@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, ListTodo, Calendar, MessageSquare, RotateCcw, Shield, LogOut, FolderKanban, KeyRound, Activity, Target } from 'lucide-react';
+import { LayoutDashboard, ListTodo, Calendar, MessageSquare, RotateCcw, Shield, LogOut, FolderKanban } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from './ui/button';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
@@ -29,7 +29,6 @@ const menuStructure: MenuGroup[] = [
     icon: LayoutDashboard,
     items: [
       { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-      { name: 'Dados AVA', href: '/dados-ava', icon: Activity },
     ],
   },
   {
@@ -46,17 +45,6 @@ const menuStructure: MenuGroup[] = [
     icon: FolderKanban,
     items: [
       { name: 'Projetos', href: '/projetos', icon: FolderKanban },
-      { name: 'Roadmap Geral', href: '/roadmap', icon: Target },
-      { name: 'Produtos', href: '/roadmap/produtos', icon: Target },
-      { name: 'Projetos GHAS', href: '/roadmap/ghas', icon: Target },
-      { name: 'Projetos Inovemed', href: '/roadmap/inovemed', icon: Target },
-    ],
-  },
-  {
-    name: 'Cadastros Gerais',
-    icon: KeyRound,
-    items: [
-      { name: 'Registros de Acessos', href: '/registros-acessos', icon: KeyRound },
     ],
   },
   {
@@ -72,10 +60,9 @@ const menuStructure: MenuGroup[] = [
 
 // Função para detectar o grupo ativo com base na rota
 const getActiveGroup = (pathname: string): string => {
-  if (pathname === '/' || pathname === '/dados-ava') return 'Dashboard';
+  if (pathname === '/') return 'Dashboard';
   if (pathname.startsWith('/backlog') || pathname.startsWith('/daily') || pathname.startsWith('/retrospectiva')) return 'SCRUM';
-  if (pathname.startsWith('/projetos') || pathname.startsWith('/roadmap')) return 'Projetos';
-  if (pathname.startsWith('/registros-acessos')) return 'Cadastros Gerais';
+  if (pathname.startsWith('/projetos')) return 'Projetos';
   if (pathname.startsWith('/administracao') || pathname.startsWith('/sprint-planning')) return 'Administração';
   return '';
 };
@@ -194,11 +181,10 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                   }
                 }}
               >
-                {subMenuItems.map((item) => {
+              {subMenuItems.map((item) => {
                   const ItemIcon = item.icon;
                   const isActive = location.pathname === item.href || 
-                    (item.href === '/daily' && location.pathname.startsWith('/daily')) ||
-                    (item.href === '/roadmap' && location.pathname.startsWith('/roadmap'));
+                    (item.href === '/daily' && location.pathname.startsWith('/daily'));
                   
                   return (
                     <TabsTrigger
