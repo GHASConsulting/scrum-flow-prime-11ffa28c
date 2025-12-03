@@ -1,17 +1,26 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, deveAlterarSenha } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (!loading && !user) {
       navigate("/auth");
     }
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    // Redirecionar para alteração de senha se necessário
+    // Não redirecionar se já estiver na página de alteração de senha
+    if (!loading && user && deveAlterarSenha === true && location.pathname !== "/alterar-senha") {
+      navigate("/alterar-senha");
+    }
+  }, [user, loading, deveAlterarSenha, navigate, location.pathname]);
 
   if (loading) {
     return (

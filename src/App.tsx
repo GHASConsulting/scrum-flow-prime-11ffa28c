@@ -15,6 +15,7 @@ import RoadmapProdutos from "./pages/RoadmapProdutos";
 import RoadmapGHAS from "./pages/RoadmapGHAS";
 import RoadmapInovemed from "./pages/RoadmapInovemed";
 import Auth from "./pages/Auth";
+import AlterarSenha from "./pages/AlterarSenha";
 import Administracao from "./pages/Administracao";
 import RegistrosAcessos from "./pages/RegistrosAcessos";
 import DadosAVA from "./pages/DadosAVA";
@@ -30,6 +31,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<Auth />} />
+          <Route path="/alterar-senha" element={<ProtectedRoute><AlterarSenha /></ProtectedRoute>} />
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/backlog" element={<ProtectedRoute><Backlog /></ProtectedRoute>} />
           <Route path="/sprint-planning" element={<ProtectedRoute><SprintPlanning /></ProtectedRoute>} />
