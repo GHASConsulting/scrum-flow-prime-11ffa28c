@@ -8,6 +8,7 @@ export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<UserRole>(null);
+  const [deveAlterarSenha, setDeveAlterarSenha] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,10 +19,11 @@ export const useAuth = () => {
         
         if (session?.user) {
           setTimeout(() => {
-            fetchUserRole(session.user.id);
+            fetchUserData(session.user.id);
           }, 0);
         } else {
           setUserRole(null);
+          setDeveAlterarSenha(null);
           setLoading(false);
         }
       }
@@ -32,7 +34,7 @@ export const useAuth = () => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        fetchUserRole(session.user.id);
+        fetchUserData(session.user.id);
       } else {
         setLoading(false);
       }
@@ -41,23 +43,39 @@ export const useAuth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchUserRole = async (userId: string) => {
+  const fetchUserData = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      // Buscar role
+      const { data: roleData, error: roleError } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", userId)
         .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching user role:", error);
+      if (roleError) {
+        console.error("Error fetching user role:", roleError);
         setUserRole(null);
       } else {
-        setUserRole(data?.role as UserRole);
+        setUserRole(roleData?.role as UserRole);
+      }
+
+      // Buscar profile para verificar se deve alterar senha
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("deve_alterar_senha")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        setDeveAlterarSenha(false);
+      } else {
+        setDeveAlterarSenha(profileData?.deve_alterar_senha ?? false);
       }
     } catch (error) {
       console.error("Error:", error);
       setUserRole(null);
+      setDeveAlterarSenha(false);
     } finally {
       setLoading(false);
     }
@@ -67,5 +85,5 @@ export const useAuth = () => {
     await supabase.auth.signOut();
   };
 
-  return { user, session, userRole, loading, signOut };
+  return { user, session, userRole, deveAlterarSenha, loading, signOut };
 };
