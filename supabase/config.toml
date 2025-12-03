@@ -1,7 +1,1 @@
-project_id = "vzqyidiudjtmlwbqriza"
-
-[functions.update-user-email]
-verify_jwt = false
-
-[functions.ava-webhook]
-verify_jwt = false
+project_id = "nqjbolgaydclpmsypzst"
