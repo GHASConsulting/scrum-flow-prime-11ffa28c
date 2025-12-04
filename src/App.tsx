@@ -13,6 +13,7 @@ import Projetos from "./pages/Projetos";
 import Auth from "./pages/Auth";
 import AlterarSenha from "./pages/AlterarSenha";
 import Administracao from "./pages/Administracao";
+import CadastrosSistema from "./pages/CadastrosSistema";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ function App() {
           <Route path="/retrospectiva" element={<ProtectedRoute><Retrospectiva /></ProtectedRoute>} />
           <Route path="/projetos" element={<ProtectedRoute><Projetos /></ProtectedRoute>} />
           <Route path="/administracao" element={<ProtectedRoute><Administracao /></ProtectedRoute>} />
+          <Route path="/cadastros" element={<ProtectedRoute><CadastrosSistema /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

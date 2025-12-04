@@ -13,6 +13,7 @@ import { useBacklog } from '@/hooks/useBacklog';
 import { useSprints } from '@/hooks/useSprints';
 import { useSprintTarefas } from '@/hooks/useSprintTarefas';
 import { useProfiles } from '@/hooks/useProfiles';
+import { useTipoProduto } from '@/hooks/useTipoProduto';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toZonedTime } from 'date-fns-tz';
@@ -28,6 +29,7 @@ const SprintPlanning = () => {
   const { sprints, addSprint, updateSprint } = useSprints();
   const { sprintTarefas, addSprintTarefa: addTarefaToSprint, deleteSprintTarefa } = useSprintTarefas();
   const { profiles } = useProfiles();
+  const { tiposProdutoAtivos } = useTipoProduto();
   
   const [selectedSprint, setSelectedSprint] = useState<string>('');
   const [isCreatingSprint, setIsCreatingSprint] = useState(false);
@@ -45,7 +47,7 @@ const SprintPlanning = () => {
     story_points: number;
     prioridade: 'baixa' | 'media' | 'alta';
     responsavel: string;
-    tipo_produto?: 'Produto' | 'Projeto GHAS' | 'Projeto Inovemed';
+    tipo_produto?: string;
   }>({
     titulo: '',
     descricao: '',
@@ -250,7 +252,7 @@ const SprintPlanning = () => {
       prioridade: task.prioridade as 'baixa' | 'media' | 'alta',
       status: task.status as Status,
       responsavel: task.responsavel || '',
-      tipo_produto: (task as any).tipo_produto as 'Produto' | 'Projeto GHAS' | 'Projeto Inovemed' | undefined
+      tipo_produto: (task as any).tipo_produto as string | undefined
     });
     setIsEditDialogOpen(true);
   };
@@ -793,15 +795,17 @@ const SprintPlanning = () => {
                     <label className="text-sm font-medium">Tipo de Produto</label>
                     <Select 
                       value={newTask.tipo_produto || undefined} 
-                      onValueChange={(value: 'Produto' | 'Projeto GHAS' | 'Projeto Inovemed') => setNewTask({ ...newTask, tipo_produto: value })}
+                      onValueChange={(value) => setNewTask({ ...newTask, tipo_produto: value })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Produto">Produto</SelectItem>
-                        <SelectItem value="Projeto GHAS">Projeto GHAS</SelectItem>
-                        <SelectItem value="Projeto Inovemed">Projeto Inovemed</SelectItem>
+                        {tiposProdutoAtivos.map((tipo) => (
+                          <SelectItem key={tipo.id} value={tipo.nome}>
+                            {tipo.nome}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -984,15 +988,17 @@ const SprintPlanning = () => {
                 <label className="text-sm font-medium">Tipo de Produto</label>
                 <Select 
                   value={editingTask.tipo_produto || undefined} 
-                  onValueChange={(value: 'Produto' | 'Projeto GHAS' | 'Projeto Inovemed') => setEditingTask({ ...editingTask, tipo_produto: value })}
+                  onValueChange={(value) => setEditingTask({ ...editingTask, tipo_produto: value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o tipo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Produto">Produto</SelectItem>
-                    <SelectItem value="Projeto GHAS">Projeto GHAS</SelectItem>
-                    <SelectItem value="Projeto Inovemed">Projeto Inovemed</SelectItem>
+                    {tiposProdutoAtivos.map((tipo) => (
+                      <SelectItem key={tipo.id} value={tipo.nome}>
+                        {tipo.nome}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
