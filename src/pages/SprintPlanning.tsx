@@ -26,14 +26,13 @@ import type { Tables } from '@/integrations/supabase/types';
 
 const SprintPlanning = () => {
   const { backlog, addBacklogItem, updateBacklogItem, deleteBacklogItem } = useBacklog();
-  const { sprints, addSprint, updateSprint } = useSprints();
+  const { sprints, addSprint, updateSprint, deleteSprint } = useSprints();
   const { sprintTarefas, addSprintTarefa: addTarefaToSprint, deleteSprintTarefa } = useSprintTarefas();
   const { profiles } = useProfiles();
   const { tiposProdutoAtivos } = useTipoProduto();
   
   const [selectedSprint, setSelectedSprint] = useState<string>('');
   const [isCreatingSprint, setIsCreatingSprint] = useState(false);
-  const [defaultResponsavel, setDefaultResponsavel] = useState('');
   const [isEditingSprint, setIsEditingSprint] = useState(false);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
   const [filtroResponsavel, setFiltroResponsavel] = useState<string>('all');
@@ -64,6 +63,7 @@ const SprintPlanning = () => {
   });
 
   const [editSprint, setEditSprint] = useState({
+    nome: '',
     data_inicio: undefined as Date | undefined,
     data_fim: undefined as Date | undefined
   });
@@ -151,7 +151,7 @@ const SprintPlanning = () => {
     }
   };
 
-  const handleUpdateSprintDates = async () => {
+  const handleUpdateSprint = async () => {
     if (!selectedSprintData) {
       return;
     }
@@ -165,8 +165,15 @@ const SprintPlanning = () => {
       return;
     }
 
+    if (!editSprint.nome.trim()) {
+      toast.error('O nome da sprint é obrigatório');
+      return;
+    }
+
     try {
-      const updates: { data_inicio?: string; data_fim?: string } = {};
+      const updates: { nome?: string; data_inicio?: string; data_fim?: string } = {
+        nome: editSprint.nome.trim()
+      };
       
       if (editSprint.data_inicio) {
         updates.data_inicio = format(editSprint.data_inicio, 'yyyy-MM-dd');
@@ -176,16 +183,28 @@ const SprintPlanning = () => {
         updates.data_fim = format(editSprint.data_fim, 'yyyy-MM-dd');
       }
 
-      if (Object.keys(updates).length === 0) {
-        toast.error('Selecione pelo menos uma data para atualizar');
-        return;
-      }
-
       await updateSprint(selectedSprintData.id, updates);
 
       setIsEditingSprint(false);
-      setEditSprint({ data_inicio: undefined, data_fim: undefined });
-      toast.success('Datas da sprint atualizadas com sucesso');
+      setEditSprint({ nome: '', data_inicio: undefined, data_fim: undefined });
+      toast.success('Sprint atualizada com sucesso');
+    } catch (error) {
+      // Error já tratado no hook
+    }
+  };
+
+  const handleDeleteSprint = async () => {
+    if (!selectedSprintData) return;
+
+    const tarefasNaSprint = sprintTarefas.filter(st => st.sprint_id === selectedSprintData.id);
+    if (tarefasNaSprint.length > 0) {
+      toast.error('Não é possível excluir uma sprint que possui tarefas');
+      return;
+    }
+
+    try {
+      await deleteSprint(selectedSprintData.id);
+      setSelectedSprint('');
     } catch (error) {
       // Error já tratado no hook
     }
@@ -324,7 +343,7 @@ const SprintPlanning = () => {
     }
 
     const backlogItem = backlog.find(b => b.id === backlogId);
-    const responsavel = defaultResponsavel || backlogItem?.responsavel || null;
+    const responsavel = backlogItem?.responsavel || null;
 
     try {
       await addTarefaToSprint({
@@ -473,6 +492,7 @@ const SprintPlanning = () => {
                                 onClick={() => {
                                   setIsEditingSprint(true);
                                   setEditSprint({
+                                    nome: selectedSprintData.nome,
                                     data_inicio: toZonedTime(parseISO(selectedSprintData.data_inicio), 'America/Sao_Paulo'),
                                     data_fim: toZonedTime(parseISO(selectedSprintData.data_fim), 'America/Sao_Paulo')
                                   });
@@ -481,7 +501,19 @@ const SprintPlanning = () => {
                                 variant="outline"
                                 className="w-full"
                               >
-                                Alterar Datas
+                                Editar Sprint
+                              </Button>
+                            )}
+
+                            {sprintTarefas.filter(st => st.sprint_id === selectedSprintData.id).length === 0 && (
+                              <Button 
+                                onClick={handleDeleteSprint}
+                                size="sm"
+                                variant="destructive"
+                                className="w-full"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Excluir Sprint
                               </Button>
                             )}
                           </div>
@@ -489,7 +521,16 @@ const SprintPlanning = () => {
                       ) : (
                         <div className="space-y-3">
                           <div>
-                            <label className="text-sm font-medium block mb-2">Nova Data de Início</label>
+                            <label className="text-sm font-medium block mb-2">Nome da Sprint</label>
+                            <Input
+                              value={editSprint.nome}
+                              onChange={(e) => setEditSprint({ ...editSprint, nome: e.target.value })}
+                              placeholder="Nome da sprint"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-sm font-medium block mb-2">Data de Início</label>
                             <Popover>
                               <PopoverTrigger asChild>
                                 <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !editSprint.data_inicio && "text-muted-foreground")}>
@@ -510,7 +551,7 @@ const SprintPlanning = () => {
                           </div>
 
                           <div>
-                            <label className="text-sm font-medium block mb-2">Nova Data de Fim</label>
+                            <label className="text-sm font-medium block mb-2">Data de Fim</label>
                             <Popover>
                               <PopoverTrigger asChild>
                                 <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !editSprint.data_fim && "text-muted-foreground")}>
@@ -531,13 +572,13 @@ const SprintPlanning = () => {
                           </div>
 
                           <div className="flex gap-2">
-                            <Button onClick={handleUpdateSprintDates} size="sm" className="flex-1">
+                            <Button onClick={handleUpdateSprint} size="sm" className="flex-1">
                               Salvar
                             </Button>
                             <Button 
                               onClick={() => {
                                 setIsEditingSprint(false);
-                                setEditSprint({ data_inicio: undefined, data_fim: undefined });
+                                setEditSprint({ nome: '', data_inicio: undefined, data_fim: undefined });
                               }} 
                               size="sm"
                               variant="outline" 
@@ -619,18 +660,6 @@ const SprintPlanning = () => {
                   </div>
                 </div>
               )}
-
-              <div>
-                <label className="text-sm font-medium">Responsável Padrão (opcional)</label>
-                <Input
-                  placeholder="Nome padrão para tarefas"
-                  value={defaultResponsavel}
-                  onChange={(e) => setDefaultResponsavel(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Será usado se a tarefa não tiver responsável definido
-                </p>
-              </div>
             </CardContent>
           </Card>
 
