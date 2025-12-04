@@ -10,13 +10,12 @@ export const formatDateTime = (dateString: string): string => {
 };
 
 export const formatDate = (dateString: string): string => {
-  // Para datas sem hora (yyyy-MM-dd), adicionar T12:00:00 para evitar problemas de timezone
-  // Isso garante que a conversão de timezone não mude o dia
-  const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(dateString);
-  const dateToUse = isDateOnly ? `${dateString}T12:00:00` : dateString;
-  const date = parseISO(dateToUse);
-  const zonedDate = toZonedTime(date, TIMEZONE);
-  return format(zonedDate, 'dd/MM/yyyy');
+  // Extrair apenas a parte da data (yyyy-MM-dd) ignorando hora e timezone
+  // Isso evita problemas de conversão de timezone que mudam o dia
+  const datePart = dateString.split('T')[0].split(' ')[0];
+  // Parsear com T12:00:00 para garantir que a data não mude com timezone
+  const date = parseISO(`${datePart}T12:00:00`);
+  return format(date, 'dd/MM/yyyy');
 };
 
 export const statusLabels: Record<string, string> = {
