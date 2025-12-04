@@ -16,7 +16,7 @@ import { useProfiles } from '@/hooks/useProfiles';
 import { useTipoProduto } from '@/hooks/useTipoProduto';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Plus, Check, Trash2, X, Edit } from 'lucide-react';
+import { CalendarIcon, Plus, Check, Trash2, X, Edit, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { statusLabels, formatDate } from '@/lib/formatters';
@@ -47,6 +47,9 @@ const SprintPlanning = () => {
   const [mostrarApenasSemSprint, setMostrarApenasSemSprint] = useState(false);
   const [editingTask, setEditingTask] = useState<BacklogItem | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
+  const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false);
+  const [duplicateResponsavel, setDuplicateResponsavel] = useState<string>('');
   
   const [newTask, setNewTask] = useState<{
     titulo: string;
@@ -380,6 +383,58 @@ const SprintPlanning = () => {
       await deleteSprintTarefa(sprintTarefa.id);
     } catch (error) {
       // Error já tratado no hook
+    }
+  };
+
+  const handleToggleTaskSelection = (taskId: string) => {
+    setSelectedTasks(prev => 
+      prev.includes(taskId) 
+        ? prev.filter(id => id !== taskId)
+        : [...prev, taskId]
+    );
+  };
+
+  const handleDuplicateTasks = async () => {
+    if (selectedTasks.length === 0) {
+      toast.error('Selecione pelo menos uma tarefa para duplicar');
+      return;
+    }
+
+    if (!duplicateResponsavel) {
+      toast.error('Selecione um responsável para as tarefas duplicadas');
+      return;
+    }
+
+    const confirmMessage = selectedTasks.length === 1 
+      ? 'Deseja duplicar a tarefa selecionada?' 
+      : `Deseja duplicar as ${selectedTasks.length} tarefas selecionadas?`;
+
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      for (const taskId of selectedTasks) {
+        const originalTask = backlog.find(b => b.id === taskId);
+        if (originalTask) {
+          await addBacklogItem({
+            titulo: `${originalTask.titulo} (cópia)`,
+            descricao: originalTask.descricao || null,
+            story_points: originalTask.story_points,
+            prioridade: originalTask.prioridade as 'baixa' | 'media' | 'alta',
+            responsavel: duplicateResponsavel,
+            status: 'todo',
+            ...(originalTask.tipo_produto && { tipo_produto: originalTask.tipo_produto })
+          } as any);
+        }
+      }
+
+      toast.success(`${selectedTasks.length} tarefa(s) duplicada(s) com sucesso`);
+      setSelectedTasks([]);
+      setIsDuplicateDialogOpen(false);
+      setDuplicateResponsavel('');
+    } catch (error) {
+      toast.error('Erro ao duplicar tarefas');
     }
   };
 
@@ -723,11 +778,28 @@ const SprintPlanning = () => {
         <Card>
             <CardHeader>
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <CardTitle>RoadMap Produtos GHAS ({availableBacklog.length})</CardTitle>
-                <Button onClick={() => setIsCreatingTask(true)} size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nova Tarefa
-                </Button>
+                <CardTitle>Tarefas da Sprint ({availableBacklog.length})</CardTitle>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => {
+                      if (selectedTasks.length === 0) {
+                        toast.error('Selecione pelo menos uma tarefa para duplicar');
+                        return;
+                      }
+                      setIsDuplicateDialogOpen(true);
+                    }} 
+                    size="sm"
+                    variant="outline"
+                    disabled={selectedTasks.length === 0}
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Duplicar Tarefa ({selectedTasks.length})
+                  </Button>
+                  <Button onClick={() => setIsCreatingTask(true)} size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nova Tarefa
+                  </Button>
+                </div>
               </div>
               
               <div className="mt-4 space-y-4">
@@ -882,15 +954,24 @@ const SprintPlanning = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {availableBacklog.map(item => {
                     const sprintDaTarefa = getSprintDaTarefa(item.id);
+                    const isSelected = selectedTasks.includes(item.id);
                     return (
                       <div 
                         key={item.id} 
-                        className="p-4 border rounded-lg space-y-3 cursor-pointer hover:border-primary transition-colors"
+                        className={`p-4 border rounded-lg space-y-3 cursor-pointer hover:border-primary transition-colors ${isSelected ? 'border-primary bg-primary/5' : ''}`}
                         onClick={() => handleEditTask(item)}
                       >
-                        <div>
+                        <div className="flex items-start gap-2">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => handleToggleTaskSelection(item.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="mt-1"
+                          />
+                          <div className="flex-1">
                           <h4 className="font-semibold text-sm">{item.titulo}</h4>
-                          <p className="text-xs text-muted-foreground mt-1">{item.descricao}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{item.descricao}</p>
+                          </div>
                         </div>
                         
                         <div className="flex gap-2 flex-wrap">
@@ -1063,6 +1144,58 @@ const SprintPlanning = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Duplicação */}
+      <Dialog open={isDuplicateDialogOpen} onOpenChange={setIsDuplicateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Duplicar Tarefa(s)</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              {selectedTasks.length === 1 
+                ? '1 tarefa selecionada para duplicação'
+                : `${selectedTasks.length} tarefas selecionadas para duplicação`}
+            </p>
+
+            <div>
+              <label className="text-sm font-medium">Novo Responsável *</label>
+              <Select 
+                value={duplicateResponsavel || undefined} 
+                onValueChange={setDuplicateResponsavel}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o responsável" />
+                </SelectTrigger>
+                <SelectContent>
+                  {profiles.map((profile) => (
+                    <SelectItem key={profile.id} value={profile.nome}>
+                      {profile.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button onClick={handleDuplicateTasks} className="flex-1">
+                Confirmar Duplicação
+              </Button>
+              <Button
+                onClick={() => {
+                  setIsDuplicateDialogOpen(false);
+                  setDuplicateResponsavel('');
+                }}
+                variant="outline"
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </Layout>
