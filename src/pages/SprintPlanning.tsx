@@ -23,6 +23,15 @@ import { statusLabels, formatDate } from '@/lib/formatters';
 import type { BacklogItem, Status } from '@/types/scrum';
 import type { Tables } from '@/integrations/supabase/types';
 
+// Função para normalizar data selecionada no calendário, evitando problemas de timezone
+// Define a hora para meio-dia (12:00) para que conversões de timezone não mudem o dia
+const normalizeDate = (date: Date | undefined): Date | undefined => {
+  if (!date) return undefined;
+  const normalized = new Date(date);
+  normalized.setHours(12, 0, 0, 0);
+  return normalized;
+};
+
 const SprintPlanning = () => {
   const { backlog, addBacklogItem, updateBacklogItem, deleteBacklogItem } = useBacklog();
   const { sprints, addSprint, updateSprint, deleteSprint } = useSprints();
@@ -547,7 +556,7 @@ const SprintPlanning = () => {
                                 <Calendar
                                   mode="single"
                                   selected={editSprint.data_inicio}
-                                  onSelect={(date) => setEditSprint({ ...editSprint, data_inicio: date })}
+                                  onSelect={(date) => setEditSprint({ ...editSprint, data_inicio: normalizeDate(date) })}
                                   initialFocus
                                   className="pointer-events-auto"
                                 />
@@ -568,7 +577,7 @@ const SprintPlanning = () => {
                                 <Calendar
                                   mode="single"
                                   selected={editSprint.data_fim}
-                                  onSelect={(date) => setEditSprint({ ...editSprint, data_fim: date })}
+                                  onSelect={(date) => setEditSprint({ ...editSprint, data_fim: normalizeDate(date) })}
                                   initialFocus
                                   className="pointer-events-auto"
                                 />
@@ -626,7 +635,7 @@ const SprintPlanning = () => {
                         <Calendar
                           mode="single"
                           selected={newSprint.data_inicio}
-                          onSelect={(date) => setNewSprint({ ...newSprint, data_inicio: date })}
+                          onSelect={(date) => setNewSprint({ ...newSprint, data_inicio: normalizeDate(date) })}
                           initialFocus
                           className="pointer-events-auto"
                         />
@@ -647,7 +656,7 @@ const SprintPlanning = () => {
                         <Calendar
                           mode="single"
                           selected={newSprint.data_fim}
-                          onSelect={(date) => setNewSprint({ ...newSprint, data_fim: date })}
+                          onSelect={(date) => setNewSprint({ ...newSprint, data_fim: normalizeDate(date) })}
                           initialFocus
                           className="pointer-events-auto"
                         />
