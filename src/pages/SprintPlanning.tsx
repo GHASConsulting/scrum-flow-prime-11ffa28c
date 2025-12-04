@@ -16,7 +16,6 @@ import { useProfiles } from '@/hooks/useProfiles';
 import { useTipoProduto } from '@/hooks/useTipoProduto';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { toZonedTime } from 'date-fns-tz';
 import { CalendarIcon, Plus, Check, Trash2, X, Edit } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -157,8 +156,11 @@ const SprintPlanning = () => {
     }
 
     // Usar as datas atuais da sprint se não foram editadas
-    const dataInicio = editSprint.data_inicio || toZonedTime(parseISO(selectedSprintData.data_inicio), 'America/Sao_Paulo');
-    const dataFim = editSprint.data_fim || toZonedTime(parseISO(selectedSprintData.data_fim), 'America/Sao_Paulo');
+    // Parsear datas adicionando T12:00:00 para evitar problemas de timezone
+    const dataInicioStr = selectedSprintData.data_inicio.split('T')[0];
+    const dataFimStr = selectedSprintData.data_fim.split('T')[0];
+    const dataInicio = editSprint.data_inicio || parseISO(`${dataInicioStr}T12:00:00`);
+    const dataFim = editSprint.data_fim || parseISO(`${dataFimStr}T12:00:00`);
 
     if (dataFim < dataInicio) {
       toast.error('Data de fim deve ser posterior à data de início');
@@ -491,10 +493,13 @@ const SprintPlanning = () => {
                               <Button 
                                 onClick={() => {
                                   setIsEditingSprint(true);
+                                  // Parsear datas adicionando T12:00:00 para evitar problemas de timezone
+                                  const dataInicioStr = selectedSprintData.data_inicio.split('T')[0];
+                                  const dataFimStr = selectedSprintData.data_fim.split('T')[0];
                                   setEditSprint({
                                     nome: selectedSprintData.nome,
-                                    data_inicio: toZonedTime(parseISO(selectedSprintData.data_inicio), 'America/Sao_Paulo'),
-                                    data_fim: toZonedTime(parseISO(selectedSprintData.data_fim), 'America/Sao_Paulo')
+                                    data_inicio: parseISO(`${dataInicioStr}T12:00:00`),
+                                    data_fim: parseISO(`${dataFimStr}T12:00:00`)
                                   });
                                 }}
                                 size="sm"
