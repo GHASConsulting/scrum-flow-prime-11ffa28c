@@ -8,7 +8,7 @@ export interface BacklogItem {
   prioridade: 'baixa' | 'media' | 'alta';
   status: Status;
   responsavel: string;
-  tipo_produto?: 'Produto' | 'Projeto GHAS' | 'Projeto Inovemed';
+  tipo_produto?: string;
 }
 
 export interface Sprint {

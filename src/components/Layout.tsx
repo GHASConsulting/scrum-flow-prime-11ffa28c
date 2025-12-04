@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, ListTodo, Calendar, MessageSquare, RotateCcw, Shield, LogOut, FolderKanban } from 'lucide-react';
+import { LayoutDashboard, ListTodo, Calendar, MessageSquare, RotateCcw, Shield, LogOut, FolderKanban, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from './ui/button';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
@@ -48,6 +48,14 @@ const menuStructure: MenuGroup[] = [
     ],
   },
   {
+    name: 'Cadastros',
+    icon: Settings,
+    adminOnly: true,
+    items: [
+      { name: 'Cadastros do Sistema', href: '/cadastros', icon: Settings },
+    ],
+  },
+  {
     name: 'Administração',
     icon: Shield,
     adminOnly: true,
@@ -63,6 +71,7 @@ const getActiveGroup = (pathname: string): string => {
   if (pathname === '/') return 'Dashboard';
   if (pathname.startsWith('/backlog') || pathname.startsWith('/daily') || pathname.startsWith('/retrospectiva')) return 'SCRUM';
   if (pathname.startsWith('/projetos')) return 'Projetos';
+  if (pathname.startsWith('/cadastros')) return 'Cadastros';
   if (pathname.startsWith('/administracao') || pathname.startsWith('/sprint-planning')) return 'Administração';
   return '';
 };
