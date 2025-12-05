@@ -107,33 +107,22 @@ export default function Administracao() {
     try {
       const validatedData = userSchema.parse(formData);
 
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: validatedData.email,
-        password: validatedData.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            nome: validatedData.nome,
-          },
+      // Usar edge function para criar usuário (bypass RLS com service role)
+      const { data, error } = await supabase.functions.invoke('create-admin-user', {
+        body: {
+          email: validatedData.email,
+          password: validatedData.password,
+          nome: validatedData.nome,
+          role: validatedData.role,
         },
       });
 
-      if (authError) throw authError;
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
-      if (authData.user) {
-        const { error: roleError } = await supabase
-          .from("user_roles")
-          .insert({
-            user_id: authData.user.id,
-            role: validatedData.role,
-          });
-
-        if (roleError) throw roleError;
-
-        toast.success("Usuário cadastrado com sucesso!");
-        setFormData({ nome: "", email: "", password: "", role: "operador" });
-        fetchUsers();
-      }
+      toast.success("Usuário cadastrado com sucesso!");
+      setFormData({ nome: "", email: "", password: "", role: "operador" });
+      fetchUsers();
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);

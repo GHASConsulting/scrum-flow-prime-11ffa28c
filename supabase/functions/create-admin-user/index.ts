@@ -25,15 +25,15 @@ serve(async (req) => {
       }
     );
 
-    const { email, password, nome } = await req.json();
-    console.log('Creating user with email:', email);
+    const { email, password, nome, role } = await req.json();
+    console.log('Creating user with email:', email, 'role:', role);
 
     // Criar usuário no auth
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true, // Auto-confirma o email
-      user_metadata: { nome: nome || 'Administrador' }
+      user_metadata: { nome: nome || 'Usuário' }
     });
 
     if (authError) {
@@ -43,12 +43,13 @@ serve(async (req) => {
 
     console.log('User created:', authData.user?.id);
 
-    // Adicionar role de administrador
+    // Adicionar role (default: operador)
+    const userRole = role || 'operador';
     const { error: roleError } = await supabaseAdmin
       .from('user_roles')
       .insert({
         user_id: authData.user!.id,
-        role: 'administrador'
+        role: userRole
       });
 
     if (roleError) {
@@ -56,7 +57,7 @@ serve(async (req) => {
       throw roleError;
     }
 
-    console.log('Admin role added successfully');
+    console.log('User role added successfully:', userRole);
 
     return new Response(
       JSON.stringify({ 
