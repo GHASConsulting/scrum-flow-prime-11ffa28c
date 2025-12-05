@@ -7,6 +7,7 @@ import { CheckCircle2, Circle, Clock, Star, Users, Filter } from 'lucide-react';
 import { useSprints } from '@/hooks/useSprints';
 import { useSprintTarefas } from '@/hooks/useSprintTarefas';
 import { useBacklog } from '@/hooks/useBacklog';
+import { useTipoProduto } from '@/hooks/useTipoProduto';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -14,8 +15,10 @@ const Dashboard = () => {
   const { sprints } = useSprints();
   const { sprintTarefas } = useSprintTarefas();
   const { backlog } = useBacklog();
+  const { tiposProdutoAtivos } = useTipoProduto();
   
   const [selectedSprint, setSelectedSprint] = useState<string>('');
+  const [selectedTipoProduto, setSelectedTipoProduto] = useState<string>('all');
   const [metrics, setMetrics] = useState({
     total: 0,
     todo: 0,
@@ -56,15 +59,23 @@ const Dashboard = () => {
       
       // Tarefas da sprint selecionada
       const sprintTasks = sprintTarefas.filter(t => t.sprint_id === sprint.id);
-      const sprintSP = sprintTasks.reduce((sum, t) => {
+      
+      // Filtrar por tipo de produto se selecionado
+      const filteredSprintTasks = sprintTasks.filter(t => {
+        if (selectedTipoProduto === 'all') return true;
+        const task = backlog.find(b => b.id === t.backlog_id);
+        return task?.tipo_produto === selectedTipoProduto;
+      });
+
+      const sprintSP = filteredSprintTasks.reduce((sum, t) => {
         const task = backlog.find(b => b.id === t.backlog_id);
         return sum + (task?.story_points || 0);
       }, 0);
       
       setTotalSprintSP(sprintSP);
 
-      // Métricas da sprint selecionada
-      const sprintBacklogIds = sprintTasks.map(t => t.backlog_id);
+      // Métricas da sprint selecionada (filtrada por tipo de produto)
+      const sprintBacklogIds = filteredSprintTasks.map(t => t.backlog_id);
       const sprintBacklogItems = backlog.filter(b => sprintBacklogIds.includes(b.id));
       
       const total = sprintBacklogItems.length;
@@ -84,8 +95,7 @@ const Dashboard = () => {
         const idealizado = sprintSP - (sprintSP / totalDays) * i;
         
         // Calcular pontos completados até esta data (excluindo validados)
-        // Buscar status real do backlog
-        const completedTasks = sprintTasks.filter(t => {
+        const completedTasks = filteredSprintTasks.filter(t => {
           const backlogTask = backlog.find(b => b.id === t.backlog_id);
           return backlogTask && backlogTask.status === 'validated';
         });
@@ -104,10 +114,10 @@ const Dashboard = () => {
       
       setBurndownData(burndown);
 
-      // Estatísticas por responsável
+      // Estatísticas por responsável (filtradas por tipo de produto)
       const responsibleMap = new Map();
       
-      sprintTasks.forEach(t => {
+      filteredSprintTasks.forEach(t => {
         const responsible = t.responsavel || 'Não atribuído';
         
         // Buscar o status real da tarefa no backlog
@@ -130,7 +140,7 @@ const Dashboard = () => {
 
       setResponsibleStats(Array.from(responsibleMap.values()));
     }
-  }, [backlog, sprints, sprintTarefas, selectedSprint]);
+  }, [backlog, sprints, sprintTarefas, selectedSprint, selectedTipoProduto]);
 
   return (
     <Layout>
@@ -148,20 +158,38 @@ const Dashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div>
-              <label className="text-sm font-medium">Sprint *</label>
-              <Select value={selectedSprint} onValueChange={setSelectedSprint}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma sprint" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sprints.map((sprint) => (
-                    <SelectItem key={sprint.id} value={sprint.id}>
-                      {sprint.nome} ({format(parseISO(sprint.data_inicio), 'dd/MM/yyyy', { locale: ptBR })} - {format(parseISO(sprint.data_fim), 'dd/MM/yyyy', { locale: ptBR })}) - {sprint.status}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Sprint *</label>
+                <Select value={selectedSprint} onValueChange={setSelectedSprint}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma sprint" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sprints.map((sprint) => (
+                      <SelectItem key={sprint.id} value={sprint.id}>
+                        {sprint.nome} ({format(parseISO(sprint.data_inicio), 'dd/MM/yyyy', { locale: ptBR })} - {format(parseISO(sprint.data_fim), 'dd/MM/yyyy', { locale: ptBR })}) - {sprint.status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Tipo de Produto</label>
+                <Select value={selectedTipoProduto} onValueChange={setSelectedTipoProduto}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos os tipos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os tipos</SelectItem>
+                    {tiposProdutoAtivos.map((tipo) => (
+                      <SelectItem key={tipo.id} value={tipo.nome}>
+                        {tipo.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
