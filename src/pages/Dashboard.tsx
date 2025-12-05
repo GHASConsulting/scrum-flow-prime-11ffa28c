@@ -224,7 +224,9 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{metrics.done}</div>
-              <p className="text-xs text-muted-foreground">concluídas</p>
+              <p className="text-xs text-muted-foreground">
+                concluídas • {metrics.total > 0 ? Math.round(((metrics.done + metrics.validated) / metrics.total) * 100) : 0}% conclusão
+              </p>
             </CardContent>
           </Card>
 
@@ -235,7 +237,9 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{metrics.validated}</div>
-              <p className="text-xs text-muted-foreground">validadas</p>
+              <p className="text-xs text-muted-foreground">
+                validadas • {metrics.total > 0 ? Math.round(((metrics.done + metrics.validated) / metrics.total) * 100) : 0}% conclusão
+              </p>
             </CardContent>
           </Card>
 
