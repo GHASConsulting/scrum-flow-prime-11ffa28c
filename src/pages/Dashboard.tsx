@@ -304,34 +304,38 @@ const Dashboard = () => {
                 </ResponsiveContainer>
                 
                 <div className="mt-6 space-y-4">
-                  {responsibleStats.map((stat) => (
-                    <div key={stat.name} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">{stat.name}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {stat.todo + stat.doing + stat.done + stat.validated} tarefas
-                        </span>
+                  {responsibleStats.map((stat) => {
+                    const total = stat.todo + stat.doing + stat.done + stat.validated;
+                    const conclusao = total > 0 ? Math.round(((stat.done + stat.validated) / total) * 100) : 0;
+                    return (
+                      <div key={stat.name} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{stat.name}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {total} tarefas • {conclusao}% conclusão
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Circle className="h-3 w-3" />
+                            <span>{stat.todo} A Fazer</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-3 w-3 text-warning" />
+                            <span>{stat.doing} Fazendo</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-3 w-3 text-success" />
+                            <span>{stat.done} Feito</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Star className="h-3 w-3 text-primary" />
+                            <span>{stat.validated} Validado</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="grid grid-cols-4 gap-2 text-sm">
-                        <div className="flex items-center gap-2">
-                          <Circle className="h-3 w-3" />
-                          <span>{stat.todo} A Fazer</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-3 w-3 text-warning" />
-                          <span>{stat.doing} Fazendo</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 className="h-3 w-3 text-success" />
-                          <span>{stat.done} Feito</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Star className="h-3 w-3 text-primary" />
-                          <span>{stat.validated} Validado</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </>
             ) : (
