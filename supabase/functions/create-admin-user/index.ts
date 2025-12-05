@@ -32,7 +32,7 @@ serve(async (req) => {
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // Auto-confirma o email
+      email_confirm: true,
       user_metadata: { nome: nome || 'Usuário' }
     });
 
@@ -43,12 +43,42 @@ serve(async (req) => {
 
     console.log('User created:', authData.user?.id);
 
-    // Adicionar role (default: operador)
+    const userId = authData.user!.id;
     const userRole = role || 'operador';
+
+    // Verificar se o perfil já existe (trigger pode ter criado)
+    const { data: existingProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .single();
+
+    // Se não existe perfil, criar manualmente
+    if (!existingProfile) {
+      console.log('Creating profile for user:', userId);
+      const { error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .insert({
+          user_id: userId,
+          nome: nome || 'Usuário',
+          email: email,
+          deve_alterar_senha: true
+        });
+
+      if (profileError) {
+        console.error('Error creating profile:', profileError);
+        // Não falhar se o perfil já existe por race condition
+        if (!profileError.message.includes('duplicate')) {
+          throw profileError;
+        }
+      }
+    }
+
+    // Adicionar role
     const { error: roleError } = await supabaseAdmin
       .from('user_roles')
       .insert({
-        user_id: authData.user!.id,
+        user_id: userId,
         role: userRole
       });
 
