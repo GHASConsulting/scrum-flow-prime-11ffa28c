@@ -20,10 +20,7 @@ const Backlog = () => {
   const [selectedSprintId, setSelectedSprintId] = useState<string>('');
   const [selectedResponsavel, setSelectedResponsavel] = useState<string>('');
 
-  // Sprints disponíveis para filtro (planejamento ou concluído)
-  const availableSprints = sprints.filter(s => s.status === 'planejamento' || s.status === 'concluido');
-  
-  // Sprint ativo
+  // Sprint ativo (para definir como padrão)
   const activeSprint = sprints.find(s => s.status === 'ativo');
 
   // Definir sprint ativo como padrão ao carregar
@@ -106,14 +103,9 @@ const Backlog = () => {
                   <SelectValue placeholder="Selecione uma sprint" />
                 </SelectTrigger>
                 <SelectContent>
-                  {activeSprint && (
-                    <SelectItem value={activeSprint.id}>
-                      {activeSprint.nome} (Ativo)
-                    </SelectItem>
-                  )}
-                  {availableSprints.map(sprint => (
+                  {sprints.map(sprint => (
                     <SelectItem key={sprint.id} value={sprint.id}>
-                      {sprint.nome} ({sprint.status === 'planejamento' ? 'Planejamento' : 'Encerrado'})
+                      {sprint.nome} ({sprint.status === 'ativo' ? 'Ativo' : sprint.status === 'planejamento' ? 'Planejamento' : 'Encerrado'})
                     </SelectItem>
                   ))}
                 </SelectContent>
