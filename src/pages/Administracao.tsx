@@ -127,7 +127,12 @@ export default function Administracao() {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else {
-        toast.error(error.message || "Erro ao cadastrar usuário");
+        const errorMessage = error.message || "";
+        if (errorMessage.includes("email address has already been registered") || errorMessage.includes("email_exists")) {
+          toast.error("Este e-mail já está cadastrado no sistema");
+        } else {
+          toast.error(errorMessage || "Erro ao cadastrar usuário");
+        }
       }
     } finally {
       setSubmitting(false);
