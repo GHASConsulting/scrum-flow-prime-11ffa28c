@@ -11,6 +11,7 @@ import { useBacklog } from '@/hooks/useBacklog';
 import { useTipoProduto } from '@/hooks/useTipoProduto';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import * as XLSX from 'xlsx';
 
 const Dashboard = () => {
   const { sprints } = useSprints();
@@ -182,19 +183,12 @@ const Dashboard = () => {
       ];
     });
 
-    const csvContent = [
-      headers.join(';'),
-      ...rows.map(row => row.join(';'))
-    ].join('\n');
-
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `dashboard_${sprint.nome.replace(/\s+/g, '_')}_${format(new Date(), 'yyyy-MM-dd')}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const worksheetData = [headers, ...rows];
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Dashboard');
+    
+    XLSX.writeFile(workbook, `dashboard_${sprint.nome.replace(/\s+/g, '_')}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
   };
 
   return (
