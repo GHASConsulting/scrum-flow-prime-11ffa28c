@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { CheckCircle2, Circle, Clock, Star, Users, Filter } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, Star, Users, Filter, FileSpreadsheet } from 'lucide-react';
 import { useSprints } from '@/hooks/useSprints';
 import { useSprintTarefas } from '@/hooks/useSprintTarefas';
 import { useBacklog } from '@/hooks/useBacklog';
@@ -142,6 +143,60 @@ const Dashboard = () => {
     }
   }, [backlog, sprints, sprintTarefas, selectedSprint, selectedTipoProduto]);
 
+  const exportToExcel = () => {
+    if (!selectedSprint || responsibleStats.length === 0) return;
+
+    const sprint = sprints.find(s => s.id === selectedSprint);
+    if (!sprint) return;
+
+    const headers = [
+      'Sprint',
+      'Responsável',
+      'Qtd Total Atividades',
+      'Qtd A Fazer',
+      'Qtd Fazendo',
+      'Qtd Feito',
+      'Qtd Validado',
+      '% A Fazer',
+      '% Fazendo',
+      '% Feito + Validado'
+    ];
+
+    const rows = responsibleStats.map(stat => {
+      const total = stat.todo + stat.doing + stat.done + stat.validated;
+      const pctTodo = total > 0 ? ((stat.todo / total) * 100).toFixed(1) : '0.0';
+      const pctDoing = total > 0 ? ((stat.doing / total) * 100).toFixed(1) : '0.0';
+      const pctDoneValidated = total > 0 ? (((stat.done + stat.validated) / total) * 100).toFixed(1) : '0.0';
+
+      return [
+        sprint.nome,
+        stat.name,
+        total,
+        stat.todo,
+        stat.doing,
+        stat.done,
+        stat.validated,
+        `${pctTodo}%`,
+        `${pctDoing}%`,
+        `${pctDoneValidated}%`
+      ];
+    });
+
+    const csvContent = [
+      headers.join(';'),
+      ...rows.map(row => row.join(';'))
+    ].join('\n');
+
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `dashboard_${sprint.nome.replace(/\s+/g, '_')}_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -151,11 +206,20 @@ const Dashboard = () => {
         </div>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Filter className="h-5 w-5" />
               Filtros
             </CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToExcel}
+              disabled={!selectedSprint || responsibleStats.length === 0}
+            >
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              Exportar Excel
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
