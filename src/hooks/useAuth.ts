@@ -8,6 +8,7 @@ export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<UserRole>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const [deveAlterarSenha, setDeveAlterarSenha] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -23,6 +24,7 @@ export const useAuth = () => {
           }, 0);
         } else {
           setUserRole(null);
+          setUserName(null);
           setDeveAlterarSenha(null);
           setLoading(false);
         }
@@ -59,22 +61,25 @@ export const useAuth = () => {
         setUserRole(roleData?.role as UserRole);
       }
 
-      // Buscar profile para verificar se deve alterar senha
+      // Buscar profile para verificar se deve alterar senha e nome
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("deve_alterar_senha")
+        .select("deve_alterar_senha, nome")
         .eq("user_id", userId)
         .maybeSingle();
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
         setDeveAlterarSenha(false);
+        setUserName(null);
       } else {
         setDeveAlterarSenha(profileData?.deve_alterar_senha ?? false);
+        setUserName(profileData?.nome ?? null);
       }
     } catch (error) {
       console.error("Error:", error);
       setUserRole(null);
+      setUserName(null);
       setDeveAlterarSenha(false);
     } finally {
       setLoading(false);
@@ -85,5 +90,5 @@ export const useAuth = () => {
     await supabase.auth.signOut();
   };
 
-  return { user, session, userRole, deveAlterarSenha, loading, signOut };
+  return { user, session, userRole, userName, deveAlterarSenha, loading, signOut };
 };

@@ -79,7 +79,7 @@ const getActiveGroup = (pathname: string): string => {
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, userRole, signOut } = useAuth();
+  const { user, userRole, userName, signOut } = useAuth();
   const [activeGroup, setActiveGroup] = useState<string>('');
 
   // Detecta o grupo ativo baseado na URL
@@ -164,10 +164,17 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
               </div>
             </div>
             {user && (
-              <Button variant="ghost" size="sm" onClick={signOut}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Sair
-              </Button>
+              <div className="flex items-center gap-3">
+                {userName && (
+                  <span className="text-sm text-muted-foreground">
+                    Olá, <span className="font-medium text-foreground">{userName}</span>!
+                  </span>
+                )}
+                <Button variant="ghost" size="sm" onClick={signOut}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sair
+                </Button>
+              </div>
             )}
           </div>
         </div>
