@@ -28,7 +28,9 @@ serve(async (req) => {
     const { email, password, nome, role } = await req.json();
     console.log('Creating user with email:', email, 'role:', role);
 
-    // Criar usuário no auth
+    let userId: string;
+
+    // Tentar criar usuário no auth
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -37,16 +39,37 @@ serve(async (req) => {
     });
 
     if (authError) {
-      console.error('Error creating user:', authError);
-      throw authError;
+      // Se o usuário já existe, buscar o ID dele
+      if (authError.code === 'email_exists') {
+        console.log('User already exists, fetching existing user...');
+        
+        // Buscar usuário existente por email
+        const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+        
+        if (listError) {
+          console.error('Error listing users:', listError);
+          throw listError;
+        }
+        
+        const existingUser = existingUsers.users.find(u => u.email === email);
+        if (!existingUser) {
+          throw new Error('Usuário existe mas não foi encontrado');
+        }
+        
+        userId = existingUser.id;
+        console.log('Found existing user:', userId);
+      } else {
+        console.error('Error creating user:', authError);
+        throw authError;
+      }
+    } else {
+      userId = authData.user!.id;
+      console.log('User created:', userId);
     }
 
-    console.log('User created:', authData.user?.id);
-
-    const userId = authData.user!.id;
     const userRole = role || 'operador';
 
-    // Verificar se o perfil já existe (trigger pode ter criado)
+    // Verificar se o perfil já existe
     const { data: existingProfile } = await supabaseAdmin
       .from('profiles')
       .select('id')
@@ -72,19 +95,34 @@ serve(async (req) => {
           throw profileError;
         }
       }
+      console.log('Profile created successfully');
+    } else {
+      console.log('Profile already exists for user:', userId);
     }
 
-    // Adicionar role
-    const { error: roleError } = await supabaseAdmin
+    // Verificar se o role já existe
+    const { data: existingRole } = await supabaseAdmin
       .from('user_roles')
-      .insert({
-        user_id: userId,
-        role: userRole
-      });
+      .select('id')
+      .eq('user_id', userId)
+      .single();
 
-    if (roleError) {
-      console.error('Error adding role:', roleError);
-      throw roleError;
+    if (!existingRole) {
+      // Adicionar role
+      const { error: roleError } = await supabaseAdmin
+        .from('user_roles')
+        .insert({
+          user_id: userId,
+          role: userRole
+        });
+
+      if (roleError) {
+        console.error('Error adding role:', roleError);
+        throw roleError;
+      }
+      console.log('User role added successfully:', userRole);
+    } else {
+      console.log('Role already exists for user:', userId);
     }
 
     console.log('User role added successfully:', userRole);
