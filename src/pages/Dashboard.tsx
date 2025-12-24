@@ -28,7 +28,8 @@ const Dashboard = () => {
   const [selectedSprint, setSelectedSprint] = useState<string>('');
   const [selectedTipoProduto, setSelectedTipoProduto] = useState<string>('all');
   const [selectedSituacao, setSelectedSituacao] = useState<string>('all');
-  const [dateFilter, setDateFilter] = useState<Date | undefined>();
+  const [dateFilterStart, setDateFilterStart] = useState<Date | undefined>();
+  const [dateFilterEnd, setDateFilterEnd] = useState<Date | undefined>();
   const [metrics, setMetrics] = useState({
     total: 0,
     todo: 0,
@@ -42,7 +43,7 @@ const Dashboard = () => {
   const [responsibleStats, setResponsibleStats] = useState<any[]>([]);
   const [totalSprintSP, setTotalSprintSP] = useState<number>(0);
 
-  // Filtrar sprints por situação e data
+  // Filtrar sprints por situação e intervalo de datas
   const filteredSprints = useMemo(() => {
     return sprints.filter(sprint => {
       // Filtro por situação
@@ -50,20 +51,29 @@ const Dashboard = () => {
         return false;
       }
       
-      // Filtro por data
-      if (dateFilter) {
-        const sprintStart = startOfDay(toZonedTime(parseISO(sprint.data_inicio), TIMEZONE));
-        const sprintEnd = endOfDay(toZonedTime(parseISO(sprint.data_fim), TIMEZONE));
-        const filterDate = startOfDay(dateFilter);
-        
-        if (!isWithinInterval(filterDate, { start: sprintStart, end: sprintEnd })) {
+      // Filtro por intervalo de datas
+      const sprintStart = startOfDay(toZonedTime(parseISO(sprint.data_inicio), TIMEZONE));
+      const sprintEnd = endOfDay(toZonedTime(parseISO(sprint.data_fim), TIMEZONE));
+      
+      // Se data início do filtro está definida, a sprint deve terminar após ou igual a ela
+      if (dateFilterStart) {
+        const filterStart = startOfDay(dateFilterStart);
+        if (sprintEnd < filterStart) {
+          return false;
+        }
+      }
+      
+      // Se data fim do filtro está definida, a sprint deve começar antes ou igual a ela
+      if (dateFilterEnd) {
+        const filterEnd = endOfDay(dateFilterEnd);
+        if (sprintStart > filterEnd) {
           return false;
         }
       }
       
       return true;
     });
-  }, [sprints, selectedSituacao, dateFilter]);
+  }, [sprints, selectedSituacao, dateFilterStart, dateFilterEnd]);
 
   // Selecionar automaticamente a sprint ativa ao carregar
   useEffect(() => {
@@ -250,7 +260,7 @@ const Dashboard = () => {
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <div>
                 <label className="text-sm font-medium">Situação do Sprint</label>
                 <Select value={selectedSituacao} onValueChange={setSelectedSituacao}>
@@ -266,39 +276,76 @@ const Dashboard = () => {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium">Filtrar por Data</label>
+                <label className="text-sm font-medium">Data Início</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className={cn(
                         "w-full justify-start text-left font-normal",
-                        !dateFilter && "text-muted-foreground"
+                        !dateFilterStart && "text-muted-foreground"
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dateFilter ? format(dateFilter, "dd/MM/yyyy", { locale: ptBR }) : <span>Todas as datas</span>}
+                      {dateFilterStart ? format(dateFilterStart, "dd/MM/yyyy", { locale: ptBR }) : <span>Selecione</span>}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={dateFilter}
-                      onSelect={setDateFilter}
+                      selected={dateFilterStart}
+                      onSelect={setDateFilterStart}
                       initialFocus
                       className={cn("p-3 pointer-events-auto")}
                       locale={ptBR}
                     />
                   </PopoverContent>
                 </Popover>
-                {dateFilter && (
+                {dateFilterStart && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setDateFilter(undefined)}
+                    onClick={() => setDateFilterStart(undefined)}
                     className="mt-1 w-full text-xs"
                   >
-                    Limpar filtro de data
+                    Limpar
+                  </Button>
+                )}
+              </div>
+              <div>
+                <label className="text-sm font-medium">Data Fim</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !dateFilterEnd && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateFilterEnd ? format(dateFilterEnd, "dd/MM/yyyy", { locale: ptBR }) : <span>Selecione</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateFilterEnd}
+                      onSelect={setDateFilterEnd}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                      locale={ptBR}
+                    />
+                  </PopoverContent>
+                </Popover>
+                {dateFilterEnd && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDateFilterEnd(undefined)}
+                    className="mt-1 w-full text-xs"
+                  >
+                    Limpar
                   </Button>
                 )}
               </div>
