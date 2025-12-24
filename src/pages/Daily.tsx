@@ -179,11 +179,18 @@ const DailyPage = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="text-sm font-medium">Sprint *</label>
-                  <Input
-                    value={sprints.find(s => s.id === selectedSprint)?.nome || ''}
-                    disabled
-                    placeholder="Sprint ativa será selecionada automaticamente"
-                  />
+                  <Select value={selectedSprint} onValueChange={setSelectedSprint}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma sprint" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sprints.map((sprint) => (
+                        <SelectItem key={sprint.id} value={sprint.id}>
+                          {sprint.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>
