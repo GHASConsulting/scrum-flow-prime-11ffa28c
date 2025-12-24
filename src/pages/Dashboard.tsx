@@ -1,17 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { CheckCircle2, Circle, Clock, Star, Users, Filter, FileSpreadsheet } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, Star, Users, Filter, FileSpreadsheet, CalendarIcon } from 'lucide-react';
 import { useSprints } from '@/hooks/useSprints';
 import { useSprintTarefas } from '@/hooks/useSprintTarefas';
 import { useBacklog } from '@/hooks/useBacklog';
 import { useTipoProduto } from '@/hooks/useTipoProduto';
-import { format, differenceInDays, parseISO } from 'date-fns';
+import { format, differenceInDays, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
+
+const TIMEZONE = 'America/Sao_Paulo';
 
 const Dashboard = () => {
   const { sprints } = useSprints();
@@ -21,6 +27,8 @@ const Dashboard = () => {
   
   const [selectedSprint, setSelectedSprint] = useState<string>('');
   const [selectedTipoProduto, setSelectedTipoProduto] = useState<string>('all');
+  const [selectedSituacao, setSelectedSituacao] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<Date | undefined>();
   const [metrics, setMetrics] = useState({
     total: 0,
     todo: 0,
@@ -34,13 +42,39 @@ const Dashboard = () => {
   const [responsibleStats, setResponsibleStats] = useState<any[]>([]);
   const [totalSprintSP, setTotalSprintSP] = useState<number>(0);
 
+  // Filtrar sprints por situação e data
+  const filteredSprints = useMemo(() => {
+    return sprints.filter(sprint => {
+      // Filtro por situação
+      if (selectedSituacao !== 'all' && sprint.status !== selectedSituacao) {
+        return false;
+      }
+      
+      // Filtro por data
+      if (dateFilter) {
+        const sprintStart = startOfDay(toZonedTime(parseISO(sprint.data_inicio), TIMEZONE));
+        const sprintEnd = endOfDay(toZonedTime(parseISO(sprint.data_fim), TIMEZONE));
+        const filterDate = startOfDay(dateFilter);
+        
+        if (!isWithinInterval(filterDate, { start: sprintStart, end: sprintEnd })) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+  }, [sprints, selectedSituacao, dateFilter]);
+
   // Selecionar automaticamente a sprint ativa ao carregar
   useEffect(() => {
-    const activeSprint = sprints.find(s => s.status === 'ativo');
+    const activeSprint = filteredSprints.find(s => s.status === 'ativo');
     if (activeSprint && !selectedSprint) {
       setSelectedSprint(activeSprint.id);
+    } else if (filteredSprints.length > 0 && !filteredSprints.find(s => s.id === selectedSprint)) {
+      // Se a sprint selecionada não está mais nos filtrados, limpar seleção
+      setSelectedSprint('');
     }
-  }, [sprints]);
+  }, [filteredSprints]);
 
   useEffect(() => {
     if (!selectedSprint) {
@@ -216,7 +250,58 @@ const Dashboard = () => {
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label className="text-sm font-medium">Situação do Sprint</label>
+                <Select value={selectedSituacao} onValueChange={setSelectedSituacao}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todas as situações" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as situações</SelectItem>
+                    <SelectItem value="ativo">Ativo</SelectItem>
+                    <SelectItem value="concluido">Concluído</SelectItem>
+                    <SelectItem value="planejamento">Planejamento</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Filtrar por Data</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !dateFilter && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateFilter ? format(dateFilter, "dd/MM/yyyy", { locale: ptBR }) : <span>Todas as datas</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateFilter}
+                      onSelect={setDateFilter}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                      locale={ptBR}
+                    />
+                  </PopoverContent>
+                </Popover>
+                {dateFilter && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDateFilter(undefined)}
+                    className="mt-1 w-full text-xs"
+                  >
+                    Limpar filtro de data
+                  </Button>
+                )}
+              </div>
               <div>
                 <label className="text-sm font-medium">Sprint *</label>
                 <Select value={selectedSprint} onValueChange={setSelectedSprint}>
@@ -224,11 +309,15 @@ const Dashboard = () => {
                     <SelectValue placeholder="Selecione uma sprint" />
                   </SelectTrigger>
                   <SelectContent>
-                    {sprints.map((sprint) => (
-                      <SelectItem key={sprint.id} value={sprint.id}>
-                        {sprint.nome} ({format(parseISO(sprint.data_inicio), 'dd/MM/yyyy', { locale: ptBR })} - {format(parseISO(sprint.data_fim), 'dd/MM/yyyy', { locale: ptBR })}) - {sprint.status}
-                      </SelectItem>
-                    ))}
+                    {filteredSprints.map((sprint) => {
+                      const dataInicio = toZonedTime(parseISO(sprint.data_inicio), TIMEZONE);
+                      const dataFim = toZonedTime(parseISO(sprint.data_fim), TIMEZONE);
+                      return (
+                        <SelectItem key={sprint.id} value={sprint.id}>
+                          {sprint.nome} ({format(dataInicio, 'dd/MM/yyyy', { locale: ptBR })} - {format(dataFim, 'dd/MM/yyyy', { locale: ptBR })}) - {sprint.status}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
