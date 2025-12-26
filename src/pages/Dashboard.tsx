@@ -5,7 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { Checkbox } from '@/components/ui/checkbox';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { CheckCircle2, Circle, Clock, Star, Users, Filter, FileSpreadsheet, CalendarIcon } from 'lucide-react';
 import { useSprints } from '@/hooks/useSprints';
 import { useSprintTarefas } from '@/hooks/useSprintTarefas';
@@ -25,7 +26,7 @@ const Dashboard = () => {
   const { backlog } = useBacklog();
   const { tiposProdutoAtivos } = useTipoProduto();
   
-  const [selectedSprint, setSelectedSprint] = useState<string>('');
+  const [selectedSprints, setSelectedSprints] = useState<string[]>([]);
   const [selectedTipoProduto, setSelectedTipoProduto] = useState<string>('all');
   const [selectedSituacao, setSelectedSituacao] = useState<string>('all');
   const [dateFilterStart, setDateFilterStart] = useState<Date | undefined>();
@@ -78,16 +79,35 @@ const Dashboard = () => {
   // Selecionar automaticamente a sprint ativa ao carregar
   useEffect(() => {
     const activeSprint = filteredSprints.find(s => s.status === 'ativo');
-    if (activeSprint && !selectedSprint) {
-      setSelectedSprint(activeSprint.id);
-    } else if (filteredSprints.length > 0 && !filteredSprints.find(s => s.id === selectedSprint)) {
-      // Se a sprint selecionada não está mais nos filtrados, limpar seleção
-      setSelectedSprint('');
+    if (activeSprint && selectedSprints.length === 0) {
+      setSelectedSprints([activeSprint.id]);
+    } else if (filteredSprints.length > 0) {
+      // Remover sprints que não estão mais nos filtrados
+      const validSprints = selectedSprints.filter(id => filteredSprints.some(s => s.id === id));
+      if (validSprints.length !== selectedSprints.length) {
+        setSelectedSprints(validSprints);
+      }
     }
   }, [filteredSprints]);
 
+  const toggleSprintSelection = (sprintId: string) => {
+    setSelectedSprints(prev => 
+      prev.includes(sprintId) 
+        ? prev.filter(id => id !== sprintId)
+        : [...prev, sprintId]
+    );
+  };
+
+  const selectAllSprints = () => {
+    setSelectedSprints(filteredSprints.map(s => s.id));
+  };
+
+  const clearSprintSelection = () => {
+    setSelectedSprints([]);
+  };
+
   useEffect(() => {
-    if (!selectedSprint) {
+    if (selectedSprints.length === 0) {
       setMetrics({ total: 0, todo: 0, doing: 0, done: 0, validated: 0, totalSP: 0 });
       setBurndownData([]);
       setResponsibleStats([]);
@@ -95,19 +115,15 @@ const Dashboard = () => {
       return;
     }
 
-    const sprint = sprints.find(s => s.id === selectedSprint);
+    // Processar dados para todas as sprints selecionadas
+    const selectedSprintsData = sprints.filter(s => selectedSprints.includes(s.id));
     
-    if (sprint) {
-      // Calcular burndown
-      const startDate = new Date(sprint.data_inicio);
-      const endDate = new Date(sprint.data_fim);
-      const totalDays = differenceInDays(endDate, startDate) + 1;
-      
-      // Tarefas da sprint selecionada
-      const sprintTasks = sprintTarefas.filter(t => t.sprint_id === sprint.id);
+    if (selectedSprintsData.length > 0) {
+      // Tarefas de todas as sprints selecionadas
+      const allSprintTasks = sprintTarefas.filter(t => selectedSprints.includes(t.sprint_id));
       
       // Filtrar por tipo de produto se selecionado
-      const filteredSprintTasks = sprintTasks.filter(t => {
+      const filteredSprintTasks = allSprintTasks.filter(t => {
         if (selectedTipoProduto === 'all') return true;
         const task = backlog.find(b => b.id === t.backlog_id);
         return task?.tipo_produto === selectedTipoProduto;
@@ -120,7 +136,7 @@ const Dashboard = () => {
       
       setTotalSprintSP(sprintSP);
 
-      // Métricas da sprint selecionada (filtrada por tipo de produto)
+      // Métricas combinadas de todas as sprints selecionadas
       const sprintBacklogIds = filteredSprintTasks.map(t => t.backlog_id);
       const sprintBacklogItems = backlog.filter(b => sprintBacklogIds.includes(b.id));
       
@@ -132,41 +148,49 @@ const Dashboard = () => {
 
       setMetrics({ total, todo, doing, done, validated, totalSP: sprintSP });
 
-      // Gerar dados do burndown
-      const burndown = [];
-      for (let i = 0; i <= totalDays; i++) {
-        const currentDate = new Date(startDate);
-        currentDate.setDate(startDate.getDate() + i);
-        
-        const idealizado = sprintSP - (sprintSP / totalDays) * i;
-        
-        // Calcular pontos completados até esta data (excluindo validados)
-        const completedTasks = filteredSprintTasks.filter(t => {
-          const backlogTask = backlog.find(b => b.id === t.backlog_id);
-          return backlogTask && backlogTask.status === 'validated';
-        });
-        const completedSP = completedTasks.reduce((sum, t) => {
-          const task = backlog.find(b => b.id === t.backlog_id);
-          return sum + (task?.story_points || 0);
-        }, 0);
-        const real = sprintSP - completedSP;
+      // Gerar dados do burndown (apenas se 1 sprint selecionada)
+      if (selectedSprintsData.length === 1) {
+        const sprint = selectedSprintsData[0];
+        const startDate = new Date(sprint.data_inicio);
+        const endDate = new Date(sprint.data_fim);
+        const totalDays = differenceInDays(endDate, startDate) + 1;
 
-        burndown.push({
-          dia: format(currentDate, 'dd/MM', { locale: ptBR }),
-          idealizado: Math.max(0, Math.round(idealizado)),
-          real: Math.max(0, Math.round(real))
-        });
+        const burndown = [];
+        for (let i = 0; i <= totalDays; i++) {
+          const currentDate = new Date(startDate);
+          currentDate.setDate(startDate.getDate() + i);
+          
+          const idealizado = sprintSP - (sprintSP / totalDays) * i;
+          
+          const completedTasks = filteredSprintTasks.filter(t => {
+            const backlogTask = backlog.find(b => b.id === t.backlog_id);
+            return backlogTask && backlogTask.status === 'validated';
+          });
+          const completedSP = completedTasks.reduce((sum, t) => {
+            const task = backlog.find(b => b.id === t.backlog_id);
+            return sum + (task?.story_points || 0);
+          }, 0);
+          const real = sprintSP - completedSP;
+
+          burndown.push({
+            dia: format(currentDate, 'dd/MM', { locale: ptBR }),
+            idealizado: Math.max(0, Math.round(idealizado)),
+            real: Math.max(0, Math.round(real))
+          });
+        }
+        
+        setBurndownData(burndown);
+      } else {
+        // Para múltiplas sprints, não mostrar burndown
+        setBurndownData([]);
       }
-      
-      setBurndownData(burndown);
 
-      // Estatísticas por responsável (filtradas por tipo de produto)
+      // Estatísticas por responsável (agrupadas de todas as sprints selecionadas)
       const responsibleMap = new Map();
       
       filteredSprintTasks.forEach(t => {
         const responsible = t.responsavel || 'Não atribuído';
         
-        // Buscar o status real da tarefa no backlog
         const backlogTask = backlog.find(b => b.id === t.backlog_id);
         if (!backlogTask) return;
         
@@ -186,16 +210,16 @@ const Dashboard = () => {
 
       setResponsibleStats(Array.from(responsibleMap.values()));
     }
-  }, [backlog, sprints, sprintTarefas, selectedSprint, selectedTipoProduto]);
+  }, [backlog, sprints, sprintTarefas, selectedSprints, selectedTipoProduto]);
 
   const exportToExcel = () => {
-    if (!selectedSprint || responsibleStats.length === 0) return;
+    if (selectedSprints.length === 0 || responsibleStats.length === 0) return;
 
-    const sprint = sprints.find(s => s.id === selectedSprint);
-    if (!sprint) return;
+    const selectedSprintsData = sprints.filter(s => selectedSprints.includes(s.id));
+    const sprintNames = selectedSprintsData.map(s => s.nome).join(', ');
 
     const headers = [
-      'Sprint',
+      'Sprint(s)',
       'Responsável',
       'Qtd Total Atividades',
       'Qtd A Fazer',
@@ -214,7 +238,7 @@ const Dashboard = () => {
       const pctDoneValidated = total > 0 ? (((stat.done + stat.validated) / total) * 100).toFixed(1) : '0.0';
 
       return [
-        sprint.nome,
+        sprintNames,
         stat.name,
         total,
         stat.todo,
@@ -232,7 +256,11 @@ const Dashboard = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Dashboard');
     
-    XLSX.writeFile(workbook, `dashboard_${sprint.nome.replace(/\s+/g, '_')}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+    const fileName = selectedSprints.length === 1 
+      ? `dashboard_${selectedSprintsData[0].nome.replace(/\s+/g, '_')}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`
+      : `dashboard_multiplas_sprints_${format(new Date(), 'yyyy-MM-dd')}.xlsx`;
+    
+    XLSX.writeFile(workbook, fileName);
   };
 
   return (
@@ -253,7 +281,7 @@ const Dashboard = () => {
               variant="outline"
               size="sm"
               onClick={exportToExcel}
-              disabled={!selectedSprint || responsibleStats.length === 0}
+              disabled={selectedSprints.length === 0 || responsibleStats.length === 0}
             >
               <FileSpreadsheet className="h-4 w-4 mr-2" />
               Exportar Excel
@@ -350,23 +378,54 @@ const Dashboard = () => {
                 )}
               </div>
               <div>
-                <label className="text-sm font-medium">Sprint *</label>
-                <Select value={selectedSprint} onValueChange={setSelectedSprint}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma sprint" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filteredSprints.map((sprint) => {
-                      const dataInicio = toZonedTime(parseISO(sprint.data_inicio), TIMEZONE);
-                      const dataFim = toZonedTime(parseISO(sprint.data_fim), TIMEZONE);
-                      return (
-                        <SelectItem key={sprint.id} value={sprint.id}>
-                          {sprint.nome} ({format(dataInicio, 'dd/MM/yyyy', { locale: ptBR })} - {format(dataFim, 'dd/MM/yyyy', { locale: ptBR })}) - {sprint.status}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
+                <label className="text-sm font-medium">Sprint(s) *</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      {selectedSprints.length === 0 
+                        ? "Selecione sprint(s)" 
+                        : selectedSprints.length === 1
+                          ? sprints.find(s => s.id === selectedSprints[0])?.nome || "1 sprint"
+                          : `${selectedSprints.length} sprints selecionadas`
+                      }
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-0" align="start">
+                    <div className="p-2 border-b flex gap-2">
+                      <Button variant="outline" size="sm" onClick={selectAllSprints} className="flex-1">
+                        Selecionar Todas
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={clearSprintSelection} className="flex-1">
+                        Limpar
+                      </Button>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto p-2 space-y-1">
+                      {filteredSprints.map((sprint) => {
+                        const dataInicio = toZonedTime(parseISO(sprint.data_inicio), TIMEZONE);
+                        const dataFim = toZonedTime(parseISO(sprint.data_fim), TIMEZONE);
+                        const isSelected = selectedSprints.includes(sprint.id);
+                        return (
+                          <div 
+                            key={sprint.id} 
+                            className="flex items-center space-x-2 p-2 hover:bg-muted rounded cursor-pointer"
+                            onClick={() => toggleSprintSelection(sprint.id)}
+                          >
+                            <Checkbox 
+                              checked={isSelected}
+                              onCheckedChange={() => toggleSprintSelection(sprint.id)}
+                            />
+                            <span className="text-sm flex-1">
+                              {sprint.nome} ({format(dataInicio, 'dd/MM/yyyy', { locale: ptBR })} - {format(dataFim, 'dd/MM/yyyy', { locale: ptBR })}) - {sprint.status}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
               <div>
                 <label className="text-sm font-medium">Tipo de Produto</label>
@@ -470,7 +529,10 @@ const Dashboard = () => {
               </ResponsiveContainer>
             ) : (
               <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-                Selecione uma sprint para visualizar o burndown
+                {selectedSprints.length > 1 
+                  ? "Burndown não disponível para múltiplas sprints"
+                  : "Selecione uma sprint para visualizar o burndown"
+                }
               </div>
             )}
           </CardContent>
@@ -534,7 +596,7 @@ const Dashboard = () => {
               </>
             ) : (
               <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-                Selecione uma sprint para visualizar as tarefas por responsável
+                Selecione sprint(s) para visualizar as tarefas por responsável
               </div>
             )}
           </CardContent>
