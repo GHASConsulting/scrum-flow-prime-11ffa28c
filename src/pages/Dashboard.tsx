@@ -46,6 +46,7 @@ const Dashboard = () => {
   });
   const [burndownData, setBurndownData] = useState<any[]>([]);
   const [responsibleStats, setResponsibleStats] = useState<any[]>([]);
+  const [responsibleSortOrder, setResponsibleSortOrder] = useState<string>('name');
   const [totalSprintSP, setTotalSprintSP] = useState<number>(0);
 
   // Filtrar sprints por situação e intervalo de datas, ordenar por nome
@@ -445,12 +446,30 @@ const Dashboard = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Tarefas por Responsável</CardTitle>
-            <Users className="h-5 w-5 text-muted-foreground" />
+            <div className="flex items-center gap-4">
+              <Select value={responsibleSortOrder} onValueChange={setResponsibleSortOrder}>
+                <SelectTrigger className="w-[220px]">
+                  <SelectValue placeholder="Ordenar por" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name">Ordenar por Nome</SelectItem>
+                  <SelectItem value="completed_desc">Concluídas (Decrescente)</SelectItem>
+                  <SelectItem value="completed_asc">Concluídas (Crescente)</SelectItem>
+                </SelectContent>
+              </Select>
+              <Users className="h-5 w-5 text-muted-foreground" />
+            </div>
           </CardHeader>
           <CardContent>
             {responsibleStats.length > 0 ? <>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={responsibleStats}>
+                  <BarChart data={[...responsibleStats].sort((a, b) => {
+                    const totalA = a.done + a.validated;
+                    const totalB = b.done + b.validated;
+                    if (responsibleSortOrder === 'completed_desc') return totalB - totalA;
+                    if (responsibleSortOrder === 'completed_asc') return totalA - totalB;
+                    return a.name.localeCompare(b.name, 'pt-BR');
+                  })}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
@@ -463,7 +482,13 @@ const Dashboard = () => {
                 </ResponsiveContainer>
                 
                 <div className="mt-6 space-y-4">
-                  {responsibleStats.map(stat => {
+                  {[...responsibleStats].sort((a, b) => {
+                    const totalA = a.done + a.validated;
+                    const totalB = b.done + b.validated;
+                    if (responsibleSortOrder === 'completed_desc') return totalB - totalA;
+                    if (responsibleSortOrder === 'completed_asc') return totalA - totalB;
+                    return a.name.localeCompare(b.name, 'pt-BR');
+                  }).map(stat => {
                 const total = stat.todo + stat.doing + stat.done + stat.validated;
                 const conclusao = total > 0 ? Math.round((stat.done + stat.validated) / total * 100) : 0;
                 return <div key={stat.name} className="space-y-2">
