@@ -44,36 +44,38 @@ const Dashboard = () => {
   const [responsibleStats, setResponsibleStats] = useState<any[]>([]);
   const [totalSprintSP, setTotalSprintSP] = useState<number>(0);
 
-  // Filtrar sprints por situação e intervalo de datas
+  // Filtrar sprints por situação e intervalo de datas, ordenar por nome
   const filteredSprints = useMemo(() => {
-    return sprints.filter(sprint => {
-      // Filtro por situação
-      if (selectedSituacao !== 'all' && sprint.status !== selectedSituacao) {
-        return false;
-      }
-      
-      // Filtro por intervalo de datas
-      const sprintStart = startOfDay(toZonedTime(parseISO(sprint.data_inicio), TIMEZONE));
-      const sprintEnd = endOfDay(toZonedTime(parseISO(sprint.data_fim), TIMEZONE));
-      
-      // Se data início do filtro está definida, a sprint deve terminar após ou igual a ela
-      if (dateFilterStart) {
-        const filterStart = startOfDay(dateFilterStart);
-        if (sprintEnd < filterStart) {
+    return sprints
+      .filter(sprint => {
+        // Filtro por situação
+        if (selectedSituacao !== 'all' && sprint.status !== selectedSituacao) {
           return false;
         }
-      }
-      
-      // Se data fim do filtro está definida, a sprint deve começar antes ou igual a ela
-      if (dateFilterEnd) {
-        const filterEnd = endOfDay(dateFilterEnd);
-        if (sprintStart > filterEnd) {
-          return false;
+        
+        // Filtro por intervalo de datas
+        const sprintStart = startOfDay(toZonedTime(parseISO(sprint.data_inicio), TIMEZONE));
+        const sprintEnd = endOfDay(toZonedTime(parseISO(sprint.data_fim), TIMEZONE));
+        
+        // Se data início do filtro está definida, a sprint deve terminar após ou igual a ela
+        if (dateFilterStart) {
+          const filterStart = startOfDay(dateFilterStart);
+          if (sprintEnd < filterStart) {
+            return false;
+          }
         }
-      }
-      
-      return true;
-    });
+        
+        // Se data fim do filtro está definida, a sprint deve começar antes ou igual a ela
+        if (dateFilterEnd) {
+          const filterEnd = endOfDay(dateFilterEnd);
+          if (sprintStart > filterEnd) {
+            return false;
+          }
+        }
+        
+        return true;
+      })
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   }, [sprints, selectedSituacao, dateFilterStart, dateFilterEnd]);
 
   // Selecionar automaticamente a sprint ativa ao carregar
