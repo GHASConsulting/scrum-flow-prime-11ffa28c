@@ -467,9 +467,9 @@ const Dashboard = () => {
                 const total = stat.todo + stat.doing + stat.done + stat.validated;
                 const conclusao = total > 0 ? Math.round((stat.done + stat.validated) / total * 100) : 0;
                 return <div key={stat.name} className="space-y-2">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
                           <span className="font-medium">{stat.name}</span>
-                          <span className="text-sm text-secondary-foreground">
+                          <span className="text-sm text-muted-foreground">
                             {total} tarefas • {conclusao}% conclusão
                           </span>
                         </div>
