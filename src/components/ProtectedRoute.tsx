@@ -10,10 +10,9 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate("/auth");
+      navigate("/auth", { replace: true, state: { from: location } });
     }
-  }, [user, loading, navigate]);
-
+  }, [user, loading, navigate, location]);
   useEffect(() => {
     // Redirecionar para alteração de senha se necessário
     // Não redirecionar se já estiver na página de alteração de senha
@@ -34,8 +33,17 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
+  // Mostra loading enquanto redireciona para evitar 404
   if (!user) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="space-y-4 w-full max-w-md p-4">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-12 w-full" />
+        </div>
+      </div>
+    );
   }
 
   return <>{children}</>;
