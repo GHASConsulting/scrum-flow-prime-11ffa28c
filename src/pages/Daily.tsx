@@ -184,7 +184,7 @@ const DailyPage = () => {
                       <SelectValue placeholder="Selecione uma sprint" />
                     </SelectTrigger>
                     <SelectContent>
-                      {sprints.map((sprint) => (
+                      {sprints.filter(s => s.status === 'ativo').map((sprint) => (
                         <SelectItem key={sprint.id} value={sprint.id}>
                           {sprint.nome}
                         </SelectItem>

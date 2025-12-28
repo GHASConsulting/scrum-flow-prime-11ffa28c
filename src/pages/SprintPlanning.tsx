@@ -1106,7 +1106,7 @@ const SprintPlanning = () => {
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium">Tipo de Produto</label>
+                    <label className="text-sm font-medium">Área</label>
                     <Select 
                       value={newTask.tipo_produto || undefined} 
                       onValueChange={(value) => setNewTask({ ...newTask, tipo_produto: value })}
@@ -1308,7 +1308,7 @@ const SprintPlanning = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium">Tipo de Produto</label>
+                <label className="text-sm font-medium">Área</label>
                 <Select 
                   value={editingTask.tipo_produto || undefined} 
                   onValueChange={(value) => setEditingTask({ ...editingTask, tipo_produto: value })}

@@ -118,7 +118,7 @@ export function AddKRDialog() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="tipo_produto">Tipo de Produto *</Label>
+              <Label htmlFor="tipo_produto">Área *</Label>
               <Select
                 value={formData.tipo_produto}
                 onValueChange={(value: any) => setFormData({ ...formData, tipo_produto: value })}

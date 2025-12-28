@@ -22,7 +22,7 @@ export const useTipoProduto = () => {
         .order('nome');
 
       if (error) {
-        toast.error('Erro ao carregar tipos de produto');
+        toast.error('Erro ao carregar áreas');
         throw error;
       }
 
@@ -40,7 +40,7 @@ export const useTipoProduto = () => {
 
       if (error) {
         if (error.code === '23505') {
-          throw new Error('Já existe um tipo de produto com este nome');
+          throw new Error('Já existe uma área com este nome');
         }
         throw error;
       }
@@ -49,10 +49,10 @@ export const useTipoProduto = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tipos-produto'] });
-      toast.success('Tipo de produto adicionado');
+      toast.success('Área adicionada');
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Erro ao adicionar tipo de produto');
+      toast.error(error.message || 'Erro ao adicionar área');
     }
   });
 
@@ -71,7 +71,7 @@ export const useTipoProduto = () => {
 
       if (error) {
         if (error.code === '23505') {
-          throw new Error('Já existe um tipo de produto com este nome');
+          throw new Error('Já existe uma área com este nome');
         }
         throw error;
       }
@@ -80,10 +80,10 @@ export const useTipoProduto = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tipos-produto'] });
-      toast.success('Tipo de produto atualizado');
+      toast.success('Área atualizada');
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Erro ao atualizar tipo de produto');
+      toast.error(error.message || 'Erro ao atualizar área');
     }
   });
 
@@ -98,10 +98,10 @@ export const useTipoProduto = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tipos-produto'] });
-      toast.success('Tipo de produto removido');
+      toast.success('Área removida');
     },
     onError: () => {
-      toast.error('Erro ao remover tipo de produto');
+      toast.error('Erro ao remover área');
     }
   });
 

@@ -71,10 +71,10 @@ export const RoadmapFilters = ({
       {showTipoFilter && (
         <Select value={tipoFilter} onValueChange={onTipoFilterChange}>
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Tipo de Produto" />
+            <SelectValue placeholder="Área" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="todos">Todos os tipos</SelectItem>
+            <SelectItem value="todos">Todas as áreas</SelectItem>
             <SelectItem value="Produto">Produto</SelectItem>
             <SelectItem value="Projeto GHAS">Projeto GHAS</SelectItem>
             <SelectItem value="Projeto Inovemed">Projeto Inovemed</SelectItem>
