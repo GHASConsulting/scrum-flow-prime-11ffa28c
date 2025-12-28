@@ -87,12 +87,12 @@ const CadastrosSistema = () => {
           <p className="text-muted-foreground mt-1">Gerencie os cadastros utilizados na ferramenta</p>
         </div>
 
-        <Accordion type="single" collapsible defaultValue="tipo-produto" className="space-y-4">
-          <AccordionItem value="tipo-produto" className="border rounded-lg bg-card">
+        <Accordion type="single" collapsible defaultValue="area" className="space-y-4">
+          <AccordionItem value="area" className="border rounded-lg bg-card">
             <AccordionTrigger className="px-6 py-4 hover:no-underline">
               <div className="flex items-center gap-3">
                 <Package className="h-5 w-5 text-primary" />
-                <span className="text-lg font-semibold">Tipo de Produto</span>
+                <span className="text-lg font-semibold">Área</span>
                 <Badge variant="secondary" className="ml-2">
                   {tiposProduto.length} itens
                 </Badge>
@@ -102,7 +102,7 @@ const CadastrosSistema = () => {
               <Card className="border-0 shadow-none">
                 <CardHeader className="px-0 pt-0">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">Lista de Tipos de Produto</CardTitle>
+                    <CardTitle className="text-base">Lista de Áreas</CardTitle>
                     <Button onClick={() => setIsAddDialogOpen(true)} size="sm">
                       <Plus className="h-4 w-4 mr-2" />
                       Adicionar
@@ -113,7 +113,7 @@ const CadastrosSistema = () => {
                   {isLoading ? (
                     <p className="text-muted-foreground">Carregando...</p>
                   ) : tiposProduto.length === 0 ? (
-                    <p className="text-muted-foreground">Nenhum tipo de produto cadastrado</p>
+                    <p className="text-muted-foreground">Nenhuma área cadastrada</p>
                   ) : (
                     <Table>
                       <TableHeader>
@@ -166,7 +166,7 @@ const CadastrosSistema = () => {
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Adicionar Tipo de Produto</DialogTitle>
+              <DialogTitle>Adicionar Área</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
@@ -174,7 +174,7 @@ const CadastrosSistema = () => {
                 <Input
                   value={newNome}
                   onChange={(e) => setNewNome(e.target.value)}
-                  placeholder="Digite o nome do tipo de produto"
+                  placeholder="Digite o nome da área"
                 />
               </div>
             </div>
@@ -191,7 +191,7 @@ const CadastrosSistema = () => {
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Editar Tipo de Produto</DialogTitle>
+              <DialogTitle>Editar Área</DialogTitle>
             </DialogHeader>
             {editingItem && (
               <div className="space-y-4 py-4">
@@ -200,7 +200,7 @@ const CadastrosSistema = () => {
                   <Input
                     value={editingItem.nome}
                     onChange={(e) => setEditingItem({ ...editingItem, nome: e.target.value })}
-                    placeholder="Digite o nome do tipo de produto"
+                    placeholder="Digite o nome da área"
                   />
                 </div>
                 <div className="flex items-center justify-between">

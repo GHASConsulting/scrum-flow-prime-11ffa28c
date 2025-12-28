@@ -337,13 +337,13 @@ const Dashboard = () => {
                 </Popover>
               </div>
               <div>
-                <label className="text-sm font-medium">Tipo de Produto</label>
+                <label className="text-sm font-medium">Área</label>
                 <Select value={selectedTipoProduto} onValueChange={setSelectedTipoProduto}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Todos os tipos" />
+                    <SelectValue placeholder="Todas as áreas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos os tipos</SelectItem>
+                    <SelectItem value="all">Todas as áreas</SelectItem>
                     {tiposProdutoAtivos.map(tipo => <SelectItem key={tipo.id} value={tipo.nome}>
                         {tipo.nome}
                       </SelectItem>)}
