@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,14 +14,17 @@ import { useSprints } from '@/hooks/useSprints';
 import { useSprintTarefas } from '@/hooks/useSprintTarefas';
 import { useProfiles } from '@/hooks/useProfiles';
 import { useTipoProduto } from '@/hooks/useTipoProduto';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, startOfDay, endOfDay } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Plus, Check, Trash2, X, Edit, Copy } from 'lucide-react';
+import { CalendarIcon, Plus, Check, Trash2, X, Edit, Copy, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { statusLabels, formatDate } from '@/lib/formatters';
 import type { BacklogItem, Status } from '@/types/scrum';
 import type { Tables } from '@/integrations/supabase/types';
+
+const TIMEZONE = 'America/Sao_Paulo';
 
 // Função para normalizar data selecionada no calendário, evitando problemas de timezone
 // Define a hora para meio-dia (12:00) para que conversões de timezone não mudem o dia
@@ -45,6 +48,11 @@ const SprintPlanning = () => {
   const [isCreatingTask, setIsCreatingTask] = useState(false);
   const [filtroResponsavel, setFiltroResponsavel] = useState<string>('all');
   const [mostrarApenasSemSprint, setMostrarApenasSemSprint] = useState(false);
+  
+  // Filtros similares ao Dashboard
+  const [selectedSituacao, setSelectedSituacao] = useState<string>('all');
+  const [dateFilterStart, setDateFilterStart] = useState<Date | undefined>();
+  const [dateFilterEnd, setDateFilterEnd] = useState<Date | undefined>();
   const [editingTask, setEditingTask] = useState<BacklogItem | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
@@ -84,6 +92,51 @@ const SprintPlanning = () => {
     data_inicio: undefined as Date | undefined,
     data_fim: undefined as Date | undefined
   });
+
+  // Filtrar sprints por situação e intervalo de datas, ordenar por nome
+  const filteredSprints = useMemo(() => {
+    return sprints.filter(sprint => {
+      // Filtro por situação
+      if (selectedSituacao !== 'all' && sprint.status !== selectedSituacao) {
+        return false;
+      }
+
+      // Filtro por intervalo de datas
+      const sprintStart = startOfDay(toZonedTime(parseISO(sprint.data_inicio), TIMEZONE));
+      const sprintEnd = endOfDay(toZonedTime(parseISO(sprint.data_fim), TIMEZONE));
+
+      // Se data início do filtro está definida, a sprint deve terminar após ou igual a ela
+      if (dateFilterStart) {
+        const filterStart = startOfDay(dateFilterStart);
+        if (sprintEnd < filterStart) {
+          return false;
+        }
+      }
+
+      // Se data fim do filtro está definida, a sprint deve começar antes ou igual a ela
+      if (dateFilterEnd) {
+        const filterEnd = endOfDay(dateFilterEnd);
+        if (sprintStart > filterEnd) {
+          return false;
+        }
+      }
+      return true;
+    }).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  }, [sprints, selectedSituacao, dateFilterStart, dateFilterEnd]);
+
+  // Selecionar automaticamente a sprint ativa ao carregar
+  useEffect(() => {
+    const activeSprint = filteredSprints.find(s => s.status === 'ativo');
+    if (activeSprint && !selectedSprint) {
+      setSelectedSprint(activeSprint.id);
+    } else if (filteredSprints.length > 0 && selectedSprint) {
+      // Verificar se a sprint selecionada ainda está nos filtrados
+      const sprintAindaExiste = filteredSprints.some(s => s.id === selectedSprint);
+      if (!sprintAindaExiste) {
+        setSelectedSprint('');
+      }
+    }
+  }, [filteredSprints]);
 
   const calculateSprintStatus = (dataInicio: string, dataFim: string): 'planejamento' | 'ativo' | 'concluido' => {
     const hoje = new Date();
@@ -561,6 +614,72 @@ const SprintPlanning = () => {
           <p className="text-muted-foreground mt-1">Planeje e organize as sprints do projeto</p>
         </div>
 
+        {/* Card de Filtros */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              Filtros
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <label className="text-sm font-medium">Situação do Sprint</label>
+                <Select value={selectedSituacao} onValueChange={setSelectedSituacao}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todas as situações" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as situações</SelectItem>
+                    <SelectItem value="ativo">Ativo</SelectItem>
+                    <SelectItem value="concluido">Concluído</SelectItem>
+                    <SelectItem value="planejamento">Planejamento</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Data Início</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !dateFilterStart && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateFilterStart ? format(dateFilterStart, "dd/MM/yyyy", { locale: ptBR }) : <span>Selecione</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={dateFilterStart} onSelect={setDateFilterStart} initialFocus className={cn("p-3 pointer-events-auto")} locale={ptBR} />
+                  </PopoverContent>
+                </Popover>
+                {dateFilterStart && (
+                  <Button variant="ghost" size="sm" onClick={() => setDateFilterStart(undefined)} className="mt-1 w-full text-xs">
+                    Limpar
+                  </Button>
+                )}
+              </div>
+              <div>
+                <label className="text-sm font-medium">Data Fim</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !dateFilterEnd && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateFilterEnd ? format(dateFilterEnd, "dd/MM/yyyy", { locale: ptBR }) : <span>Selecione</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={dateFilterEnd} onSelect={setDateFilterEnd} initialFocus className={cn("p-3 pointer-events-auto")} locale={ptBR} />
+                  </PopoverContent>
+                </Popover>
+                {dateFilterEnd && (
+                  <Button variant="ghost" size="sm" onClick={() => setDateFilterEnd(undefined)} className="mt-1 w-full text-xs">
+                    Limpar
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
@@ -576,7 +695,7 @@ const SprintPlanning = () => {
                         <SelectValue placeholder="Selecione uma sprint" />
                       </SelectTrigger>
                       <SelectContent>
-                        {sprints.map(sprint => (
+                        {filteredSprints.map(sprint => (
                           <SelectItem key={sprint.id} value={sprint.id}>
                             {sprint.nome} ({sprint.status === 'ativo' ? 'Ativa' : sprint.status === 'concluido' ? 'Concluída' : 'Planejamento'})
                           </SelectItem>
