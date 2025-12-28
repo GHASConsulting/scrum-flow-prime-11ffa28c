@@ -502,6 +502,81 @@ export type Database = {
           },
         ]
       }
+      risco: {
+        Row: {
+          area_impactada: string
+          comentario_acompanhamento: string | null
+          created_at: string
+          data_identificacao: string
+          data_limite_acao: string | null
+          descricao: string
+          historico: string | null
+          id: string
+          impacto: string
+          impacto_real_ocorrido: string | null
+          licao_aprendida: string | null
+          nivel_risco: string | null
+          origem_risco: string
+          plano_mitigacao: string | null
+          probabilidade: string
+          projeto: string
+          responsavel: string | null
+          risco_ocorreu: boolean | null
+          status_risco: string
+          tipo_risco_cliente: string
+          tipo_risco_ghas: string
+          updated_at: string
+        }
+        Insert: {
+          area_impactada: string
+          comentario_acompanhamento?: string | null
+          created_at?: string
+          data_identificacao?: string
+          data_limite_acao?: string | null
+          descricao: string
+          historico?: string | null
+          id?: string
+          impacto: string
+          impacto_real_ocorrido?: string | null
+          licao_aprendida?: string | null
+          nivel_risco?: string | null
+          origem_risco: string
+          plano_mitigacao?: string | null
+          probabilidade: string
+          projeto: string
+          responsavel?: string | null
+          risco_ocorreu?: boolean | null
+          status_risco?: string
+          tipo_risco_cliente: string
+          tipo_risco_ghas: string
+          updated_at?: string
+        }
+        Update: {
+          area_impactada?: string
+          comentario_acompanhamento?: string | null
+          created_at?: string
+          data_identificacao?: string
+          data_limite_acao?: string | null
+          descricao?: string
+          historico?: string | null
+          id?: string
+          impacto?: string
+          impacto_real_ocorrido?: string | null
+          licao_aprendida?: string | null
+          nivel_risco?: string | null
+          origem_risco?: string
+          plano_mitigacao?: string | null
+          probabilidade?: string
+          projeto?: string
+          responsavel?: string | null
+          risco_ocorreu?: boolean | null
+          status_risco?: string
+          tipo_risco_cliente?: string
+          tipo_risco_ghas?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       roadmap: {
         Row: {
           atores: string | null

@@ -9,7 +9,7 @@ import SprintPlanning from "./pages/SprintPlanning";
 import Daily from "./pages/Daily";
 import HistoricoDaily from "./pages/HistoricoDaily";
 import Retrospectiva from "./pages/Retrospectiva";
-import Projetos from "./pages/Projetos";
+import Riscos from "./pages/Riscos";
 import Auth from "./pages/Auth";
 import AlterarSenha from "./pages/AlterarSenha";
 import Administracao from "./pages/Administracao";
@@ -33,7 +33,7 @@ function App() {
           <Route path="/daily" element={<ProtectedRoute><Daily /></ProtectedRoute>} />
           <Route path="/daily/historico" element={<ProtectedRoute><HistoricoDaily /></ProtectedRoute>} />
           <Route path="/retrospectiva" element={<ProtectedRoute><Retrospectiva /></ProtectedRoute>} />
-          <Route path="/projetos" element={<ProtectedRoute><Projetos /></ProtectedRoute>} />
+          <Route path="/riscos" element={<ProtectedRoute><Riscos /></ProtectedRoute>} />
           <Route path="/administracao" element={<ProtectedRoute><Administracao /></ProtectedRoute>} />
           <Route path="/cadastros" element={<ProtectedRoute><CadastrosSistema /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />

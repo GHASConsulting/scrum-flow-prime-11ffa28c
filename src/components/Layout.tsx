@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, ListTodo, Calendar, MessageSquare, RotateCcw, Shield, LogOut, FolderKanban, Settings } from 'lucide-react';
+import { LayoutDashboard, ListTodo, Calendar, MessageSquare, RotateCcw, Shield, LogOut, AlertTriangle, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from './ui/button';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
@@ -41,10 +41,10 @@ const menuStructure: MenuGroup[] = [
     ],
   },
   {
-    name: 'Projetos',
-    icon: FolderKanban,
+    name: 'Riscos',
+    icon: AlertTriangle,
     items: [
-      { name: 'Projetos', href: '/projetos', icon: FolderKanban },
+      { name: 'Riscos', href: '/riscos', icon: AlertTriangle },
     ],
   },
   {
@@ -70,7 +70,7 @@ const menuStructure: MenuGroup[] = [
 const getActiveGroup = (pathname: string): string => {
   if (pathname === '/') return 'Dashboard';
   if (pathname.startsWith('/backlog') || pathname.startsWith('/daily') || pathname.startsWith('/retrospectiva')) return 'SCRUM';
-  if (pathname.startsWith('/projetos')) return 'Projetos';
+  if (pathname.startsWith('/riscos')) return 'Riscos';
   if (pathname.startsWith('/cadastros')) return 'Cadastros';
   if (pathname.startsWith('/administracao') || pathname.startsWith('/sprint-planning')) return 'Administração';
   return '';
