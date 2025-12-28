@@ -6,13 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
-import { CheckCircle2, Circle, Clock, Star, Users, Filter, FileSpreadsheet, CalendarIcon } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { CheckCircle2, Circle, Clock, Star, Users, Filter, FileSpreadsheet, CalendarIcon, TableProperties } from 'lucide-react';
 import { useSprints } from '@/hooks/useSprints';
 import { useSprintTarefas } from '@/hooks/useSprintTarefas';
 import { useBacklog } from '@/hooks/useBacklog';
 import { useTipoProduto } from '@/hooks/useTipoProduto';
-import { format, differenceInDays, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
+import { format, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -44,7 +44,6 @@ const Dashboard = () => {
     validated: 0,
     totalSP: 0
   });
-  const [burndownData, setBurndownData] = useState<any[]>([]);
   const [responsibleStats, setResponsibleStats] = useState<any[]>([]);
   const [responsibleSortOrder, setResponsibleSortOrder] = useState<string>('name');
   const [totalSprintSP, setTotalSprintSP] = useState<number>(0);
@@ -112,7 +111,6 @@ const Dashboard = () => {
         validated: 0,
         totalSP: 0
       });
-      setBurndownData([]);
       setResponsibleStats([]);
       setTotalSprintSP(0);
       return;
@@ -152,40 +150,6 @@ const Dashboard = () => {
         validated,
         totalSP: sprintSP
       });
-
-      // Gerar dados do burndown (apenas se 1 sprint selecionada)
-      if (selectedSprintsData.length === 1) {
-        const sprint = selectedSprintsData[0];
-        const startDate = new Date(sprint.data_inicio);
-        const endDate = new Date(sprint.data_fim);
-        const totalDays = differenceInDays(endDate, startDate) + 1;
-        const burndown = [];
-        for (let i = 0; i <= totalDays; i++) {
-          const currentDate = new Date(startDate);
-          currentDate.setDate(startDate.getDate() + i);
-          const idealizado = sprintSP - sprintSP / totalDays * i;
-          const completedTasks = filteredSprintTasks.filter(t => {
-            const backlogTask = backlog.find(b => b.id === t.backlog_id);
-            return backlogTask && backlogTask.status === 'validated';
-          });
-          const completedSP = completedTasks.reduce((sum, t) => {
-            const task = backlog.find(b => b.id === t.backlog_id);
-            return sum + (task?.story_points || 0);
-          }, 0);
-          const real = sprintSP - completedSP;
-          burndown.push({
-            dia: format(currentDate, 'dd/MM', {
-              locale: ptBR
-            }),
-            idealizado: Math.max(0, Math.round(idealizado)),
-            real: Math.max(0, Math.round(real))
-          });
-        }
-        setBurndownData(burndown);
-      } else {
-        // Para múltiplas sprints, não mostrar burndown
-        setBurndownData([]);
-      }
 
       // Estatísticas por responsável (agrupadas de todas as sprints selecionadas)
       const responsibleMap = new Map();
@@ -416,30 +380,83 @@ const Dashboard = () => {
         </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Burndown Chart</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <TableProperties className="h-5 w-5" />
+              Indicador Global dos Sprints
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            {burndownData.length > 0 ? <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={burndownData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="dia" label={{
-                value: 'Período da Sprint',
-                position: 'insideBottom',
-                offset: -5
-              }} />
-                  <YAxis label={{
-                value: 'Story Points',
-                angle: -90,
-                position: 'insideLeft'
-              }} domain={[0, totalSprintSP]} />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="idealizado" stroke="hsl(var(--muted-foreground))" strokeDasharray="5 5" name="Idealizado" />
-                  <Line type="monotone" dataKey="real" stroke="hsl(var(--primary))" strokeWidth={2} name="Real" />
-                </LineChart>
-              </ResponsiveContainer> : <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-                {selectedSprints.length > 1 ? "Burndown não disponível para múltiplas sprints" : "Selecione uma sprint para visualizar o burndown"}
-              </div>}
+            {responsibleStats.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="text-left p-3 font-semibold">Responsável</th>
+                      <th className="text-right p-3 font-semibold">Qtd Total</th>
+                      <th className="text-right p-3 font-semibold">Qtd A Fazer</th>
+                      <th className="text-right p-3 font-semibold">Qtd Fazendo</th>
+                      <th className="text-right p-3 font-semibold">Qtd Feito</th>
+                      <th className="text-right p-3 font-semibold">Qtd Validado</th>
+                      <th className="text-right p-3 font-semibold">% A Fazer</th>
+                      <th className="text-right p-3 font-semibold">% Fazendo</th>
+                      <th className="text-right p-3 font-semibold">% Feito + Validado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...responsibleStats].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map((stat, index) => {
+                      const total = stat.todo + stat.doing + stat.done + stat.validated;
+                      const pctTodo = total > 0 ? (stat.todo / total * 100).toFixed(1) : '0.0';
+                      const pctDoing = total > 0 ? (stat.doing / total * 100).toFixed(1) : '0.0';
+                      const pctDoneValidated = total > 0 ? ((stat.done + stat.validated) / total * 100).toFixed(1) : '0.0';
+                      return (
+                        <tr key={stat.name} className={index % 2 === 0 ? 'bg-background' : 'bg-muted/30'}>
+                          <td className="p-3 font-medium">{stat.name}</td>
+                          <td className="text-right p-3">{total}</td>
+                          <td className="text-right p-3">{stat.todo}</td>
+                          <td className="text-right p-3">{stat.doing}</td>
+                          <td className="text-right p-3">{stat.done}</td>
+                          <td className="text-right p-3">{stat.validated}</td>
+                          <td className="text-right p-3">{pctTodo}%</td>
+                          <td className="text-right p-3">{pctDoing}%</td>
+                          <td className="text-right p-3">{pctDoneValidated}%</td>
+                        </tr>
+                      );
+                    })}
+                    {/* Linha Totalizadora */}
+                    {(() => {
+                      const totals = responsibleStats.reduce((acc, stat) => ({
+                        todo: acc.todo + stat.todo,
+                        doing: acc.doing + stat.doing,
+                        done: acc.done + stat.done,
+                        validated: acc.validated + stat.validated
+                      }), { todo: 0, doing: 0, done: 0, validated: 0 });
+                      const grandTotal = totals.todo + totals.doing + totals.done + totals.validated;
+                      const pctTodo = grandTotal > 0 ? (totals.todo / grandTotal * 100).toFixed(0) : '0';
+                      const pctDoing = grandTotal > 0 ? (totals.doing / grandTotal * 100).toFixed(0) : '0';
+                      const pctDoneValidated = grandTotal > 0 ? ((totals.done + totals.validated) / grandTotal * 100).toFixed(0) : '0';
+                      return (
+                        <tr className="border-t-2 border-foreground bg-muted font-bold">
+                          <td className="p-3">TOTAL</td>
+                          <td className="text-right p-3">{grandTotal}</td>
+                          <td className="text-right p-3">{totals.todo}</td>
+                          <td className="text-right p-3">{totals.doing}</td>
+                          <td className="text-right p-3">{totals.done}</td>
+                          <td className="text-right p-3">{totals.validated}</td>
+                          <td className="text-right p-3">{pctTodo}%</td>
+                          <td className="text-right p-3">{pctDoing}%</td>
+                          <td className="text-right p-3">{pctDoneValidated}%</td>
+                        </tr>
+                      );
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-[200px] text-muted-foreground">
+                Selecione sprint(s) para visualizar os indicadores globais
+              </div>
+            )}
           </CardContent>
         </Card>
 
