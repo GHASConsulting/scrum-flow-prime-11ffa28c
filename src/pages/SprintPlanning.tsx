@@ -50,6 +50,12 @@ const SprintPlanning = () => {
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
   const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false);
   const [duplicateResponsavel, setDuplicateResponsavel] = useState<string>('');
+  const [isDuplicateSprintDialogOpen, setIsDuplicateSprintDialogOpen] = useState(false);
+  const [duplicateSprintData, setDuplicateSprintData] = useState({
+    nome: '',
+    data_inicio: undefined as Date | undefined,
+    data_fim: undefined as Date | undefined
+  });
   
   const [newTask, setNewTask] = useState<{
     titulo: string;
@@ -438,6 +444,69 @@ const SprintPlanning = () => {
     }
   };
 
+  const handleDuplicateSprint = async () => {
+    if (!selectedSprintData) return;
+
+    if (!duplicateSprintData.nome.trim()) {
+      toast.error('O nome da sprint é obrigatório');
+      return;
+    }
+
+    if (!duplicateSprintData.data_inicio || !duplicateSprintData.data_fim) {
+      toast.error('Preencha as datas de início e fim');
+      return;
+    }
+
+    if (duplicateSprintData.data_fim < duplicateSprintData.data_inicio) {
+      toast.error('Data de fim deve ser posterior à data de início');
+      return;
+    }
+
+    try {
+      const dataInicioFormatted = format(duplicateSprintData.data_inicio, 'yyyy-MM-dd');
+      const dataFimFormatted = format(duplicateSprintData.data_fim, 'yyyy-MM-dd');
+      const status = calculateSprintStatus(dataInicioFormatted, dataFimFormatted);
+
+      // Criar a nova sprint
+      const newSprintCreated = await addSprint({
+        nome: duplicateSprintData.nome.trim(),
+        data_inicio: dataInicioFormatted,
+        data_fim: dataFimFormatted,
+        status
+      });
+
+      // Duplicar todas as tarefas da sprint original para a nova sprint
+      const tarefasDaSprintOriginal = sprintTarefas.filter(st => st.sprint_id === selectedSprintData.id);
+      
+      for (const tarefa of tarefasDaSprintOriginal) {
+        await addTarefaToSprint({
+          sprint_id: newSprintCreated.id,
+          backlog_id: tarefa.backlog_id,
+          responsavel: tarefa.responsavel,
+          status: 'todo'
+        });
+      }
+
+      setSelectedSprint(newSprintCreated.id);
+      setIsDuplicateSprintDialogOpen(false);
+      setDuplicateSprintData({ nome: '', data_inicio: undefined, data_fim: undefined });
+      toast.success(`Sprint duplicada com ${tarefasDaSprintOriginal.length} tarefa(s)`);
+    } catch (error) {
+      toast.error('Erro ao duplicar sprint');
+    }
+  };
+
+  const openDuplicateSprintDialog = () => {
+    if (!selectedSprintData) return;
+    
+    setDuplicateSprintData({
+      nome: `${selectedSprintData.nome} (cópia)`,
+      data_inicio: undefined,
+      data_fim: undefined
+    });
+    setIsDuplicateSprintDialogOpen(true);
+  };
+
   const getAvailableBacklog = () => {
     // Mostra sempre todas as tarefas, exceto as validadas
     let filteredBacklog = backlog.filter(b => b.status !== 'validated');
@@ -570,9 +639,20 @@ const SprintPlanning = () => {
                                 variant="outline"
                                 className="w-full"
                               >
+                                <Edit className="h-4 w-4 mr-2" />
                                 Editar Sprint
                               </Button>
                             )}
+
+                            <Button 
+                              onClick={openDuplicateSprintDialog}
+                              size="sm"
+                              variant="outline"
+                              className="w-full"
+                            >
+                              <Copy className="h-4 w-4 mr-2" />
+                              Duplicar Sprint
+                            </Button>
 
                             {sprintTarefas.filter(st => st.sprint_id === selectedSprintData.id).length === 0 && (
                               <Button 
@@ -1188,6 +1268,88 @@ const SprintPlanning = () => {
                 onClick={() => {
                   setIsDuplicateDialogOpen(false);
                   setDuplicateResponsavel('');
+                }}
+                variant="outline"
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Duplicação de Sprint */}
+      <Dialog open={isDuplicateSprintDialogOpen} onOpenChange={setIsDuplicateSprintDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Duplicar Sprint</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Todas as tarefas da sprint serão duplicadas para a nova sprint.
+            </p>
+
+            <div>
+              <label className="text-sm font-medium">Nome da Sprint *</label>
+              <Input
+                value={duplicateSprintData.nome}
+                onChange={(e) => setDuplicateSprintData({ ...duplicateSprintData, nome: e.target.value })}
+                placeholder="Nome da nova sprint"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium block mb-2">Data de Início *</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !duplicateSprintData.data_inicio && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {duplicateSprintData.data_inicio ? format(duplicateSprintData.data_inicio, 'dd/MM/yyyy', { locale: ptBR }) : 'Selecione a data'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={duplicateSprintData.data_inicio}
+                    onSelect={(date) => setDuplicateSprintData({ ...duplicateSprintData, data_inicio: normalizeDate(date) })}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium block mb-2">Data de Fim *</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !duplicateSprintData.data_fim && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {duplicateSprintData.data_fim ? format(duplicateSprintData.data_fim, 'dd/MM/yyyy', { locale: ptBR }) : 'Selecione a data'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={duplicateSprintData.data_fim}
+                    onSelect={(date) => setDuplicateSprintData({ ...duplicateSprintData, data_fim: normalizeDate(date) })}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button onClick={handleDuplicateSprint} className="flex-1">
+                Duplicar Sprint
+              </Button>
+              <Button
+                onClick={() => {
+                  setIsDuplicateSprintDialogOpen(false);
+                  setDuplicateSprintData({ nome: '', data_inicio: undefined, data_fim: undefined });
                 }}
                 variant="outline"
                 className="flex-1"
