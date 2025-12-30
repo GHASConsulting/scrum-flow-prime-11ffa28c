@@ -142,11 +142,18 @@ export default function Administracao() {
   const handleDelete = async (userId: string) => {
     if (!confirm("Deseja realmente excluir este usuário?")) return;
 
-    const { error } = await supabase.auth.admin.deleteUser(userId);
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId },
+      });
 
-    if (error) {
-      toast.error("Erro ao excluir usuário");
-      return;
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast.success("Usuário excluído com sucesso!");
+      fetchUsers();
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao excluir usuário");
     }
 
     toast.success("Usuário excluído com sucesso!");
