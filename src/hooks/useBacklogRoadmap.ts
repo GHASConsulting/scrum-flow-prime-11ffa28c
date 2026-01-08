@@ -19,6 +19,7 @@ export interface BacklogRoadmapItem {
   // Dados da sprint (se vinculado)
   sprint_tarefa_id: string | null;
   sprint_id: string | null;
+  sprint_nome: string | null;
   sprint_data_inicio: string | null;
   sprint_data_fim: string | null;
   sprint_status: string | null; // status da sprint (planejada, ativa, concluida)
@@ -129,6 +130,7 @@ export const useBacklogRoadmap = () => {
           responsavel,
           status,
           sprint:sprint_id (
+            nome,
             data_inicio,
             data_fim,
             status
@@ -172,6 +174,7 @@ export const useBacklogRoadmap = () => {
         let sprintDataFim: string | null = null;
         let sprintTarefaId: string | null = null;
         let sprintId: string | null = null;
+        let sprintNome: string | null = null;
         let sprintStatus: string | null = null;
 
         if (sprintTarefasDoBacklog.length > 0) {
@@ -182,6 +185,7 @@ export const useBacklogRoadmap = () => {
               fim: new Date(st.sprint.data_fim).getTime(),
               id: st.id,
               sprintId: st.sprint_id,
+              sprintNome: st.sprint.nome,
               sprintStatus: st.sprint.status,
             }));
           
@@ -197,11 +201,13 @@ export const useBacklogRoadmap = () => {
             sprintDataFim = new Date(ultimaData.fim).toISOString();
             sprintTarefaId = sprintSelecionada.id;
             sprintId = sprintSelecionada.sprintId;
+            sprintNome = sprintSelecionada.sprintNome;
             sprintStatus = sprintSelecionada.sprintStatus;
             
             // Se há sprint ativa, usar o status dela
             if (sprintAtiva) {
               sprintStatus = 'ativa';
+              sprintNome = sprintAtiva.sprintNome;
             }
           }
         }
@@ -240,6 +246,7 @@ export const useBacklogRoadmap = () => {
           updated_at: backlog.updated_at,
           sprint_tarefa_id: sprintTarefaId,
           sprint_id: sprintId,
+          sprint_nome: sprintNome,
           sprint_data_inicio: sprintDataInicio,
           sprint_data_fim: sprintDataFim,
           sprint_status: sprintStatus,
