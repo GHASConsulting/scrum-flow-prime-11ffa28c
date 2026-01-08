@@ -1166,8 +1166,10 @@ const SprintPlanning = () => {
                         type="number"
                         min="1"
                         max="100"
-                        value={newTask.story_points}
+                        value={newTaskSubtarefas.length > 0 ? newTaskSubtarefas.length : newTask.story_points}
                         onChange={(e) => setNewTask({ ...newTask, story_points: parseInt(e.target.value) || 1 })}
+                        readOnly={newTaskSubtarefas.length > 0}
+                        className={newTaskSubtarefas.length > 0 ? 'bg-muted cursor-not-allowed' : ''}
                       />
                     </div>
 
@@ -1247,7 +1249,13 @@ const SprintPlanning = () => {
                   {selectedSprint && (
                     <SubtarefasForm
                       subtarefas={newTaskSubtarefas}
-                      onSubtarefasChange={setNewTaskSubtarefas}
+                      onSubtarefasChange={(subtarefas) => {
+                        setNewTaskSubtarefas(subtarefas);
+                        // Atualizar story_points automaticamente com a quantidade de subtarefas
+                        if (subtarefas.length > 0) {
+                          setNewTask(prev => ({ ...prev, story_points: subtarefas.length }));
+                        }
+                      }}
                       defaultResponsavel={newTask.responsavel}
                     />
                   )}
