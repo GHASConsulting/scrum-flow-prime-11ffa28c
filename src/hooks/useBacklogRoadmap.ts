@@ -46,14 +46,14 @@ const calculateRoadmapStatus = (
   // Zerar horas para comparar apenas datas
   hoje.setHours(0, 0, 0, 0);
   
+  // ENTREGUE - Status do backlog é FEITO ou VALIDADO (independente do status da sprint)
+  if (backlogStatus === 'feito' || backlogStatus === 'validado') {
+    return 'ENTREGUE';
+  }
+  
   // NÃO PLANEJADA - Tarefa fora de sprint
   if (!sprintStatus) {
     return 'NAO_PLANEJADA';
-  }
-  
-  // ENTREGUE - Sprint ativa e status do backlog é FEITO ou VALIDADO
-  if (sprintStatus === 'ativa' && (backlogStatus === 'feito' || backlogStatus === 'validado')) {
-    return 'ENTREGUE';
   }
   
   // EM ATRASO - Verificar se está atrasado
