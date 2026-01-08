@@ -18,6 +18,7 @@ import { useProfiles } from '@/hooks/useProfiles';
 import { useTipoProduto } from '@/hooks/useTipoProduto';
 import { SubtarefasForm, SubtarefaTemp } from '@/components/SubtarefasForm';
 import { SprintTaskListView } from '@/components/SprintTaskListView';
+import { BacklogTaskListView } from '@/components/BacklogTaskListView';
 import { format, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { ptBR } from 'date-fns/locale';
@@ -54,6 +55,7 @@ const SprintPlanning = () => {
   const [filtroResponsavel, setFiltroResponsavel] = useState<string>('all');
   const [mostrarApenasSemSprint, setMostrarApenasSemSprint] = useState(false);
   const [sprintViewMode, setSprintViewMode] = useState<'card' | 'list'>('card');
+  const [backlogViewMode, setBacklogViewMode] = useState<'card' | 'list'>('card');
   
   // Filtros similares ao Dashboard
   const [selectedSituacao, setSelectedSituacao] = useState<string>('all');
@@ -145,12 +147,9 @@ const SprintPlanning = () => {
     }).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   }, [sprints, selectedSituacao, dateFilterStart, dateFilterEnd]);
 
-  // Selecionar automaticamente a sprint ativa ao carregar
+  // Não selecionar sprint automaticamente, apenas verificar se a selecionada ainda existe
   useEffect(() => {
-    const activeSprint = filteredSprints.find(s => s.status === 'ativo');
-    if (activeSprint && !selectedSprint) {
-      setSelectedSprint(activeSprint.id);
-    } else if (filteredSprints.length > 0 && selectedSprint) {
+    if (filteredSprints.length > 0 && selectedSprint) {
       // Verificar se a sprint selecionada ainda está nos filtrados
       const sprintAindaExiste = filteredSprints.some(s => s.id === selectedSprint);
       if (!sprintAindaExiste) {
@@ -1054,7 +1053,19 @@ const SprintPlanning = () => {
         <Card>
             <CardHeader>
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <CardTitle>Tarefas da Sprint ({availableBacklog.length})</CardTitle>
+                <div className="flex items-center gap-4">
+                  <CardTitle>Tarefas da Sprint ({availableBacklog.length})</CardTitle>
+                  {availableBacklog.length > 0 && (
+                    <ToggleGroup type="single" value={backlogViewMode} onValueChange={(value) => value && setBacklogViewMode(value as 'card' | 'list')}>
+                      <ToggleGroupItem value="card" aria-label="Visualização em cards">
+                        <LayoutGrid className="h-4 w-4" />
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="list" aria-label="Visualização em lista">
+                        <List className="h-4 w-4" />
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                  )}
+                </div>
                 <div className="flex gap-2">
                   <Button 
                     onClick={() => {
@@ -1243,74 +1254,86 @@ const SprintPlanning = () => {
               )}
 
               {availableBacklog.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {availableBacklog.map(item => {
-                    const sprintDaTarefa = getSprintDaTarefa(item.id);
-                    const isSelected = selectedTasks.includes(item.id);
-                    return (
-                      <div 
-                        key={item.id} 
-                        className={`p-4 border rounded-lg space-y-3 cursor-pointer hover:border-primary transition-colors ${isSelected ? 'border-primary bg-primary/5' : ''}`}
-                        onClick={() => handleEditTask(item)}
-                      >
-                        <div className="flex items-start gap-2">
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() => handleToggleTaskSelection(item.id)}
-                            onClick={(e) => e.stopPropagation()}
-                            className="mt-1"
-                          />
-                          <div className="flex-1">
-                          <h4 className="font-semibold text-sm">{item.titulo}</h4>
-                            <p className="text-xs text-muted-foreground mt-1">{item.descricao}</p>
+                backlogViewMode === 'list' ? (
+                  <BacklogTaskListView
+                    tarefas={availableBacklog}
+                    selectedTasks={selectedTasks}
+                    onToggleTaskSelection={handleToggleTaskSelection}
+                    onEditTask={handleEditTask}
+                    onAddToSprint={handleAddToSprint}
+                    onDeleteTask={deleteBacklogItem}
+                    getSprintDaTarefa={getSprintDaTarefa}
+                  />
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {availableBacklog.map(item => {
+                      const sprintDaTarefa = getSprintDaTarefa(item.id);
+                      const isSelected = selectedTasks.includes(item.id);
+                      return (
+                        <div 
+                          key={item.id} 
+                          className={`p-4 border rounded-lg space-y-3 cursor-pointer hover:border-primary transition-colors ${isSelected ? 'border-primary bg-primary/5' : ''}`}
+                          onClick={() => handleEditTask(item)}
+                        >
+                          <div className="flex items-start gap-2">
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={() => handleToggleTaskSelection(item.id)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="mt-1"
+                            />
+                            <div className="flex-1">
+                            <h4 className="font-semibold text-sm">{item.titulo}</h4>
+                              <p className="text-xs text-muted-foreground mt-1">{item.descricao}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex gap-2 flex-wrap">
+                            <Badge variant="outline" className="text-xs">SP: {item.story_points}</Badge>
+                            {(item as any).tipo_produto && (
+                              <Badge variant="default" className="text-xs">
+                                {(item as any).tipo_produto}
+                              </Badge>
+                            )}
+                            {sprintDaTarefa ? (
+                              <Badge variant="secondary" className="text-xs">
+                                Sprint: {sprintDaTarefa.nome}
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-xs">Fora do Sprint</Badge>
+                            )}
+                          </div>
+
+                          <p className="text-xs text-muted-foreground">
+                            Responsável: {item.responsavel}
+                          </p>
+
+                          <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                            <Button 
+                              onClick={() => handleAddToSprint(item.id)} 
+                              size="sm" 
+                              className="flex-1"
+                            >
+                              <Plus className="h-3 w-3 mr-1" />
+                              Adicionar à Sprint
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                if (confirm('Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser desfeita.')) {
+                                  deleteBacklogItem(item.id);
+                                }
+                              }}
+                              size="sm"
+                              variant="destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
-                        
-                        <div className="flex gap-2 flex-wrap">
-                          <Badge variant="outline" className="text-xs">SP: {item.story_points}</Badge>
-                          {(item as any).tipo_produto && (
-                            <Badge variant="default" className="text-xs">
-                              {(item as any).tipo_produto}
-                            </Badge>
-                          )}
-                          {sprintDaTarefa ? (
-                            <Badge variant="secondary" className="text-xs">
-                              Sprint: {sprintDaTarefa.nome}
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-xs">Fora do Sprint</Badge>
-                          )}
-                        </div>
-
-                        <p className="text-xs text-muted-foreground">
-                          Responsável: {item.responsavel}
-                        </p>
-
-                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                          <Button 
-                            onClick={() => handleAddToSprint(item.id)} 
-                            size="sm" 
-                            className="flex-1"
-                          >
-                            <Plus className="h-3 w-3 mr-1" />
-                            Adicionar à Sprint
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              if (confirm('Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser desfeita.')) {
-                                deleteBacklogItem(item.id);
-                              }
-                            }}
-                            size="sm"
-                            variant="destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )
               ) : !isCreatingTask && (
                 <p className="text-sm text-muted-foreground text-center py-8">
                   {mostrarApenasSemSprint 
