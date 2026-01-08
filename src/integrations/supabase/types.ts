@@ -57,6 +57,7 @@ export type Database = {
           status: string
           story_points: number
           tipo_produto: string | null
+          tipo_tarefa: string | null
           titulo: string
           updated_at: string
         }
@@ -69,6 +70,7 @@ export type Database = {
           status: string
           story_points: number
           tipo_produto?: string | null
+          tipo_tarefa?: string | null
           titulo: string
           updated_at?: string
         }
@@ -81,6 +83,7 @@ export type Database = {
           status?: string
           story_points?: number
           tipo_produto?: string | null
+          tipo_tarefa?: string | null
           titulo?: string
           updated_at?: string
         }
@@ -904,6 +907,30 @@ export type Database = {
         ]
       }
       tipo_produto: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tipo_tarefa: {
         Row: {
           ativo: boolean
           created_at: string
