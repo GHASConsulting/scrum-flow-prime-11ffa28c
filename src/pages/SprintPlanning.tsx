@@ -1447,6 +1447,7 @@ const SprintPlanning = () => {
               <SubtarefasEditPanel
                 backlogId={editingTask.id}
                 defaultResponsavel={editingTask.responsavel}
+                selectedSprintId={selectedSprint}
               />
 
               <div className="flex gap-2 pt-4">

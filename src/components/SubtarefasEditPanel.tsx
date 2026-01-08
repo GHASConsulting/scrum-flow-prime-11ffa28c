@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,19 +13,20 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useSubtarefas } from '@/hooks/useSubtarefas';
 import { useSprintTarefas } from '@/hooks/useSprintTarefas';
-import type { Tables } from '@/integrations/supabase/types';
 
 interface SubtarefasEditPanelProps {
   backlogId: string;
   defaultResponsavel?: string;
+  selectedSprintId?: string;
 }
 
-export const SubtarefasEditPanel = ({ backlogId, defaultResponsavel = '' }: SubtarefasEditPanelProps) => {
+export const SubtarefasEditPanel = ({ backlogId, defaultResponsavel = '', selectedSprintId }: SubtarefasEditPanelProps) => {
   const { subtarefas, addSubtarefa, updateSubtarefa, deleteSubtarefa } = useSubtarefas();
-  const { sprintTarefas } = useSprintTarefas();
+  const { sprintTarefas, addSprintTarefa } = useSprintTarefas();
   
   const [isOpen, setIsOpen] = useState(true);
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [isAddingToSprint, setIsAddingToSprint] = useState(false);
   const [newSubtarefa, setNewSubtarefa] = useState({
     titulo: '',
     responsavel: defaultResponsavel,
@@ -42,11 +43,6 @@ export const SubtarefasEditPanel = ({ backlogId, defaultResponsavel = '' }: Subt
     : [];
 
   const handleAddSubtarefa = async () => {
-    if (!sprintTarefa) {
-      toast.error('A tarefa precisa estar em uma sprint para adicionar subtarefas');
-      return;
-    }
-
     if (!newSubtarefa.titulo.trim()) {
       toast.error('O título da subtarefa é obrigatório');
       return;
@@ -68,6 +64,30 @@ export const SubtarefasEditPanel = ({ backlogId, defaultResponsavel = '' }: Subt
     }
 
     try {
+      setIsAddingToSprint(true);
+      
+      let targetSprintTarefaId = sprintTarefa?.id;
+
+      // Se a tarefa não está em uma sprint, adicionar à sprint selecionada primeiro
+      if (!targetSprintTarefaId) {
+        if (!selectedSprintId) {
+          toast.error('Selecione uma sprint primeiro no campo "Sprint Selecionada"');
+          setIsAddingToSprint(false);
+          return;
+        }
+
+        // Adicionar tarefa à sprint
+        const newSprintTarefa = await addSprintTarefa({
+          sprint_id: selectedSprintId,
+          backlog_id: backlogId,
+          responsavel: defaultResponsavel || null,
+          status: 'todo'
+        });
+
+        targetSprintTarefaId = newSprintTarefa.id;
+        toast.success('Tarefa adicionada à sprint automaticamente');
+      }
+
       const dataInicio = new Date(newSubtarefa.inicio);
       dataInicio.setHours(0, 0, 0, 0);
       
@@ -75,7 +95,7 @@ export const SubtarefasEditPanel = ({ backlogId, defaultResponsavel = '' }: Subt
       dataFim.setHours(23, 59, 59, 999);
 
       await addSubtarefa({
-        sprint_tarefa_id: sprintTarefa.id,
+        sprint_tarefa_id: targetSprintTarefaId,
         titulo: newSubtarefa.titulo.trim(),
         responsavel: newSubtarefa.responsavel?.trim() || null,
         inicio: dataInicio.toISOString(),
@@ -92,6 +112,8 @@ export const SubtarefasEditPanel = ({ backlogId, defaultResponsavel = '' }: Subt
       setIsAddingNew(false);
     } catch (error) {
       // Error handled in hook
+    } finally {
+      setIsAddingToSprint(false);
     }
   };
 
@@ -112,15 +134,7 @@ export const SubtarefasEditPanel = ({ backlogId, defaultResponsavel = '' }: Subt
     }
   };
 
-  if (!sprintTarefa) {
-    return (
-      <div className="border rounded-lg p-4 bg-muted/50">
-        <p className="text-sm text-muted-foreground text-center">
-          Adicione a tarefa a uma sprint para poder cadastrar subtarefas
-        </p>
-      </div>
-    );
-  }
+  const canAddSubtarefas = !!sprintTarefa || !!selectedSprintId;
 
   return (
     <div className="border rounded-lg p-4 space-y-4">
@@ -169,13 +183,30 @@ export const SubtarefasEditPanel = ({ backlogId, defaultResponsavel = '' }: Subt
             </div>
           )}
 
-          {!isAddingNew ? (
+          {!canAddSubtarefas && (
+            <p className="text-sm text-muted-foreground text-center py-2 bg-muted/50 rounded">
+              Selecione uma sprint no campo "Sprint Selecionada" para adicionar subtarefas
+            </p>
+          )}
+
+          {canAddSubtarefas && !isAddingNew && (
             <Button onClick={() => setIsAddingNew(true)} variant="outline" className="w-full">
               <Plus className="h-4 w-4 mr-2" />
               Adicionar Subtarefa
+              {!sprintTarefa && selectedSprintId && (
+                <span className="ml-1 text-xs text-muted-foreground">(adicionará à sprint)</span>
+              )}
             </Button>
-          ) : (
+          )}
+
+          {isAddingNew && (
             <div className="space-y-3 p-3 border rounded-lg bg-background">
+              {!sprintTarefa && selectedSprintId && (
+                <p className="text-xs text-muted-foreground bg-primary/10 p-2 rounded">
+                  A tarefa será adicionada automaticamente à sprint selecionada
+                </p>
+              )}
+
               <div>
                 <Label>Título *</Label>
                 <Input
@@ -249,8 +280,8 @@ export const SubtarefasEditPanel = ({ backlogId, defaultResponsavel = '' }: Subt
               </div>
 
               <div className="flex gap-2">
-                <Button onClick={handleAddSubtarefa} className="flex-1">
-                  Adicionar
+                <Button onClick={handleAddSubtarefa} className="flex-1" disabled={isAddingToSprint}>
+                  {isAddingToSprint ? 'Adicionando...' : 'Adicionar'}
                 </Button>
                 <Button
                   onClick={() => {
@@ -264,6 +295,7 @@ export const SubtarefasEditPanel = ({ backlogId, defaultResponsavel = '' }: Subt
                   }}
                   variant="outline"
                   className="flex-1"
+                  disabled={isAddingToSprint}
                 >
                   Cancelar
                 </Button>
