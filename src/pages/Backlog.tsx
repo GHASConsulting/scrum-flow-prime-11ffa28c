@@ -205,8 +205,10 @@ const Backlog = () => {
                 <label className="text-sm font-medium">Sprint(s) *</label>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left font-normal">
-                      {selectedSprints.length === 0 ? "Selecione sprint(s)" : selectedSprints.length === 1 ? sprints.find(s => s.id === selectedSprints[0])?.nome || "1 sprint" : `${selectedSprints.length} sprints selecionadas`}
+                    <Button variant="outline" className="w-full justify-start text-left font-normal overflow-hidden">
+                      <span className="truncate">
+                        {selectedSprints.length === 0 ? "Selecione sprint(s)" : selectedSprints.length === 1 ? sprints.find(s => s.id === selectedSprints[0])?.nome || "1 sprint" : `${selectedSprints.length} sprints selecionadas`}
+                      </span>
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-80 p-0" align="start">
