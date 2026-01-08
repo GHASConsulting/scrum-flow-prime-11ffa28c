@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { toZonedTime } from 'date-fns-tz';
+
+const TIMEZONE = 'America/Sao_Paulo';
 
 export type RoadmapTaskStatus = 'EM_SPRINT' | 'NAO_PLANEJADA' | 'EM_PLANEJAMENTO' | 'ENTREGUE' | 'EM_ATRASO';
 
@@ -43,9 +46,10 @@ const calculateRoadmapStatus = (
   subtarefas: { fim: string; status: string | null }[]
 ): RoadmapTaskStatus => {
   // Usar data atual no fuso horário do Brasil (GMT-3)
-  const hoje = new Date();
+  const hojeUtc = new Date();
+  const hojeBrasil = toZonedTime(hojeUtc, TIMEZONE);
   // Zerar horas para comparar apenas datas
-  hoje.setHours(0, 0, 0, 0);
+  hojeBrasil.setHours(0, 0, 0, 0);
   
   // ENTREGUE - Status do backlog é FEITO ou VALIDADO (independente do status da sprint)
   if (backlogStatus === 'feito' || backlogStatus === 'validado') {
@@ -64,31 +68,34 @@ const calculateRoadmapStatus = (
   if (isBacklogNaoConcluido) {
     // Verificar se a data da sprint já passou (considera até 23:59:59 do dia fim)
     if (sprintDataFim) {
-      const dataFimSprint = new Date(sprintDataFim);
-      dataFimSprint.setHours(0, 0, 0, 0);
+      const dataFimSprintBrasil = toZonedTime(new Date(sprintDataFim), TIMEZONE);
+      dataFimSprintBrasil.setHours(0, 0, 0, 0);
       // Adiciona 1 dia para considerar o dia inteiro como válido
-      const diaAposDataFim = new Date(dataFimSprint);
+      const diaAposDataFim = new Date(dataFimSprintBrasil);
       diaAposDataFim.setDate(diaAposDataFim.getDate() + 1);
       
-      if (hoje >= diaAposDataFim) {
+      if (hojeBrasil >= diaAposDataFim) {
         return 'EM_ATRASO';
       }
     }
     
     // Verificar se a maior data fim de uma subtarefa já passou
     if (subtarefas.length > 0) {
-      const datasFim = subtarefas
-        .map(s => new Date(s.fim).getTime())
+      const datasFimBrasil = subtarefas
+        .map(s => {
+          const dataBrasil = toZonedTime(new Date(s.fim), TIMEZONE);
+          dataBrasil.setHours(0, 0, 0, 0);
+          return dataBrasil.getTime();
+        })
         .filter(d => !isNaN(d));
       
-      if (datasFim.length > 0) {
-        const maiorDataFim = new Date(Math.max(...datasFim));
-        maiorDataFim.setHours(0, 0, 0, 0);
+      if (datasFimBrasil.length > 0) {
+        const maiorDataFim = new Date(Math.max(...datasFimBrasil));
         // Adiciona 1 dia para considerar o dia inteiro como válido
         const diaAposMaiorDataFim = new Date(maiorDataFim);
         diaAposMaiorDataFim.setDate(diaAposMaiorDataFim.getDate() + 1);
         
-        if (hoje >= diaAposMaiorDataFim) {
+        if (hojeBrasil >= diaAposMaiorDataFim) {
           return 'EM_ATRASO';
         }
       }
