@@ -2,12 +2,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { getStatusColor, getStatusLabel } from '@/lib/roadmapStatus';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import type { RoadmapTarefa } from '@/hooks/useRoadmapTarefas';
+import type { BacklogRoadmapItem } from '@/hooks/useBacklogRoadmap';
 import { Badge } from '@/components/ui/badge';
 
 interface RoadmapTableProps {
-  items: RoadmapTarefa[];
-  onRowClick?: (item: RoadmapTarefa) => void;
+  items: BacklogRoadmapItem[];
+  onRowClick?: (item: BacklogRoadmapItem) => void;
 }
 
 export const RoadmapTable = ({ items, onRowClick }: RoadmapTableProps) => {
@@ -16,15 +16,37 @@ export const RoadmapTable = ({ items, onRowClick }: RoadmapTableProps) => {
     return format(new Date(date), 'dd/MM/yyyy', { locale: ptBR });
   };
 
-  const getDataInicio = (item: RoadmapTarefa) => {
+  const getDataInicio = (item: BacklogRoadmapItem) => {
+    // Se tem subtarefas, pegar a primeira data de subtarefa
+    if (item.subtarefas.length > 0) {
+      const datasInicio = item.subtarefas
+        .map(s => new Date(s.inicio).getTime())
+        .filter(d => !isNaN(d));
+      
+      if (datasInicio.length > 0) {
+        return formatDate(new Date(Math.min(...datasInicio)).toISOString());
+      }
+    }
+    // Senão, pegar a data de início da sprint
     return formatDate(item.sprint_data_inicio);
   };
 
-  const getDataFim = (item: RoadmapTarefa) => {
+  const getDataFim = (item: BacklogRoadmapItem) => {
+    // Se tem subtarefas, pegar a última data de subtarefa
+    if (item.subtarefas.length > 0) {
+      const datasFim = item.subtarefas
+        .map(s => new Date(s.fim).getTime())
+        .filter(d => !isNaN(d));
+      
+      if (datasFim.length > 0) {
+        return formatDate(new Date(Math.max(...datasFim)).toISOString());
+      }
+    }
+    // Senão, pegar a data de fim da sprint
     return formatDate(item.sprint_data_fim);
   };
 
-  const getSubtarefasStatus = (item: RoadmapTarefa) => {
+  const getSubtarefasStatus = (item: BacklogRoadmapItem) => {
     const total = item.subtarefas.length;
     if (total === 0) return { concluidas: 0, total: 0, status: 'NAO_INICIADO' };
     
@@ -45,7 +67,6 @@ export const RoadmapTable = ({ items, onRowClick }: RoadmapTableProps) => {
             <TableHead className="font-bold">Tarefa</TableHead>
             <TableHead className="font-bold">Responsável</TableHead>
             <TableHead className="font-bold">Story Points</TableHead>
-            <TableHead className="font-bold">Subtarefas</TableHead>
             <TableHead className="font-bold">Data Início</TableHead>
             <TableHead className="font-bold">Data Fim</TableHead>
             <TableHead className="font-bold">Status</TableHead>
@@ -70,15 +91,12 @@ export const RoadmapTable = ({ items, onRowClick }: RoadmapTableProps) => {
                 </TableCell>
                 <TableCell>{item.responsavel || '-'}</TableCell>
                 <TableCell>
-                  <Badge variant="outline">{item.story_points}</Badge>
-                </TableCell>
-                <TableCell>
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">{subtarefasInfo.concluidas}/{subtarefasInfo.total}</span>
+                    <Badge variant="outline">{item.story_points}</Badge>
                     {subtarefasInfo.total > 0 && (
-                      <div className="text-xs text-muted-foreground">
-                        ({Math.round((subtarefasInfo.concluidas / subtarefasInfo.total) * 100)}%)
-                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        ({subtarefasInfo.concluidas}/{subtarefasInfo.total})
+                      </span>
                     )}
                   </div>
                 </TableCell>
@@ -92,7 +110,7 @@ export const RoadmapTable = ({ items, onRowClick }: RoadmapTableProps) => {
           })}
           {items.length === 0 && (
             <TableRow>
-              <TableCell colSpan={7} className="text-center text-muted-foreground">
+              <TableCell colSpan={6} className="text-center text-muted-foreground">
                 Nenhuma tarefa encontrada
               </TableCell>
             </TableRow>

@@ -45,8 +45,6 @@ const menuStructure: MenuGroup[] = [
     icon: Map,
     items: [
       { name: 'Geral', href: '/roadmap', icon: Map },
-      { name: 'Produtos', href: '/roadmap/produtos', icon: Map },
-      { name: 'GHAS', href: '/roadmap/ghas', icon: Map },
     ],
   },
   {
