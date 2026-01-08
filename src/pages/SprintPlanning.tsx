@@ -19,6 +19,7 @@ import { useTipoProduto } from '@/hooks/useTipoProduto';
 import { SubtarefasForm, SubtarefaTemp } from '@/components/SubtarefasForm';
 import { SprintTaskListView } from '@/components/SprintTaskListView';
 import { BacklogTaskListView } from '@/components/BacklogTaskListView';
+import { SubtarefasEditPanel } from '@/components/SubtarefasEditPanel';
 import { format, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { ptBR } from 'date-fns/locale';
@@ -1441,6 +1442,12 @@ const SprintPlanning = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Painel de Subtarefas */}
+              <SubtarefasEditPanel
+                backlogId={editingTask.id}
+                defaultResponsavel={editingTask.responsavel}
+              />
 
               <div className="flex gap-2 pt-4">
                 <Button onClick={handleUpdateTask} className="flex-1">
