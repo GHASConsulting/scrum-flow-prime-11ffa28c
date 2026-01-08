@@ -4,7 +4,7 @@ import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { BacklogRoadmapItem, RoadmapTaskStatus } from '@/hooks/useBacklogRoadmap';
-import { CheckCircle2, Circle, Clock, User, Calendar, FileText, Tag, Layers } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, User, Calendar, FileText, Tag, Layers, Zap } from 'lucide-react';
 
 interface TaskDetailDialogProps {
   item: BacklogRoadmapItem | null;
@@ -139,6 +139,14 @@ export const TaskDetailDialog = ({ item, open, onOpenChange }: TaskDetailDialogP
 
           {/* Informações Gerais */}
           <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Zap className="h-4 w-4" />
+                Sprint
+              </div>
+              <p className="text-sm font-medium">{item.sprint_nome || 'Não vinculada'}</p>
+            </div>
+
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <User className="h-4 w-4" />
