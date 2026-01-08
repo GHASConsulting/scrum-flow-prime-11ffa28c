@@ -8,62 +8,68 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Plus, Edit, Trash2, Package } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, Tag } from 'lucide-react';
 import { useTipoProduto } from '@/hooks/useTipoProduto';
+import { useTipoTarefa } from '@/hooks/useTipoTarefa';
 import { toast } from 'sonner';
 
 const CadastrosSistema = () => {
-  const { tiposProduto, isLoading, addTipoProduto, updateTipoProduto, deleteTipoProduto } = useTipoProduto();
+  const { tiposProduto, isLoading: isLoadingArea, addTipoProduto, updateTipoProduto, deleteTipoProduto } = useTipoProduto();
+  const { tiposTarefa, isLoading: isLoadingTipo, addTipoTarefa, updateTipoTarefa, deleteTipoTarefa } = useTipoTarefa();
   
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [newNome, setNewNome] = useState('');
-  const [editingItem, setEditingItem] = useState<{ id: string; nome: string; ativo: boolean } | null>(null);
+  // Estado para Área
+  const [isAddAreaDialogOpen, setIsAddAreaDialogOpen] = useState(false);
+  const [isEditAreaDialogOpen, setIsEditAreaDialogOpen] = useState(false);
+  const [newAreaNome, setNewAreaNome] = useState('');
+  const [editingArea, setEditingArea] = useState<{ id: string; nome: string; ativo: boolean } | null>(null);
 
-  const handleAdd = async () => {
-    if (!newNome.trim()) {
+  // Estado para Tipo
+  const [isAddTipoDialogOpen, setIsAddTipoDialogOpen] = useState(false);
+  const [isEditTipoDialogOpen, setIsEditTipoDialogOpen] = useState(false);
+  const [newTipoNome, setNewTipoNome] = useState('');
+  const [editingTipo, setEditingTipo] = useState<{ id: string; nome: string; ativo: boolean } | null>(null);
+
+  // Handlers para Área
+  const handleAddArea = async () => {
+    if (!newAreaNome.trim()) {
       toast.error('Nome é obrigatório');
       return;
     }
-
     try {
-      await addTipoProduto(newNome.trim());
-      setNewNome('');
-      setIsAddDialogOpen(false);
+      await addTipoProduto(newAreaNome.trim());
+      setNewAreaNome('');
+      setIsAddAreaDialogOpen(false);
     } catch (error) {
       // Error handled in hook
     }
   };
 
-  const handleEdit = (item: { id: string; nome: string; ativo: boolean }) => {
-    setEditingItem({ ...item });
-    setIsEditDialogOpen(true);
+  const handleEditArea = (item: { id: string; nome: string; ativo: boolean }) => {
+    setEditingArea({ ...item });
+    setIsEditAreaDialogOpen(true);
   };
 
-  const handleUpdate = async () => {
-    if (!editingItem) return;
-
-    if (!editingItem.nome.trim()) {
+  const handleUpdateArea = async () => {
+    if (!editingArea) return;
+    if (!editingArea.nome.trim()) {
       toast.error('Nome é obrigatório');
       return;
     }
-
     try {
       await updateTipoProduto({
-        id: editingItem.id,
-        nome: editingItem.nome.trim(),
-        ativo: editingItem.ativo
+        id: editingArea.id,
+        nome: editingArea.nome.trim(),
+        ativo: editingArea.ativo
       });
-      setIsEditDialogOpen(false);
-      setEditingItem(null);
+      setIsEditAreaDialogOpen(false);
+      setEditingArea(null);
     } catch (error) {
       // Error handled in hook
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDeleteArea = async (id: string) => {
     if (!confirm('Tem certeza que deseja remover este item?')) return;
-
     try {
       await deleteTipoProduto(id);
     } catch (error) {
@@ -71,9 +77,65 @@ const CadastrosSistema = () => {
     }
   };
 
-  const handleToggleAtivo = async (id: string, ativo: boolean) => {
+  const handleToggleAreaAtivo = async (id: string, ativo: boolean) => {
     try {
       await updateTipoProduto({ id, ativo: !ativo });
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+
+  // Handlers para Tipo
+  const handleAddTipo = async () => {
+    if (!newTipoNome.trim()) {
+      toast.error('Nome é obrigatório');
+      return;
+    }
+    try {
+      await addTipoTarefa(newTipoNome.trim());
+      setNewTipoNome('');
+      setIsAddTipoDialogOpen(false);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+
+  const handleEditTipo = (item: { id: string; nome: string; ativo: boolean }) => {
+    setEditingTipo({ ...item });
+    setIsEditTipoDialogOpen(true);
+  };
+
+  const handleUpdateTipo = async () => {
+    if (!editingTipo) return;
+    if (!editingTipo.nome.trim()) {
+      toast.error('Nome é obrigatório');
+      return;
+    }
+    try {
+      await updateTipoTarefa({
+        id: editingTipo.id,
+        nome: editingTipo.nome.trim(),
+        ativo: editingTipo.ativo
+      });
+      setIsEditTipoDialogOpen(false);
+      setEditingTipo(null);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+
+  const handleDeleteTipo = async (id: string) => {
+    if (!confirm('Tem certeza que deseja remover este item?')) return;
+    try {
+      await deleteTipoTarefa(id);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+
+  const handleToggleTipoAtivo = async (id: string, ativo: boolean) => {
+    try {
+      await updateTipoTarefa({ id, ativo: !ativo });
     } catch (error) {
       // Error handled in hook
     }
@@ -88,6 +150,7 @@ const CadastrosSistema = () => {
         </div>
 
         <Accordion type="single" collapsible defaultValue="area" className="space-y-4">
+          {/* Área */}
           <AccordionItem value="area" className="border rounded-lg bg-card">
             <AccordionTrigger className="px-6 py-4 hover:no-underline">
               <div className="flex items-center gap-3">
@@ -103,14 +166,14 @@ const CadastrosSistema = () => {
                 <CardHeader className="px-0 pt-0">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base">Lista de Áreas</CardTitle>
-                    <Button onClick={() => setIsAddDialogOpen(true)} size="sm">
+                    <Button onClick={() => setIsAddAreaDialogOpen(true)} size="sm">
                       <Plus className="h-4 w-4 mr-2" />
                       Adicionar
                     </Button>
                   </div>
                 </CardHeader>
                 <CardContent className="px-0 pb-0">
-                  {isLoading ? (
+                  {isLoadingArea ? (
                     <p className="text-muted-foreground">Carregando...</p>
                   ) : tiposProduto.length === 0 ? (
                     <p className="text-muted-foreground">Nenhuma área cadastrada</p>
@@ -130,7 +193,7 @@ const CadastrosSistema = () => {
                             <TableCell className="text-center">
                               <Switch
                                 checked={item.ativo}
-                                onCheckedChange={() => handleToggleAtivo(item.id, item.ativo)}
+                                onCheckedChange={() => handleToggleAreaAtivo(item.id, item.ativo)}
                               />
                             </TableCell>
                             <TableCell>
@@ -138,14 +201,88 @@ const CadastrosSistema = () => {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => handleEdit(item)}
+                                  onClick={() => handleEditArea(item)}
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => handleDelete(item.id)}
+                                  onClick={() => handleDeleteArea(item.id)}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Tipo */}
+          <AccordionItem value="tipo" className="border rounded-lg bg-card">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline">
+              <div className="flex items-center gap-3">
+                <Tag className="h-5 w-5 text-primary" />
+                <span className="text-lg font-semibold">Tipo</span>
+                <Badge variant="secondary" className="ml-2">
+                  {tiposTarefa.length} itens
+                </Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-4">
+              <Card className="border-0 shadow-none">
+                <CardHeader className="px-0 pt-0">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">Lista de Tipos</CardTitle>
+                    <Button onClick={() => setIsAddTipoDialogOpen(true)} size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="px-0 pb-0">
+                  {isLoadingTipo ? (
+                    <p className="text-muted-foreground">Carregando...</p>
+                  ) : tiposTarefa.length === 0 ? (
+                    <p className="text-muted-foreground">Nenhum tipo cadastrado</p>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nome</TableHead>
+                          <TableHead className="w-[100px] text-center">Ativo</TableHead>
+                          <TableHead className="w-[100px] text-center">Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {tiposTarefa.map((item) => (
+                          <TableRow key={item.id}>
+                            <TableCell className="font-medium">{item.nome}</TableCell>
+                            <TableCell className="text-center">
+                              <Switch
+                                checked={item.ativo}
+                                onCheckedChange={() => handleToggleTipoAtivo(item.id, item.ativo)}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center justify-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleEditTipo(item)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleDeleteTipo(item.id)}
                                 >
                                   <Trash2 className="h-4 w-4 text-destructive" />
                                 </Button>
@@ -162,8 +299,8 @@ const CadastrosSistema = () => {
           </AccordionItem>
         </Accordion>
 
-        {/* Dialog Adicionar */}
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        {/* Dialog Adicionar Área */}
+        <Dialog open={isAddAreaDialogOpen} onOpenChange={setIsAddAreaDialogOpen}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Adicionar Área</DialogTitle>
@@ -172,51 +309,110 @@ const CadastrosSistema = () => {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Nome</label>
                 <Input
-                  value={newNome}
-                  onChange={(e) => setNewNome(e.target.value)}
+                  value={newAreaNome}
+                  onChange={(e) => setNewAreaNome(e.target.value)}
                   placeholder="Digite o nome da área"
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+              <Button variant="outline" onClick={() => setIsAddAreaDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleAdd}>Adicionar</Button>
+              <Button onClick={handleAddArea}>Adicionar</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
-        {/* Dialog Editar */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        {/* Dialog Editar Área */}
+        <Dialog open={isEditAreaDialogOpen} onOpenChange={setIsEditAreaDialogOpen}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Editar Área</DialogTitle>
             </DialogHeader>
-            {editingItem && (
+            {editingArea && (
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Nome</label>
                   <Input
-                    value={editingItem.nome}
-                    onChange={(e) => setEditingItem({ ...editingItem, nome: e.target.value })}
+                    value={editingArea.nome}
+                    onChange={(e) => setEditingArea({ ...editingArea, nome: e.target.value })}
                     placeholder="Digite o nome da área"
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium">Ativo</label>
                   <Switch
-                    checked={editingItem.ativo}
-                    onCheckedChange={(checked) => setEditingItem({ ...editingItem, ativo: checked })}
+                    checked={editingArea.ativo}
+                    onCheckedChange={(checked) => setEditingArea({ ...editingArea, ativo: checked })}
                   />
                 </div>
               </div>
             )}
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <Button variant="outline" onClick={() => setIsEditAreaDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleUpdate}>Salvar</Button>
+              <Button onClick={handleUpdateArea}>Salvar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Adicionar Tipo */}
+        <Dialog open={isAddTipoDialogOpen} onOpenChange={setIsAddTipoDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Adicionar Tipo</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nome</label>
+                <Input
+                  value={newTipoNome}
+                  onChange={(e) => setNewTipoNome(e.target.value)}
+                  placeholder="Digite o nome do tipo"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddTipoDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAddTipo}>Adicionar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Editar Tipo */}
+        <Dialog open={isEditTipoDialogOpen} onOpenChange={setIsEditTipoDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar Tipo</DialogTitle>
+            </DialogHeader>
+            {editingTipo && (
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Nome</label>
+                  <Input
+                    value={editingTipo.nome}
+                    onChange={(e) => setEditingTipo({ ...editingTipo, nome: e.target.value })}
+                    placeholder="Digite o nome do tipo"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Ativo</label>
+                  <Switch
+                    checked={editingTipo.ativo}
+                    onCheckedChange={(checked) => setEditingTipo({ ...editingTipo, ativo: checked })}
+                  />
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditTipoDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleUpdateTipo}>Salvar</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

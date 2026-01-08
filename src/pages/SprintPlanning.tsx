@@ -16,6 +16,7 @@ import { useSprintTarefas } from '@/hooks/useSprintTarefas';
 import { useSubtarefas } from '@/hooks/useSubtarefas';
 import { useProfiles } from '@/hooks/useProfiles';
 import { useTipoProduto } from '@/hooks/useTipoProduto';
+import { useTipoTarefa } from '@/hooks/useTipoTarefa';
 import { SubtarefasForm, SubtarefaTemp } from '@/components/SubtarefasForm';
 import { SprintTaskListView } from '@/components/SprintTaskListView';
 import { BacklogTaskListView } from '@/components/BacklogTaskListView';
@@ -48,6 +49,7 @@ const SprintPlanning = () => {
   const { subtarefas, addSubtarefa } = useSubtarefas();
   const { profiles } = useProfiles();
   const { tiposProdutoAtivos } = useTipoProduto();
+  const { tiposTarefaAtivos } = useTipoTarefa();
   
   const [selectedSprint, setSelectedSprint] = useState<string>('');
   const [isCreatingSprint, setIsCreatingSprint] = useState(false);
@@ -84,13 +86,15 @@ const SprintPlanning = () => {
     prioridade: 'baixa' | 'media' | 'alta';
     responsavel: string;
     tipo_produto?: string;
+    tipo_tarefa?: string;
   }>({
     titulo: '',
     descricao: '',
     story_points: 1,
     prioridade: 'media',
     responsavel: '',
-    tipo_produto: undefined
+    tipo_produto: undefined,
+    tipo_tarefa: undefined
   });
   
   const [newSprint, setNewSprint] = useState({
@@ -341,7 +345,8 @@ const SprintPlanning = () => {
         prioridade: newTask.prioridade,
         responsavel: newTask.responsavel.trim(),
         status: 'todo',
-        ...(newTask.tipo_produto && { tipo_produto: newTask.tipo_produto })
+        ...(newTask.tipo_produto && { tipo_produto: newTask.tipo_produto }),
+        ...(newTask.tipo_tarefa && { tipo_tarefa: newTask.tipo_tarefa })
       } as any);
 
       // Se há sprint selecionada e subtarefas, criar sprint_tarefa e subtarefas
@@ -381,7 +386,8 @@ const SprintPlanning = () => {
         story_points: 1,
         prioridade: 'media',
         responsavel: '',
-        tipo_produto: undefined
+        tipo_produto: undefined,
+        tipo_tarefa: undefined
       });
       setNewTaskSubtarefas([]);
       setIsCreatingTask(false);
@@ -399,7 +405,8 @@ const SprintPlanning = () => {
       prioridade: task.prioridade as 'baixa' | 'media' | 'alta',
       status: task.status as Status,
       responsavel: task.responsavel || '',
-      tipo_produto: (task as any).tipo_produto as string | undefined
+      tipo_produto: (task as any).tipo_produto as string | undefined,
+      tipo_tarefa: (task as any).tipo_tarefa as string | undefined
     });
     setIsEditDialogOpen(true);
   };
@@ -443,6 +450,10 @@ const SprintPlanning = () => {
       
       if (editingTask.tipo_produto) {
         updates.tipo_produto = editingTask.tipo_produto;
+      }
+      
+      if (editingTask.tipo_tarefa) {
+        updates.tipo_tarefa = editingTask.tipo_tarefa;
       }
 
       await updateBacklogItem(editingTask.id, updates);
@@ -1201,10 +1212,29 @@ const SprintPlanning = () => {
                       onValueChange={(value) => setNewTask({ ...newTask, tipo_produto: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo" />
+                        <SelectValue placeholder="Selecione a área" />
                       </SelectTrigger>
                       <SelectContent>
                         {tiposProdutoAtivos.map((tipo) => (
+                          <SelectItem key={tipo.id} value={tipo.nome}>
+                            {tipo.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Tipo</label>
+                    <Select 
+                      value={newTask.tipo_tarefa || undefined} 
+                      onValueChange={(value) => setNewTask({ ...newTask, tipo_tarefa: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {tiposTarefaAtivos.map((tipo) => (
                           <SelectItem key={tipo.id} value={tipo.nome}>
                             {tipo.nome}
                           </SelectItem>
@@ -1241,7 +1271,8 @@ const SprintPlanning = () => {
                           story_points: 1,
                           prioridade: 'media',
                           responsavel: '',
-                          tipo_produto: undefined
+                          tipo_produto: undefined,
+                          tipo_tarefa: undefined
                         });
                         setNewTaskSubtarefas([]);
                       }} 
@@ -1431,7 +1462,7 @@ const SprintPlanning = () => {
                   onValueChange={(value) => setEditingTask({ ...editingTask, tipo_produto: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo" />
+                    <SelectValue placeholder="Selecione a área" />
                   </SelectTrigger>
                   <SelectContent>
                     {tiposProdutoAtivos.map((tipo) => (
@@ -1443,7 +1474,26 @@ const SprintPlanning = () => {
                 </Select>
               </div>
 
-              {/* Painel de Subtarefas */}
+              <div>
+                <label className="text-sm font-medium">Tipo</label>
+                <Select 
+                  value={editingTask.tipo_tarefa || undefined} 
+                  onValueChange={(value) => setEditingTask({ ...editingTask, tipo_tarefa: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tiposTarefaAtivos.map((tipo) => (
+                      <SelectItem key={tipo.id} value={tipo.nome}>
+                        {tipo.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+
               <SubtarefasEditPanel
                 backlogId={editingTask.id}
                 defaultResponsavel={editingTask.responsavel}

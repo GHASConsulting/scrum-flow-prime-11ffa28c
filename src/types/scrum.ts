@@ -9,6 +9,7 @@ export interface BacklogItem {
   status: Status;
   responsavel: string;
   tipo_produto?: string;
+  tipo_tarefa?: string;
 }
 
 export interface Sprint {

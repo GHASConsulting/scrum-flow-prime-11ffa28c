@@ -17,7 +17,6 @@ import CadastrosSistema from "./pages/CadastrosSistema";
 import RoadmapGeral from "./pages/RoadmapGeral";
 import RoadmapProdutos from "./pages/RoadmapProdutos";
 import RoadmapGHAS from "./pages/RoadmapGHAS";
-import RoadmapInovemed from "./pages/RoadmapInovemed";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,7 +40,6 @@ function App() {
           <Route path="/roadmap" element={<ProtectedRoute><RoadmapGeral /></ProtectedRoute>} />
           <Route path="/roadmap/produtos" element={<ProtectedRoute><RoadmapProdutos /></ProtectedRoute>} />
           <Route path="/roadmap/ghas" element={<ProtectedRoute><RoadmapGHAS /></ProtectedRoute>} />
-          <Route path="/roadmap/inovemed" element={<ProtectedRoute><RoadmapInovemed /></ProtectedRoute>} />
           <Route path="/administracao" element={<ProtectedRoute><Administracao /></ProtectedRoute>} />
           <Route path="/cadastros" element={<ProtectedRoute><CadastrosSistema /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
