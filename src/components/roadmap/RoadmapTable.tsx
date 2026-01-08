@@ -1,14 +1,47 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getStatusColor, getStatusLabel } from '@/lib/roadmapStatus';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import type { BacklogRoadmapItem } from '@/hooks/useBacklogRoadmap';
+import type { BacklogRoadmapItem, RoadmapTaskStatus } from '@/hooks/useBacklogRoadmap';
 import { Badge } from '@/components/ui/badge';
 
 interface RoadmapTableProps {
   items: BacklogRoadmapItem[];
   onRowClick?: (item: BacklogRoadmapItem) => void;
 }
+
+const getStatusColor = (status: RoadmapTaskStatus): string => {
+  switch (status) {
+    case 'ENTREGUE':
+      return 'bg-[#B5E3B5]'; // verde claro
+    case 'EM_ATRASO':
+      return 'bg-[#F49B9B]'; // vermelho claro
+    case 'EM_PLANEJAMENTO':
+      return 'bg-[#E5C3A3]'; // marrom claro
+    case 'NAO_PLANEJADA':
+      return 'bg-gray-200'; // cinza claro
+    case 'EM_SPRINT':
+      return 'bg-[#FFF4A3]'; // amarelo claro
+    default:
+      return 'bg-gray-100';
+  }
+};
+
+const getStatusLabel = (status: RoadmapTaskStatus): string => {
+  switch (status) {
+    case 'EM_SPRINT':
+      return 'EM SPRINT';
+    case 'NAO_PLANEJADA':
+      return 'NÃO PLANEJADA';
+    case 'EM_PLANEJAMENTO':
+      return 'EM PLANEJAMENTO';
+    case 'ENTREGUE':
+      return 'ENTREGUE';
+    case 'EM_ATRASO':
+      return 'EM ATRASO';
+    default:
+      return status;
+  }
+};
 
 export const RoadmapTable = ({ items, onRowClick }: RoadmapTableProps) => {
   const formatDate = (date: string | null) => {
@@ -46,17 +79,13 @@ export const RoadmapTable = ({ items, onRowClick }: RoadmapTableProps) => {
     return formatDate(item.sprint_data_fim);
   };
 
-  const getSubtarefasStatus = (item: BacklogRoadmapItem) => {
+  const getSubtarefasCount = (item: BacklogRoadmapItem) => {
     const total = item.subtarefas.length;
-    if (total === 0) return { concluidas: 0, total: 0, status: 'NAO_INICIADO' };
+    if (total === 0) return { concluidas: 0, total: 0 };
     
     const concluidas = item.subtarefas.filter(s => s.status === 'done' || s.status === 'validated').length;
     
-    let status = 'NAO_INICIADO';
-    if (concluidas === total) status = 'DESENVOLVIDO';
-    else if (concluidas > 0) status = 'EM_DESENVOLVIMENTO';
-    
-    return { concluidas, total, status };
+    return { concluidas, total };
   };
 
   return (
@@ -74,11 +103,11 @@ export const RoadmapTable = ({ items, onRowClick }: RoadmapTableProps) => {
         </TableHeader>
         <TableBody>
           {items.map((item) => {
-            const subtarefasInfo = getSubtarefasStatus(item);
+            const subtarefasInfo = getSubtarefasCount(item);
             return (
               <TableRow
                 key={item.id}
-                className={`${getStatusColor(subtarefasInfo.status as any)} cursor-pointer hover:opacity-80`}
+                className={`${getStatusColor(item.roadmapStatus)} cursor-pointer hover:opacity-80`}
                 onClick={() => onRowClick?.(item)}
               >
                 <TableCell>
@@ -103,7 +132,7 @@ export const RoadmapTable = ({ items, onRowClick }: RoadmapTableProps) => {
                 <TableCell>{getDataInicio(item)}</TableCell>
                 <TableCell>{getDataFim(item)}</TableCell>
                 <TableCell className="font-semibold">
-                  {getStatusLabel(subtarefasInfo.status as any)}
+                  {getStatusLabel(item.roadmapStatus)}
                 </TableCell>
               </TableRow>
             );

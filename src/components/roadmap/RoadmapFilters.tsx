@@ -46,9 +46,11 @@ export const RoadmapFilters = ({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="todos">Todos os status</SelectItem>
-          <SelectItem value="NAO_INICIADO">Não iniciado</SelectItem>
-          <SelectItem value="EM_DESENVOLVIMENTO">Em desenvolvimento</SelectItem>
-          <SelectItem value="DESENVOLVIDO">Desenvolvido</SelectItem>
+          <SelectItem value="EM_SPRINT">Em Sprint</SelectItem>
+          <SelectItem value="NAO_PLANEJADA">Não Planejada</SelectItem>
+          <SelectItem value="EM_PLANEJAMENTO">Em Planejamento</SelectItem>
+          <SelectItem value="ENTREGUE">Entregue</SelectItem>
+          <SelectItem value="EM_ATRASO">Em Atraso</SelectItem>
         </SelectContent>
       </Select>
 

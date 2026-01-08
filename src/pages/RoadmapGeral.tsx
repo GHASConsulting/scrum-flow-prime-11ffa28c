@@ -20,16 +20,7 @@ export default function RoadmapGeral() {
   const filteredItems = useMemo(() => {
     return items.filter(item => {
       const matchTarefa = item.titulo.toLowerCase().includes(searchTarefa.toLowerCase());
-      
-      // Calcular status baseado em subtarefas
-      let itemStatus = 'NAO_INICIADO';
-      if (item.subtarefas.length > 0) {
-        const concluidas = item.subtarefas.filter(s => s.status === 'done' || s.status === 'validated').length;
-        if (concluidas === item.subtarefas.length) itemStatus = 'DESENVOLVIDO';
-        else if (concluidas > 0) itemStatus = 'EM_DESENVOLVIMENTO';
-      }
-      
-      const matchStatus = statusFilter === 'todos' || itemStatus === statusFilter;
+      const matchStatus = statusFilter === 'todos' || item.roadmapStatus === statusFilter;
       const matchResponsavel = responsavelFilter === 'todos' || item.responsavel === responsavelFilter;
       const matchTipoTarefa = tipoTarefaFilter === 'todos' || item.tipo_tarefa === tipoTarefaFilter;
       
@@ -39,10 +30,7 @@ export default function RoadmapGeral() {
 
   const calculateKPIs = (itemsList: typeof items) => {
     const total = itemsList.length;
-    const concluidos = itemsList.filter(item => {
-      const concluidasCount = item.subtarefas.filter(s => s.status === 'done' || s.status === 'validated').length;
-      return item.subtarefas.length > 0 && concluidasCount === item.subtarefas.length;
-    }).length;
+    const concluidos = itemsList.filter(item => item.roadmapStatus === 'ENTREGUE').length;
     
     return {
       total,
