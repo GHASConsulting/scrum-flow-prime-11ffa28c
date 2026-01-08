@@ -232,11 +232,14 @@ export const useBacklogRoadmap = () => {
           todasSubtarefas
         );
 
+        // Story points: usar quantidade de subtarefas se houver, senão usar o valor do backlog
+        const storyPointsCalculado = todasSubtarefas.length > 0 ? todasSubtarefas.length : backlog.story_points;
+
         return {
           id: backlog.id,
           titulo: backlog.titulo,
           descricao: backlog.descricao,
-          story_points: backlog.story_points,
+          story_points: storyPointsCalculado,
           prioridade: backlog.prioridade,
           status: backlog.status,
           responsavel: backlog.responsavel,
