@@ -9,15 +9,19 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useBacklog } from '@/hooks/useBacklog';
 import { useSprints } from '@/hooks/useSprints';
 import { useSprintTarefas } from '@/hooks/useSprintTarefas';
+import { useSubtarefas } from '@/hooks/useSubtarefas';
 import { useProfiles } from '@/hooks/useProfiles';
 import { useTipoProduto } from '@/hooks/useTipoProduto';
+import { SubtarefasForm, SubtarefaTemp } from '@/components/SubtarefasForm';
+import { SprintTaskListView } from '@/components/SprintTaskListView';
 import { format, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Plus, Check, Trash2, X, Edit, Copy, Filter } from 'lucide-react';
+import { CalendarIcon, Plus, Check, Trash2, X, Edit, Copy, Filter, LayoutGrid, List } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { statusLabels, formatDate } from '@/lib/formatters';
@@ -39,6 +43,7 @@ const SprintPlanning = () => {
   const { backlog, addBacklogItem, updateBacklogItem, deleteBacklogItem } = useBacklog();
   const { sprints, addSprint, updateSprint, deleteSprint } = useSprints();
   const { sprintTarefas, addSprintTarefa: addTarefaToSprint, deleteSprintTarefa } = useSprintTarefas();
+  const { subtarefas, addSubtarefa } = useSubtarefas();
   const { profiles } = useProfiles();
   const { tiposProdutoAtivos } = useTipoProduto();
   
@@ -48,6 +53,7 @@ const SprintPlanning = () => {
   const [isCreatingTask, setIsCreatingTask] = useState(false);
   const [filtroResponsavel, setFiltroResponsavel] = useState<string>('all');
   const [mostrarApenasSemSprint, setMostrarApenasSemSprint] = useState(false);
+  const [sprintViewMode, setSprintViewMode] = useState<'card' | 'list'>('card');
   
   // Filtros similares ao Dashboard
   const [selectedSituacao, setSelectedSituacao] = useState<string>('all');
@@ -64,6 +70,9 @@ const SprintPlanning = () => {
     data_inicio: undefined as Date | undefined,
     data_fim: undefined as Date | undefined
   });
+  
+  // Subtarefas temporárias para nova tarefa
+  const [newTaskSubtarefas, setNewTaskSubtarefas] = useState<SubtarefaTemp[]>([]);
   
   const [newTask, setNewTask] = useState<{
     titulo: string;
@@ -92,6 +101,18 @@ const SprintPlanning = () => {
     data_inicio: undefined as Date | undefined,
     data_fim: undefined as Date | undefined
   });
+
+  // Calcular contagem de subtarefas por backlog_id
+  const subtarefasCountByBacklog = useMemo(() => {
+    const count: Record<string, number> = {};
+    sprintTarefas.forEach(st => {
+      const subtarefasCount = subtarefas.filter(sub => sub.sprint_tarefa_id === st.id).length;
+      if (subtarefasCount > 0) {
+        count[st.backlog_id] = subtarefasCount;
+      }
+    });
+    return count;
+  }, [sprintTarefas, subtarefas]);
 
   // Filtrar sprints por situação e intervalo de datas, ordenar por nome
   const filteredSprints = useMemo(() => {
@@ -299,7 +320,10 @@ const SprintPlanning = () => {
       return;
     }
 
-    if (newTask.story_points < 1 || newTask.story_points > 100) {
+    // Se tem subtarefas, usar a quantidade como story_points
+    const storyPoints = newTaskSubtarefas.length > 0 ? newTaskSubtarefas.length : newTask.story_points;
+
+    if (storyPoints < 1 || storyPoints > 100) {
       toast.error('Story points deve estar entre 1 e 100');
       return;
     }
@@ -310,15 +334,46 @@ const SprintPlanning = () => {
     }
 
     try {
-      await addBacklogItem({
+      const createdBacklogItem = await addBacklogItem({
         titulo: newTask.titulo.trim(),
         descricao: newTask.descricao.trim() || null,
-        story_points: newTask.story_points,
+        story_points: storyPoints,
         prioridade: newTask.prioridade,
         responsavel: newTask.responsavel.trim(),
         status: 'todo',
         ...(newTask.tipo_produto && { tipo_produto: newTask.tipo_produto })
       } as any);
+
+      // Se há sprint selecionada e subtarefas, criar sprint_tarefa e subtarefas
+      if (selectedSprint && newTaskSubtarefas.length > 0 && createdBacklogItem) {
+        const sprintTarefa = await addTarefaToSprint({
+          sprint_id: selectedSprint,
+          backlog_id: createdBacklogItem.id,
+          responsavel: newTask.responsavel.trim(),
+          status: 'todo'
+        });
+
+        // Criar as subtarefas
+        for (const sub of newTaskSubtarefas) {
+          const dataInicio = new Date(sub.inicio!);
+          dataInicio.setHours(0, 0, 0, 0);
+          
+          const dataFim = new Date(sub.fim!);
+          dataFim.setHours(23, 59, 59, 999);
+
+          await addSubtarefa({
+            sprint_tarefa_id: sprintTarefa.id,
+            titulo: sub.titulo,
+            responsavel: sub.responsavel || null,
+            inicio: dataInicio.toISOString(),
+            fim: dataFim.toISOString(),
+            status: 'todo'
+          });
+        }
+        toast.success(`Tarefa criada com ${newTaskSubtarefas.length} subtarefa(s) na sprint`);
+      } else {
+        toast.success('Tarefa criada no backlog');
+      }
 
       setNewTask({
         titulo: '',
@@ -328,8 +383,8 @@ const SprintPlanning = () => {
         responsavel: '',
         tipo_produto: undefined
       });
+      setNewTaskSubtarefas([]);
       setIsCreatingTask(false);
-      toast.success('Tarefa criada no backlog');
     } catch (error) {
       // Error já tratado no hook
     }
@@ -933,7 +988,19 @@ const SprintPlanning = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Tarefas na Sprint ({tarefasDaSprint.length})</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Tarefas na Sprint ({tarefasDaSprint.length})</CardTitle>
+                {selectedSprint && tarefasDaSprint.length > 0 && (
+                  <ToggleGroup type="single" value={sprintViewMode} onValueChange={(value) => value && setSprintViewMode(value as 'card' | 'list')}>
+                    <ToggleGroupItem value="card" aria-label="Visualização em cards">
+                      <LayoutGrid className="h-4 w-4" />
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="list" aria-label="Visualização em lista">
+                      <List className="h-4 w-4" />
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {!selectedSprint ? (
@@ -944,30 +1011,40 @@ const SprintPlanning = () => {
                 <p className="text-sm text-muted-foreground text-center py-8">
                   Nenhuma tarefa na sprint. Adicione tarefas do backlog.
                 </p>
+              ) : sprintViewMode === 'list' ? (
+                <SprintTaskListView
+                  tarefas={tarefasDaSprint}
+                  subtarefasCount={subtarefasCountByBacklog}
+                  onRemoveFromSprint={handleRemoveFromSprint}
+                />
               ) : (
                 <div className="space-y-2">
-                  {tarefasDaSprint.map(tarefa => (
-                    <div key={tarefa.id} className="p-3 border rounded-lg">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
-                          <h4 className="font-medium text-sm">{tarefa.titulo}</h4>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            SP: {tarefa.story_points} | {tarefa.responsavel}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleRemoveFromSprint(tarefa.id)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <X className="h-4 w-4 text-destructive" />
-                          </Button>
+                  {tarefasDaSprint.map(tarefa => {
+                    const subtarefaCount = subtarefasCountByBacklog[tarefa.id] || 0;
+                    return (
+                      <div key={tarefa.id} className="p-3 border rounded-lg">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-sm">{tarefa.titulo}</h4>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              SP: {subtarefaCount > 0 ? subtarefaCount : tarefa.story_points} | {tarefa.responsavel}
+                              {subtarefaCount > 0 && ` | ${subtarefaCount} subtarefas`}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleRemoveFromSprint(tarefa.id)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <X className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
@@ -1124,9 +1201,24 @@ const SprintPlanning = () => {
                     </Select>
                   </div>
 
+                  {/* Subtarefas - disponível quando há sprint selecionada */}
+                  {selectedSprint && (
+                    <SubtarefasForm
+                      subtarefas={newTaskSubtarefas}
+                      onSubtarefasChange={setNewTaskSubtarefas}
+                      defaultResponsavel={newTask.responsavel}
+                    />
+                  )}
+
+                  {newTaskSubtarefas.length > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      Story Points será automaticamente definido como {newTaskSubtarefas.length} (quantidade de subtarefas)
+                    </p>
+                  )}
+
                   <div className="flex gap-2">
                     <Button onClick={handleCreateTask} className="flex-1">
-                      Criar no Backlog
+                      {newTaskSubtarefas.length > 0 ? 'Criar na Sprint' : 'Criar no Backlog'}
                     </Button>
                     <Button
                       onClick={() => {
@@ -1139,6 +1231,7 @@ const SprintPlanning = () => {
                           responsavel: '',
                           tipo_produto: undefined
                         });
+                        setNewTaskSubtarefas([]);
                       }} 
                       variant="outline" 
                       className="flex-1"
