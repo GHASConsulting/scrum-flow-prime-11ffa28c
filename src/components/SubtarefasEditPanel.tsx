@@ -183,30 +183,15 @@ export const SubtarefasEditPanel = ({ backlogId, defaultResponsavel = '', select
             </div>
           )}
 
-          {!canAddSubtarefas && (
-            <p className="text-sm text-muted-foreground text-center py-2 bg-muted/50 rounded">
-              Selecione uma sprint no campo "Sprint Selecionada" para adicionar subtarefas
-            </p>
-          )}
-
           {canAddSubtarefas && !isAddingNew && (
             <Button onClick={() => setIsAddingNew(true)} variant="outline" className="w-full">
               <Plus className="h-4 w-4 mr-2" />
               Adicionar Subtarefa
-              {!sprintTarefa && selectedSprintId && (
-                <span className="ml-1 text-xs text-muted-foreground">(adicionará à sprint)</span>
-              )}
             </Button>
           )}
 
           {isAddingNew && (
             <div className="space-y-3 p-3 border rounded-lg bg-background">
-              {!sprintTarefa && selectedSprintId && (
-                <p className="text-xs text-muted-foreground bg-primary/10 p-2 rounded">
-                  A tarefa será adicionada automaticamente à sprint selecionada
-                </p>
-              )}
-
               <div>
                 <Label>Título *</Label>
                 <Input
