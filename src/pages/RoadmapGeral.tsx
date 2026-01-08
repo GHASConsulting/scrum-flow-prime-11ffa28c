@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react';
 import { Layout } from '@/components/Layout';
-import { useBacklogRoadmap } from '@/hooks/useBacklogRoadmap';
+import { useBacklogRoadmap, BacklogRoadmapItem } from '@/hooks/useBacklogRoadmap';
 import { useTipoTarefa } from '@/hooks/useTipoTarefa';
 import { RoadmapKPIs } from '@/components/roadmap/RoadmapKPIs';
 import { RoadmapFilters } from '@/components/roadmap/RoadmapFilters';
 import { RoadmapTable } from '@/components/roadmap/RoadmapTable';
 import { RoadmapExport } from '@/components/roadmap/RoadmapExport';
+import { TaskDetailDialog } from '@/components/roadmap/TaskDetailDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function RoadmapGeral() {
@@ -16,6 +17,8 @@ export default function RoadmapGeral() {
   const [statusFilter, setStatusFilter] = useState('todos');
   const [responsavelFilter, setResponsavelFilter] = useState('todos');
   const [tipoTarefaFilter, setTipoTarefaFilter] = useState('todos');
+  const [selectedItem, setSelectedItem] = useState<BacklogRoadmapItem | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
   const filteredItems = useMemo(() => {
     return items.filter(item => {
@@ -60,6 +63,11 @@ export default function RoadmapGeral() {
     setStatusFilter('todos');
     setResponsavelFilter('todos');
     setTipoTarefaFilter('todos');
+  };
+
+  const handleRowClick = (item: BacklogRoadmapItem) => {
+    setSelectedItem(item);
+    setDetailDialogOpen(true);
   };
 
   if (loading) {
@@ -111,9 +119,15 @@ export default function RoadmapGeral() {
             </div>
           </CardHeader>
           <CardContent>
-            <RoadmapTable items={filteredItems} />
+            <RoadmapTable items={filteredItems} onRowClick={handleRowClick} />
           </CardContent>
         </Card>
+
+        <TaskDetailDialog 
+          item={selectedItem} 
+          open={detailDialogOpen} 
+          onOpenChange={setDetailDialogOpen} 
+        />
       </div>
     </Layout>
   );
