@@ -2,13 +2,33 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatInTimeZone } from 'date-fns-tz';
-import { parseISO, addDays, isAfter, isSameDay } from 'date-fns';
+import { parseISO, isAfter } from 'date-fns';
 
 const TIMEZONE = 'America/Sao_Paulo';
 
+const toSafeDate = (input: Date | string): Date | null => {
+  if (input instanceof Date) {
+    return isNaN(input.getTime()) ? null : input;
+  }
+
+  const raw = input.trim();
+
+  // Tenta parse direto (ISO ou formatos suportados pelo browser)
+  const direct = new Date(raw);
+  if (!isNaN(direct.getTime())) return direct;
+
+  // Normaliza timestamp do Postgres: "YYYY-MM-DD HH:mm:ss+00" -> ISO-ish
+  let normalized = raw.replace(' ', 'T');
+  normalized = normalized.replace(/([+-]\d{2})(?!:)(\s*)$/, '$1:00');
+
+  const d = new Date(normalized);
+  return isNaN(d.getTime()) ? null : d;
+};
+
 // Extrai a data (YYYY-MM-DD) no fuso horário do Brasil
 const getDateInBrazil = (date: Date | string): string => {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const dateObj = toSafeDate(date);
+  if (!dateObj) return '';
   return formatInTimeZone(dateObj, TIMEZONE, 'yyyy-MM-dd');
 };
 
@@ -76,32 +96,31 @@ const calculateRoadmapStatus = (
   const isBacklogNaoConcluido = backlogStatus !== 'feito' && backlogStatus !== 'validado';
   
   if (isBacklogNaoConcluido) {
-    // Verificar se a data da sprint já passou (considera até 23:59:59 do dia fim)
-    if (sprintDataFim) {
-      const dataFimSprintStr = getDateInBrazil(sprintDataFim);
-      const dataFimSprint = parseDate(dataFimSprintStr);
-      // Só é atraso se hoje for DEPOIS da data fim (não no mesmo dia)
-      if (isAfter(hoje, dataFimSprint)) {
-        return 'EM_ATRASO';
-      }
-    }
-    
-    // Verificar se a maior data fim de uma subtarefa já passou
+    // Regra: se existem subtarefas, a data fim considerada é a MAIOR data fim das subtarefas.
+    // Caso não existam subtarefas, usa a data fim da sprint.
+
+    let dataFimConsideradaStr = '';
+
     if (subtarefas.length > 0) {
       const datasSubtarefas = subtarefas
         .map(s => getDateInBrazil(s.fim))
-        .filter(d => d);
-      
+        .filter(Boolean);
+
       if (datasSubtarefas.length > 0) {
-        // Ordenar e pegar a maior data
         datasSubtarefas.sort((a, b) => b.localeCompare(a));
-        const maiorDataFimStr = datasSubtarefas[0];
-        const maiorDataFim = parseDate(maiorDataFimStr);
-        
-        // Só é atraso se hoje for DEPOIS da maior data fim (não no mesmo dia)
-        if (isAfter(hoje, maiorDataFim)) {
-          return 'EM_ATRASO';
-        }
+        dataFimConsideradaStr = datasSubtarefas[0];
+      }
+    }
+
+    if (!dataFimConsideradaStr && sprintDataFim) {
+      dataFimConsideradaStr = getDateInBrazil(sprintDataFim);
+    }
+
+    if (dataFimConsideradaStr) {
+      const dataFimConsiderada = parseDate(dataFimConsideradaStr);
+      // Só é atraso se hoje for DEPOIS da data fim (ou seja, a partir do dia seguinte 00:00)
+      if (isAfter(hoje, dataFimConsiderada)) {
+        return 'EM_ATRASO';
       }
     }
   }
