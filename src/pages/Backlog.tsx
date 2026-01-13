@@ -24,8 +24,8 @@ import { Filter, CalendarIcon } from 'lucide-react';
 const TIMEZONE = 'America/Sao_Paulo';
 
 const Backlog = () => {
-  const { backlog, updateBacklogItem } = useBacklog();
-  const { sprintTarefas } = useSprintTarefas();
+  const { backlog } = useBacklog();
+  const { sprintTarefas, updateSprintTarefa } = useSprintTarefas();
   const { sprints } = useSprints();
   const { user, userRole } = useAuth();
   const { profiles } = useProfiles();
@@ -105,26 +105,38 @@ const Backlog = () => {
   }, [userRole, user, profiles]);
 
   // Filtrar tarefas das sprints selecionadas
-  let tarefasNasSprints: BacklogItem[] = backlog
-    .filter(item => sprintTarefas.some(st => st.backlog_id === item.id && selectedSprints.includes(st.sprint_id)))
-    .map(item => ({
-      id: item.id,
-      titulo: item.titulo,
-      descricao: item.descricao || '',
-      story_points: item.story_points,
-      prioridade: item.prioridade as 'baixa' | 'media' | 'alta',
-      status: item.status as Status,
-      responsavel: item.responsavel || ''
-    }));
+  // Para cada tarefa, usamos o status de sprint_tarefas (independente por sprint)
+  let tarefasNasSprints: (BacklogItem & { sprintTarefaId: string })[] = sprintTarefas
+    .filter(st => selectedSprints.includes(st.sprint_id))
+    .map(st => {
+      const item = backlog.find(b => b.id === st.backlog_id);
+      if (!item) return null;
+      return {
+        id: item.id,
+        titulo: item.titulo,
+        descricao: item.descricao || '',
+        story_points: item.story_points,
+        prioridade: item.prioridade as 'baixa' | 'media' | 'alta',
+        status: st.status as Status, // Usa status do sprint_tarefas
+        responsavel: item.responsavel || '',
+        sprintTarefaId: st.id
+      };
+    })
+    .filter(Boolean) as (BacklogItem & { sprintTarefaId: string })[];
 
   // Aplicar filtro por responsável (ignorar se for "all")
   if (selectedResponsavel && selectedResponsavel !== 'all') {
     tarefasNasSprints = tarefasNasSprints.filter(item => item.responsavel === selectedResponsavel);
   }
 
-  const handleStatusChange = async (id: string, newStatus: Status) => {
+  // Atualiza o status no sprint_tarefas (independente por sprint)
+  const handleStatusChange = async (id: string, newStatus: Status, sprintTarefaId?: string) => {
+    if (!sprintTarefaId) {
+      toast.error('Erro ao identificar a tarefa na sprint');
+      return;
+    }
     try {
-      await updateBacklogItem(id, { status: newStatus });
+      await updateSprintTarefa(sprintTarefaId, { status: newStatus });
       toast.success(`Status atualizado para ${statusLabels[newStatus]}`);
     } catch (error) {
       // Error já tratado no hook
@@ -279,8 +291,9 @@ const Backlog = () => {
                   ) : (
                     items.map((item) => (
                       <BacklogCard
-                        key={item.id}
+                        key={`${item.id}-${item.sprintTarefaId}`}
                         item={item}
+                        sprintTarefaId={item.sprintTarefaId}
                         onStatusChange={handleStatusChange}
                         onUpdate={() => {}}
                       />
