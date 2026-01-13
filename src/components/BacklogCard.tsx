@@ -22,11 +22,12 @@ import { toast } from 'sonner';
 
 interface BacklogCardProps {
   item: BacklogItem;
-  onStatusChange: (id: string, newStatus: Status) => void;
+  sprintTarefaId?: string;
+  onStatusChange: (id: string, newStatus: Status, sprintTarefaId?: string) => void;
   onUpdate: () => void;
 }
 
-export const BacklogCard = ({ item, onStatusChange, onUpdate }: BacklogCardProps) => {
+export const BacklogCard = ({ item, sprintTarefaId, onStatusChange, onUpdate }: BacklogCardProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubtarefasOpen, setIsSubtarefasOpen] = useState(true);
   const [isNovaSubtarefaOpen, setIsNovaSubtarefaOpen] = useState(false);
@@ -161,7 +162,7 @@ export const BacklogCard = ({ item, onStatusChange, onUpdate }: BacklogCardProps
       <Card className="hover:shadow-md transition-shadow">
         <CardContent className="p-4 space-y-3">
           <DialogTrigger asChild>
-            <div className="cursor-pointer" onClick={() => canAddSubtarefas && setIsDialogOpen(true)}>
+            <div className="cursor-pointer" onClick={() => setIsDialogOpen(true)}>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h4 className="font-semibold text-foreground">{item.titulo}</h4>
@@ -178,7 +179,7 @@ export const BacklogCard = ({ item, onStatusChange, onUpdate }: BacklogCardProps
                 <Badge variant="outline" className={`text-xs border ${prioridadeColors[item.prioridade]}`}>
                   {prioridadeLabels[item.prioridade]}
                 </Badge>
-                {canAddSubtarefas && subtarefasDaTarefa.length > 0 && (
+                {subtarefasDaTarefa.length > 0 && (
                   <Badge variant="outline" className="text-xs">
                     {subtarefasDaTarefa.filter(s => s.status === 'done').length}/{subtarefasDaTarefa.length} subtarefas
                   </Badge>
@@ -197,7 +198,7 @@ export const BacklogCard = ({ item, onStatusChange, onUpdate }: BacklogCardProps
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onStatusChange(item.id, getPrevStatus(item.status)!)}
+                onClick={() => onStatusChange(item.id, getPrevStatus(item.status)!, sprintTarefaId)}
                 className="flex-1"
               >
                 <ArrowLeft className="h-3 w-3 mr-1" />
@@ -207,7 +208,7 @@ export const BacklogCard = ({ item, onStatusChange, onUpdate }: BacklogCardProps
             {getNextStatus(item.status) && (
               <Button
                 size="sm"
-                onClick={() => onStatusChange(item.id, getNextStatus(item.status)!)}
+                onClick={() => onStatusChange(item.id, getNextStatus(item.status)!, sprintTarefaId)}
                 className="flex-1"
               >
                 {statusLabels[getNextStatus(item.status)!]}
@@ -218,15 +219,14 @@ export const BacklogCard = ({ item, onStatusChange, onUpdate }: BacklogCardProps
         </CardContent>
       </Card>
 
-      {canAddSubtarefas && (
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{item.titulo}</DialogTitle>
-          </DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{item.titulo}</DialogTitle>
+        </DialogHeader>
 
-          <div className="space-y-4 mt-4">
-            <Collapsible open={isSubtarefasOpen} onOpenChange={setIsSubtarefasOpen}>
-              <div className="flex items-center justify-between">
+        <div className="space-y-4 mt-4">
+          <Collapsible open={isSubtarefasOpen} onOpenChange={setIsSubtarefasOpen}>
+            <div className="flex items-center justify-between">
                 <CollapsibleTrigger asChild>
                   <Button variant="ghost" className="w-full justify-between p-0 hover:bg-transparent">
                     <h4 className="font-semibold">Subtarefas</h4>
@@ -284,6 +284,7 @@ export const BacklogCard = ({ item, onStatusChange, onUpdate }: BacklogCardProps
               </CollapsibleContent>
             </Collapsible>
 
+            {canAddSubtarefas && (
             <div className="border-t pt-4">
               <Collapsible open={isNovaSubtarefaOpen} onOpenChange={setIsNovaSubtarefaOpen}>
                 <CollapsibleTrigger asChild>
@@ -373,9 +374,9 @@ export const BacklogCard = ({ item, onStatusChange, onUpdate }: BacklogCardProps
                 </CollapsibleContent>
               </Collapsible>
             </div>
-          </div>
-        </DialogContent>
-      )}
+            )}
+        </div>
+      </DialogContent>
     </Dialog>
   );
 };
