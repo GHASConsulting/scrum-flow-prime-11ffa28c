@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, ListTodo, Calendar, MessageSquare, RotateCcw, Shield, LogOut, AlertTriangle, Settings, Map, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, ListTodo, Calendar, MessageSquare, RotateCcw, Shield, LogOut, AlertTriangle, Settings, Map, ClipboardList, Target } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from './ui/button';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
@@ -33,6 +33,13 @@ const menuStructure: MenuGroup[] = [
       { name: 'Daily', href: '/daily', icon: MessageSquare },
       { name: 'Retrospectiva', href: '/retrospectiva', icon: RotateCcw },
       { name: 'Roadmap', href: '/roadmap', icon: Map },
+    ],
+  },
+  {
+    name: 'Prioridades',
+    icon: Target,
+    items: [
+      { name: 'Prioridades', href: '/prioridades', icon: Target },
     ],
   },
   {
@@ -73,6 +80,7 @@ const menuStructure: MenuGroup[] = [
 const getActiveGroup = (pathname: string): string => {
   if (pathname === '/' || pathname.startsWith('/dashboard-projetos') || pathname.startsWith('/dashboard-clientes')) return "Dashboard's";
   if (pathname.startsWith('/sprint-planning') || pathname.startsWith('/backlog') || pathname.startsWith('/daily') || pathname.startsWith('/retrospectiva') || pathname.startsWith('/roadmap')) return 'Scrum';
+  if (pathname.startsWith('/prioridades')) return 'Prioridades';
   if (pathname.startsWith('/produtividade')) return 'Produtividade';
   if (pathname.startsWith('/riscos')) return "Riscos e BO's";
   if (pathname.startsWith('/cadastros') || pathname.startsWith('/administracao')) return 'Administração';
