@@ -199,11 +199,11 @@ export default function Riscos() {
                       >
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="Risco" id="tipo-risco" />
-                          <Label htmlFor="tipo-risco" className="font-normal cursor-pointer">Risco</Label>
+                          <Label htmlFor="tipo-risco" className="font-normal cursor-pointer">Risco (Possibilidade de Ocorrência)</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="BO" id="tipo-bo" />
-                          <Label htmlFor="tipo-bo" className="font-normal cursor-pointer">BO</Label>
+                          <Label htmlFor="tipo-bo" className="font-normal cursor-pointer">BO (Registro de Ocorrência)</Label>
                         </div>
                       </RadioGroup>
                     </div>
