@@ -36,10 +36,10 @@ const menuStructure: MenuGroup[] = [
     ],
   },
   {
-    name: 'Riscos/BO',
+    name: "Riscos e BO's",
     icon: AlertTriangle,
     items: [
-      { name: 'Riscos/BO', href: '/riscos', icon: AlertTriangle },
+      { name: "Riscos e BO's", href: '/riscos', icon: AlertTriangle },
     ],
   },
   {
@@ -71,7 +71,7 @@ const menuStructure: MenuGroup[] = [
 const getActiveGroup = (pathname: string): string => {
   if (pathname === '/') return 'Dashboard';
   if (pathname.startsWith('/sprint-planning') || pathname.startsWith('/backlog') || pathname.startsWith('/daily') || pathname.startsWith('/retrospectiva') || pathname.startsWith('/roadmap')) return 'Scrum';
-  if (pathname.startsWith('/riscos')) return 'Riscos/BO';
+  if (pathname.startsWith('/riscos')) return "Riscos e BO's";
   if (pathname.startsWith('/cadastros')) return 'Cadastros';
   if (pathname.startsWith('/administracao')) return 'Administração';
   return '';
