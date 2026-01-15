@@ -275,7 +275,8 @@ const Produtividade = () => {
                   <TableRow>
                     <TableHead>Prestador</TableHead>
                     <TableHead>Cliente</TableHead>
-                    <TableHead>Período</TableHead>
+                    <TableHead>Data Início</TableHead>
+                    <TableHead>Data Fim</TableHead>
                     <TableHead className="text-right">Total de Chamados Encerrados</TableHead>
                     <TableHead className="w-[80px] text-center">Ações</TableHead>
                   </TableRow>
@@ -287,9 +288,8 @@ const Produtividade = () => {
                         {prod.prestador ? `${prod.prestador.codigo} - ${prod.prestador.nome}` : '-'}
                       </TableCell>
                       <TableCell>{prod.cliente?.cliente || '-'}</TableCell>
-                      <TableCell>
-                        {formatDate(prod.data_inicio)} - {formatDate(prod.data_fim)}
-                      </TableCell>
+                      <TableCell>{formatDate(prod.data_inicio)}</TableCell>
+                      <TableCell>{formatDate(prod.data_fim)}</TableCell>
                       <TableCell className="text-right font-medium">
                         {Number(prod.horas_trabalhadas)}
                       </TableCell>
