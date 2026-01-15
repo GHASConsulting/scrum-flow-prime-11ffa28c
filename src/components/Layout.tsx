@@ -48,6 +48,7 @@ const menuStructure: MenuGroup[] = [
     items: [
       { name: 'Scrum', href: '/', icon: LayoutDashboard },
       { name: 'Projetos', href: '/dashboard-projetos', icon: LayoutDashboard },
+      { name: 'Clientes', href: '/dashboard-clientes', icon: LayoutDashboard },
     ],
   },
   {
