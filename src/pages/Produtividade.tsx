@@ -48,23 +48,51 @@ const Produtividade = () => {
     setFilterAnoFim(value);
   };
 
-  // Generate years for dropdown (from 2020 to current year + 1)
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: currentYear - 2020 + 2 }, (_, i) => 2020 + i);
-  const months = [
-    { value: '01', label: 'Janeiro' },
-    { value: '02', label: 'Fevereiro' },
-    { value: '03', label: 'Março' },
-    { value: '04', label: 'Abril' },
-    { value: '05', label: 'Maio' },
-    { value: '06', label: 'Junho' },
-    { value: '07', label: 'Julho' },
-    { value: '08', label: 'Agosto' },
-    { value: '09', label: 'Setembro' },
-    { value: '10', label: 'Outubro' },
-    { value: '11', label: 'Novembro' },
-    { value: '12', label: 'Dezembro' },
-  ];
+  // Generate available months/years based on existing records
+  const availableMonthYears = useMemo(() => {
+    const monthYearSet = new Set<string>();
+    
+    produtividades.forEach((p) => {
+      // Add month/year from data_inicio
+      const startDate = new Date(p.data_inicio + 'T12:00:00');
+      const startKey = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}`;
+      monthYearSet.add(startKey);
+      
+      // Add month/year from data_fim
+      const endDate = new Date(p.data_fim + 'T12:00:00');
+      const endKey = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}`;
+      monthYearSet.add(endKey);
+    });
+    
+    return Array.from(monthYearSet).sort();
+  }, [produtividades]);
+
+  // Extract unique years and months from available data
+  const availableYears = useMemo(() => {
+    const years = new Set<string>();
+    availableMonthYears.forEach((my) => {
+      years.add(my.split('-')[0]);
+    });
+    return Array.from(years).sort();
+  }, [availableMonthYears]);
+
+  const getAvailableMonths = (selectedYear: string) => {
+    if (!selectedYear) return [];
+    
+    const monthLabels: Record<string, string> = {
+      '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril',
+      '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto',
+      '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro',
+    };
+    
+    return availableMonthYears
+      .filter((my) => my.startsWith(selectedYear))
+      .map((my) => {
+        const month = my.split('-')[1];
+        return { value: month, label: monthLabels[month] };
+      })
+      .sort((a, b) => a.value.localeCompare(b.value));
+  };
 
   const resetForm = () => {
     setFormData({
@@ -235,26 +263,26 @@ const Produtividade = () => {
               <div className="space-y-2">
                 <Label>Mês/Ano Inicial</Label>
                 <div className="flex gap-2">
-                  <Select value={filterMesInicio} onValueChange={handleMesInicioChange}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Mês" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {months.map((m) => (
-                        <SelectItem key={m.value} value={m.value}>
-                          {m.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                   <Select value={filterAnoInicio} onValueChange={handleAnoInicioChange}>
                     <SelectTrigger className="w-[100px]">
                       <SelectValue placeholder="Ano" />
                     </SelectTrigger>
                     <SelectContent>
-                      {years.map((year) => (
-                        <SelectItem key={year} value={String(year)}>
+                      {availableYears.map((year) => (
+                        <SelectItem key={year} value={year}>
                           {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={filterMesInicio} onValueChange={handleMesInicioChange} disabled={!filterAnoInicio}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Mês" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getAvailableMonths(filterAnoInicio).map((m) => (
+                        <SelectItem key={m.value} value={m.value}>
+                          {m.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -265,26 +293,26 @@ const Produtividade = () => {
               <div className="space-y-2">
                 <Label>Mês/Ano Final</Label>
                 <div className="flex gap-2">
-                  <Select value={filterMesFim} onValueChange={setFilterMesFim}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Mês" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {months.map((m) => (
-                        <SelectItem key={m.value} value={m.value}>
-                          {m.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                   <Select value={filterAnoFim} onValueChange={setFilterAnoFim}>
                     <SelectTrigger className="w-[100px]">
                       <SelectValue placeholder="Ano" />
                     </SelectTrigger>
                     <SelectContent>
-                      {years.map((year) => (
-                        <SelectItem key={year} value={String(year)}>
+                      {availableYears.map((year) => (
+                        <SelectItem key={year} value={year}>
                           {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={filterMesFim} onValueChange={setFilterMesFim} disabled={!filterAnoFim}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Mês" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getAvailableMonths(filterAnoFim).map((m) => (
+                        <SelectItem key={m.value} value={m.value}>
+                          {m.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
