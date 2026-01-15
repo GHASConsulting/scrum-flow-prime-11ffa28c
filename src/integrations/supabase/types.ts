@@ -103,18 +103,21 @@ export type Database = {
       client_access_records: {
         Row: {
           cliente: string
+          codigo: number
           created_at: string
           id: string
           updated_at: string
         }
         Insert: {
           cliente: string
+          codigo?: number
           created_at?: string
           id?: string
           updated_at?: string
         }
         Update: {
           cliente?: string
+          codigo?: number
           created_at?: string
           id?: string
           updated_at?: string

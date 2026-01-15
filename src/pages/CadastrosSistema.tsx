@@ -70,6 +70,7 @@ const CadastrosSistema = () => {
   const [newClienteNome, setNewClienteNome] = useState('');
   const [editingCliente, setEditingCliente] = useState<{
     id: string;
+    codigo: number;
     cliente: string;
   } | null>(null);
 
@@ -230,6 +231,7 @@ const CadastrosSistema = () => {
   };
   const handleEditCliente = (item: {
     id: string;
+    codigo: number;
     cliente: string;
   }) => {
     setEditingCliente({
@@ -467,12 +469,14 @@ const CadastrosSistema = () => {
                   {isLoadingClientes ? <p className="text-muted-foreground">Carregando...</p> : clientes.length === 0 ? <p className="text-muted-foreground">Nenhum cliente cadastrado</p> : <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="w-[80px]">Código</TableHead>
                           <TableHead>Nome</TableHead>
                           <TableHead className="w-[100px] text-center">Ações</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {clientes.map(item => <TableRow key={item.id}>
+                            <TableCell className="font-medium">{item.codigo}</TableCell>
                             <TableCell className="font-medium">{item.cliente}</TableCell>
                             <TableCell>
                               <div className="flex items-center justify-center gap-2">

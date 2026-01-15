@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 export interface ClientAccessRecord {
   id: string;
+  codigo: number;
   cliente: string;
   created_at: string;
   updated_at: string;
