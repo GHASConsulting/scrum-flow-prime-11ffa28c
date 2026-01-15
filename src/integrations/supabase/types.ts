@@ -328,39 +328,49 @@ export type Database = {
       }
       daily: {
         Row: {
+          cliente_id: string | null
           created_at: string
           data: string
           hoje: string
           id: string
           impedimentos: string | null
           ontem: string
-          sprint_id: string
+          sprint_id: string | null
           updated_at: string
           usuario: string
         }
         Insert: {
+          cliente_id?: string | null
           created_at?: string
           data?: string
           hoje: string
           id?: string
           impedimentos?: string | null
           ontem: string
-          sprint_id: string
+          sprint_id?: string | null
           updated_at?: string
           usuario: string
         }
         Update: {
+          cliente_id?: string | null
           created_at?: string
           data?: string
           hoje?: string
           id?: string
           impedimentos?: string | null
           ontem?: string
-          sprint_id?: string
+          sprint_id?: string | null
           updated_at?: string
           usuario?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "daily_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "client_access_records"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "daily_sprint_id_fkey"
             columns: ["sprint_id"]

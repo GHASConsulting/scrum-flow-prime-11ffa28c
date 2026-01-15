@@ -16,6 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSprints } from '@/hooks/useSprints';
 import { useDailies } from '@/hooks/useDailies';
 import { useProfiles } from '@/hooks/useProfiles';
+import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 
@@ -25,8 +26,10 @@ const DailyPage = () => {
   const { sprints } = useSprints();
   const { dailies, addDaily: addDailyDB, deleteDaily } = useDailies();
   const { profiles } = useProfiles();
+  const { records: clientes } = useClientAccessRecords();
   
   const [selectedSprint, setSelectedSprint] = useState<string>('');
+  const [selectedCliente, setSelectedCliente] = useState<string>('');
   const [dataRegistro, setDataRegistro] = useState<Date>(new Date());
   const [formData, setFormData] = useState({
     usuario: '',
@@ -109,8 +112,8 @@ const DailyPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedSprint) {
-      toast.error('Selecione uma sprint');
+    if (!selectedCliente) {
+      toast.error('Selecione um cliente');
       return;
     }
 
@@ -128,13 +131,14 @@ const DailyPage = () => {
     const dataRegistroISO = new Date(dataRegistro.setHours(new Date().getHours(), new Date().getMinutes())).toISOString();
 
     const { error } = await addDailyDB({
-      sprint_id: selectedSprint,
+      sprint_id: selectedSprint || null,
+      cliente_id: selectedCliente,
       usuario: formData.usuario,
       data: dataRegistroISO,
       ontem: formData.ontem,
       hoje: formData.hoje,
       impedimentos: formData.impedimentos || null
-    });
+    } as any);
 
     if (error) {
       toast.error('Erro ao registrar daily');
@@ -143,6 +147,7 @@ const DailyPage = () => {
 
     // Limpar campos, mas manter usuário para operadores e resetar data para hoje
     setDataRegistro(new Date());
+    setSelectedCliente('');
     if (userRole === 'operador') {
       setFormData(prev => ({ ...prev, ontem: '', hoje: '', impedimentos: '' }));
     } else {
@@ -178,10 +183,26 @@ const DailyPage = () => {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium">Sprint *</label>
+                  <label className="text-sm font-medium">Cliente *</label>
+                  <Select value={selectedCliente} onValueChange={setSelectedCliente}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um cliente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clientes.map((cliente) => (
+                        <SelectItem key={cliente.id} value={cliente.id}>
+                          {cliente.cliente}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Sprint</label>
                   <Select value={selectedSprint} onValueChange={setSelectedSprint}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma sprint" />
+                      <SelectValue placeholder="Selecione uma sprint (opcional)" />
                     </SelectTrigger>
                     <SelectContent>
                       {sprints.filter(s => s.status === 'ativo').map((sprint) => (
