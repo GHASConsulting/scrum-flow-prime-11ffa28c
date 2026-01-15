@@ -40,7 +40,7 @@ const Produtividade = () => {
   const [filterAnoFim, setFilterAnoFim] = useState<string>('');
 
   // Sorting states
-  type SortColumn = 'prestador' | 'cliente' | 'data_inicio' | 'data_fim' | 'horas_trabalhadas' | 'importado';
+  type SortColumn = 'codigo' | 'prestador' | 'cliente' | 'data_inicio' | 'data_fim' | 'horas_trabalhadas' | 'importado';
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
@@ -412,6 +412,10 @@ const Produtividade = () => {
         let bValue: string | number | boolean;
 
         switch (sortColumn) {
+          case 'codigo':
+            aValue = a.codigo;
+            bValue = b.codigo;
+            break;
           case 'prestador':
             aValue = a.prestador ? `${a.prestador.codigo} - ${a.prestador.nome}` : '';
             bValue = b.prestador ? `${b.prestador.codigo} - ${b.prestador.nome}` : '';
@@ -671,6 +675,9 @@ const Produtividade = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="cursor-pointer hover:bg-muted/50 w-[80px]" onClick={() => handleSort('codigo')}>
+                      ID <SortIcon column="codigo" />
+                    </TableHead>
                     <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('prestador')}>
                       Prestador <SortIcon column="prestador" />
                     </TableHead>
@@ -695,6 +702,7 @@ const Produtividade = () => {
                 <TableBody>
                   {filteredProdutividades.map((prod) => (
                     <TableRow key={prod.id}>
+                      <TableCell className="font-medium">{prod.codigo}</TableCell>
                       <TableCell className="font-medium">
                         {prod.prestador ? `${prod.prestador.codigo} - ${prod.prestador.nome}` : '-'}
                       </TableCell>

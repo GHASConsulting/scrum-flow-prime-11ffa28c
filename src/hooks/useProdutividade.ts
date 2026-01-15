@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 
 export interface Produtividade {
   id: string;
+  codigo: number;
   prestador_id: string;
   cliente_id: string;
   data_inicio: string;

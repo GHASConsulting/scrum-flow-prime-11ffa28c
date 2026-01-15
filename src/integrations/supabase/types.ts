@@ -434,6 +434,7 @@ export type Database = {
       produtividade: {
         Row: {
           cliente_id: string
+          codigo: number
           created_at: string
           data_fim: string
           data_inicio: string
@@ -446,6 +447,7 @@ export type Database = {
         }
         Insert: {
           cliente_id: string
+          codigo?: number
           created_at?: string
           data_fim: string
           data_inicio: string
@@ -458,6 +460,7 @@ export type Database = {
         }
         Update: {
           cliente_id?: string
+          codigo?: number
           created_at?: string
           data_fim?: string
           data_inicio?: string
