@@ -171,8 +171,8 @@ export default function Riscos() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">Riscos/BO</h1>
-            <p className="text-muted-foreground">Gerencie os riscos e BOs do projeto</p>
+            <h1 className="text-3xl font-bold">Riscos e BO's</h1>
+            <p className="text-muted-foreground">Gerencie os riscos e BO's do projeto</p>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
@@ -581,8 +581,8 @@ export default function Riscos() {
 
         <Tabs defaultValue="registro" className="w-full">
           <TabsList>
-            <TabsTrigger value="registro">Registro de Riscos</TabsTrigger>
-            <TabsTrigger value="acompanhamento">Acompanhamento dos Riscos</TabsTrigger>
+            <TabsTrigger value="registro">Registro</TabsTrigger>
+            <TabsTrigger value="acompanhamento">Acompanhamento</TabsTrigger>
           </TabsList>
           
           <TabsContent value="registro">
