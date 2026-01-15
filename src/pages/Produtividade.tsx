@@ -532,7 +532,7 @@ const Produtividade = () => {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
                   <Upload className="h-4 w-4 mr-2" />
-                  Selecionar Arquivo
+                  Importar Registros
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => {
                   const link = document.createElement('a');
