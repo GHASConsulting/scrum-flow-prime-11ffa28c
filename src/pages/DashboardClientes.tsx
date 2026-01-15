@@ -195,7 +195,7 @@ const DashboardClientes = () => {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold text-foreground">Dashboard Clientes</h2>
+          <h2 className="text-3xl font-bold text-foreground">Clientes</h2>
           <p className="text-muted-foreground mt-1">Visão geral dos clientes</p>
         </div>
 
