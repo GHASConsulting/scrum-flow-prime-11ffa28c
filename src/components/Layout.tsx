@@ -43,7 +43,7 @@ const menuStructure: MenuGroup[] = [
     ],
   },
   {
-    name: 'Dashboard',
+    name: "Dashboard's",
     icon: LayoutDashboard,
     items: [
       { name: 'Scrum', href: '/', icon: LayoutDashboard },
@@ -52,30 +52,22 @@ const menuStructure: MenuGroup[] = [
     ],
   },
   {
-    name: 'Cadastros',
-    icon: Settings,
-    adminOnly: true,
-    items: [
-      { name: 'Cadastros do Sistema', href: '/cadastros', icon: Settings },
-    ],
-  },
-  {
     name: 'Administração',
     icon: Shield,
     adminOnly: true,
     items: [
       { name: 'Administração', href: '/administracao', icon: Shield },
+      { name: 'Cadastros do Sistema', href: '/cadastros', icon: Settings },
     ],
   },
 ];
 
 // Função para detectar o grupo ativo com base na rota
 const getActiveGroup = (pathname: string): string => {
-  if (pathname === '/' || pathname.startsWith('/dashboard-projetos') || pathname.startsWith('/dashboard-clientes')) return 'Dashboard';
+  if (pathname === '/' || pathname.startsWith('/dashboard-projetos') || pathname.startsWith('/dashboard-clientes')) return "Dashboard's";
   if (pathname.startsWith('/sprint-planning') || pathname.startsWith('/backlog') || pathname.startsWith('/daily') || pathname.startsWith('/retrospectiva') || pathname.startsWith('/roadmap')) return 'Scrum';
   if (pathname.startsWith('/riscos')) return "Riscos e BO's";
-  if (pathname.startsWith('/cadastros')) return 'Cadastros';
-  if (pathname.startsWith('/administracao')) return 'Administração';
+  if (pathname.startsWith('/cadastros') || pathname.startsWith('/administracao')) return 'Administração';
   return '';
 };
 
