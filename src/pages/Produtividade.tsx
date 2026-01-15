@@ -8,7 +8,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, CheckCircle, Users, Building2, Upload, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Trash2, CheckCircle, Users, Building2, Upload, ArrowUp, ArrowDown, Download, FileSpreadsheet } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useProdutividade } from '@/hooks/useProdutividade';
 import { usePrestadorServico } from '@/hooks/usePrestadorServico';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
@@ -490,14 +496,26 @@ const Produtividade = () => {
               onChange={handleImportFile}
               className="hidden"
             />
-            <Button 
-              variant="outline" 
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isImporting}
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              {isImporting ? 'Importando...' : 'Importar Excel'}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" disabled={isImporting}>
+                  <FileSpreadsheet className="h-4 w-4 mr-2" />
+                  {isImporting ? 'Importando...' : 'Importar Excel'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Selecionar Arquivo
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <a href="/templates/GHAS_-_Arquivo_Modelo_de_Importacao.xlsx" download>
+                    <Download className="h-4 w-4 mr-2" />
+                    Baixar Modelo de Arquivo
+                  </a>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button onClick={() => {
               resetForm();
               setIsAddDialogOpen(true);
