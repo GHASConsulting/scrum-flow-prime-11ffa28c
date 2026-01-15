@@ -71,7 +71,7 @@ const menuStructure: MenuGroup[] = [
 
 // Função para detectar o grupo ativo com base na rota
 const getActiveGroup = (pathname: string): string => {
-  if (pathname === '/') return 'Dashboard';
+  if (pathname === '/' || pathname.startsWith('/dashboard-projetos') || pathname.startsWith('/dashboard-clientes')) return 'Dashboard';
   if (pathname.startsWith('/sprint-planning') || pathname.startsWith('/backlog') || pathname.startsWith('/daily') || pathname.startsWith('/retrospectiva') || pathname.startsWith('/roadmap')) return 'Scrum';
   if (pathname.startsWith('/riscos')) return "Riscos e BO's";
   if (pathname.startsWith('/cadastros')) return 'Cadastros';
