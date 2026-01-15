@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, CheckCircle } from 'lucide-react';
+import { Plus, Trash2, CheckCircle, Users, Building2 } from 'lucide-react';
 import { useProdutividade } from '@/hooks/useProdutividade';
 import { usePrestadorServico } from '@/hooks/usePrestadorServico';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
@@ -117,6 +117,11 @@ const Produtividade = () => {
     });
   }, [produtividades, filterPrestador, filterCliente, filterDataInicio, filterDataFim]);
 
+  // Calculate KPIs based on filtered data
+  const totalChamados = filteredProdutividades.reduce((sum, p) => sum + Number(p.horas_trabalhadas), 0);
+  const uniquePrestadores = new Set(filteredProdutividades.map(p => p.prestador_id)).size;
+  const uniqueClientes = new Set(filteredProdutividades.map(p => p.cliente_id)).size;
+
   const clearFilters = () => {
     setFilterPrestador('all');
     setFilterCliente('all');
@@ -212,7 +217,7 @@ const Produtividade = () => {
         </Card>
 
         {/* KPIs */}
-        <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
@@ -221,7 +226,33 @@ const Produtividade = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Total de Chamados Encerrados</p>
-                  <p className="text-2xl font-bold">{filteredProdutividades.reduce((sum, p) => sum + Number(p.horas_trabalhadas), 0)}</p>
+                  <p className="text-2xl font-bold">{totalChamados}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-lg bg-primary/10">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Prestadores</p>
+                  <p className="text-2xl font-bold">{uniquePrestadores}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-lg bg-primary/10">
+                  <Building2 className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Clientes</p>
+                  <p className="text-2xl font-bold">{uniqueClientes}</p>
                 </div>
               </div>
             </CardContent>
