@@ -25,13 +25,6 @@ type MenuGroup = {
 
 const menuStructure: MenuGroup[] = [
   {
-    name: 'Dashboard',
-    icon: LayoutDashboard,
-    items: [
-      { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-    ],
-  },
-  {
     name: 'SCRUM',
     icon: ListTodo,
     items: [
@@ -42,6 +35,13 @@ const menuStructure: MenuGroup[] = [
     ],
   },
   {
+    name: 'Riscos',
+    icon: AlertTriangle,
+    items: [
+      { name: 'Riscos', href: '/riscos', icon: AlertTriangle },
+    ],
+  },
+  {
     name: 'Roadmap',
     icon: Map,
     items: [
@@ -49,10 +49,10 @@ const menuStructure: MenuGroup[] = [
     ],
   },
   {
-    name: 'Riscos',
-    icon: AlertTriangle,
+    name: 'Dashboard',
+    icon: LayoutDashboard,
     items: [
-      { name: 'Riscos', href: '/riscos', icon: AlertTriangle },
+      { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     ],
   },
   {
