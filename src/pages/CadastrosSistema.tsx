@@ -12,7 +12,7 @@ import { Plus, Edit, Trash2, Package, Tag, Users, User } from 'lucide-react';
 import { useTipoProduto } from '@/hooks/useTipoProduto';
 import { useTipoTarefa } from '@/hooks/useTipoTarefa';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
-import { usePessoaFisica } from '@/hooks/usePessoaFisica';
+import { usePrestadorServico } from '@/hooks/usePrestadorServico';
 import { toast } from 'sonner';
 const CadastrosSistema = () => {
   const {
@@ -37,12 +37,12 @@ const CadastrosSistema = () => {
     deleteRecord
   } = useClientAccessRecords();
   const {
-    pessoasFisicas,
-    isLoading: isLoadingPessoaFisica,
-    addPessoaFisica,
-    updatePessoaFisica,
-    deletePessoaFisica
-  } = usePessoaFisica();
+    prestadoresServico,
+    isLoading: isLoadingPrestador,
+    addPrestadorServico,
+    updatePrestadorServico,
+    deletePrestadorServico
+  } = usePrestadorServico();
 
   // Estado para Área
   const [isAddAreaDialogOpen, setIsAddAreaDialogOpen] = useState(false);
@@ -73,12 +73,12 @@ const CadastrosSistema = () => {
     cliente: string;
   } | null>(null);
 
-  // Estado para Pessoa Física
-  const [isAddPessoaFisicaDialogOpen, setIsAddPessoaFisicaDialogOpen] = useState(false);
-  const [isEditPessoaFisicaDialogOpen, setIsEditPessoaFisicaDialogOpen] = useState(false);
-  const [newPessoaFisicaNome, setNewPessoaFisicaNome] = useState('');
-  const [newPessoaFisicaEmail, setNewPessoaFisicaEmail] = useState('');
-  const [editingPessoaFisica, setEditingPessoaFisica] = useState<{
+  // Estado para Prestador de Serviço
+  const [isAddPrestadorDialogOpen, setIsAddPrestadorDialogOpen] = useState(false);
+  const [isEditPrestadorDialogOpen, setIsEditPrestadorDialogOpen] = useState(false);
+  const [newPrestadorNome, setNewPrestadorNome] = useState('');
+  const [newPrestadorEmail, setNewPrestadorEmail] = useState('');
+  const [editingPrestador, setEditingPrestador] = useState<{
     id: string;
     codigo: number;
     nome: string;
@@ -268,57 +268,57 @@ const CadastrosSistema = () => {
     }
   };
 
-  // Handlers para Pessoa Física
-  const handleAddPessoaFisica = async () => {
-    if (!newPessoaFisicaNome.trim()) {
+  // Handlers para Prestador de Serviço
+  const handleAddPrestador = async () => {
+    if (!newPrestadorNome.trim()) {
       toast.error('Nome é obrigatório');
       return;
     }
     try {
-      await addPessoaFisica({
-        nome: newPessoaFisicaNome.trim(),
-        email: newPessoaFisicaEmail.trim() || undefined
+      await addPrestadorServico({
+        nome: newPrestadorNome.trim(),
+        email: newPrestadorEmail.trim() || undefined
       });
-      setNewPessoaFisicaNome('');
-      setNewPessoaFisicaEmail('');
-      setIsAddPessoaFisicaDialogOpen(false);
+      setNewPrestadorNome('');
+      setNewPrestadorEmail('');
+      setIsAddPrestadorDialogOpen(false);
     } catch (error) {
       // Error handled in hook
     }
   };
-  const handleEditPessoaFisica = (item: {
+  const handleEditPrestador = (item: {
     id: string;
     codigo: number;
     nome: string;
     email: string | null;
   }) => {
-    setEditingPessoaFisica({
+    setEditingPrestador({
       ...item
     });
-    setIsEditPessoaFisicaDialogOpen(true);
+    setIsEditPrestadorDialogOpen(true);
   };
-  const handleUpdatePessoaFisica = async () => {
-    if (!editingPessoaFisica) return;
-    if (!editingPessoaFisica.nome.trim()) {
+  const handleUpdatePrestador = async () => {
+    if (!editingPrestador) return;
+    if (!editingPrestador.nome.trim()) {
       toast.error('Nome é obrigatório');
       return;
     }
     try {
-      await updatePessoaFisica({
-        id: editingPessoaFisica.id,
-        nome: editingPessoaFisica.nome.trim(),
-        email: editingPessoaFisica.email?.trim() || undefined
+      await updatePrestadorServico({
+        id: editingPrestador.id,
+        nome: editingPrestador.nome.trim(),
+        email: editingPrestador.email?.trim() || undefined
       });
-      setIsEditPessoaFisicaDialogOpen(false);
-      setEditingPessoaFisica(null);
+      setIsEditPrestadorDialogOpen(false);
+      setEditingPrestador(null);
     } catch (error) {
       // Error handled in hook
     }
   };
-  const handleDeletePessoaFisica = async (id: string) => {
-    if (!confirm('Tem certeza que deseja remover esta pessoa?')) return;
+  const handleDeletePrestador = async (id: string) => {
+    if (!confirm('Tem certeza que deseja remover este prestador?')) return;
     try {
-      await deletePessoaFisica(id);
+      await deletePrestadorServico(id);
     } catch (error) {
       // Error handled in hook
     }
@@ -492,14 +492,14 @@ const CadastrosSistema = () => {
             </AccordionContent>
           </AccordionItem>
 
-          {/* Pessoa Física */}
-          <AccordionItem value="pessoa-fisica" className="border rounded-lg bg-card">
+          {/* Prestador de Serviço */}
+          <AccordionItem value="prestador-servico" className="border rounded-lg bg-card">
             <AccordionTrigger className="px-6 py-4 hover:no-underline">
               <div className="flex items-center gap-3">
                 <User className="h-5 w-5 text-primary" />
                 <span className="text-lg font-semibold">Prestador de Serviço</span>
                 <Badge variant="secondary" className="ml-2">
-                  {pessoasFisicas.length} itens
+                  {prestadoresServico.length} itens
                 </Badge>
               </div>
             </AccordionTrigger>
@@ -508,14 +508,14 @@ const CadastrosSistema = () => {
                 <CardHeader className="px-0 pt-0">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base">Lista de Prestadores de Serviço</CardTitle>
-                    <Button onClick={() => setIsAddPessoaFisicaDialogOpen(true)} size="sm">
+                    <Button onClick={() => setIsAddPrestadorDialogOpen(true)} size="sm">
                       <Plus className="h-4 w-4 mr-2" />
                       Adicionar
                     </Button>
                   </div>
                 </CardHeader>
                 <CardContent className="px-0 pb-0">
-                  {isLoadingPessoaFisica ? <p className="text-muted-foreground">Carregando...</p> : pessoasFisicas.length === 0 ? <p className="text-muted-foreground">Nenhuma pessoa física cadastrada</p> : <Table>
+                  {isLoadingPrestador ? <p className="text-muted-foreground">Carregando...</p> : prestadoresServico.length === 0 ? <p className="text-muted-foreground">Nenhum prestador de serviço cadastrado</p> : <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-[100px]">Código</TableHead>
@@ -525,16 +525,16 @@ const CadastrosSistema = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {pessoasFisicas.map(item => <TableRow key={item.id}>
+                        {prestadoresServico.map(item => <TableRow key={item.id}>
                             <TableCell className="font-medium">{item.codigo}</TableCell>
                             <TableCell className="font-medium">{item.nome}</TableCell>
                             <TableCell className="text-muted-foreground">{item.email || '-'}</TableCell>
                             <TableCell>
                               <div className="flex items-center justify-center gap-2">
-                                <Button variant="ghost" size="icon" onClick={() => handleEditPessoaFisica(item)}>
+                                <Button variant="ghost" size="icon" onClick={() => handleEditPrestador(item)}>
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleDeletePessoaFisica(item.id)}>
+                                <Button variant="ghost" size="icon" onClick={() => handleDeletePrestador(item.id)}>
                                   <Trash2 className="h-4 w-4 text-destructive" />
                                 </Button>
                               </div>
@@ -697,62 +697,62 @@ const CadastrosSistema = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog Adicionar Pessoa Física */}
-        <Dialog open={isAddPessoaFisicaDialogOpen} onOpenChange={setIsAddPessoaFisicaDialogOpen}>
+        {/* Dialog Adicionar Prestador de Serviço */}
+        <Dialog open={isAddPrestadorDialogOpen} onOpenChange={setIsAddPrestadorDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Adicionar Pessoa Física</DialogTitle>
+              <DialogTitle>Adicionar Prestador de Serviço</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Nome</label>
-                <Input value={newPessoaFisicaNome} onChange={e => setNewPessoaFisicaNome(e.target.value)} placeholder="Digite o nome" />
+                <Input value={newPrestadorNome} onChange={e => setNewPrestadorNome(e.target.value)} placeholder="Digite o nome" />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Email</label>
-                <Input type="email" value={newPessoaFisicaEmail} onChange={e => setNewPessoaFisicaEmail(e.target.value)} placeholder="Digite o email" />
+                <Input type="email" value={newPrestadorEmail} onChange={e => setNewPrestadorEmail(e.target.value)} placeholder="Digite o email" />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddPessoaFisicaDialogOpen(false)}>
+              <Button variant="outline" onClick={() => setIsAddPrestadorDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleAddPessoaFisica}>Adicionar</Button>
+              <Button onClick={handleAddPrestador}>Adicionar</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
-        {/* Dialog Editar Pessoa Física */}
-        <Dialog open={isEditPessoaFisicaDialogOpen} onOpenChange={setIsEditPessoaFisicaDialogOpen}>
+        {/* Dialog Editar Prestador de Serviço */}
+        <Dialog open={isEditPrestadorDialogOpen} onOpenChange={setIsEditPrestadorDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Editar Pessoa Física</DialogTitle>
+              <DialogTitle>Editar Prestador de Serviço</DialogTitle>
             </DialogHeader>
-            {editingPessoaFisica && <div className="space-y-4 py-4">
+            {editingPrestador && <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Código</label>
-                  <Input value={editingPessoaFisica.codigo} disabled className="bg-muted" />
+                  <Input value={editingPrestador.codigo} disabled className="bg-muted" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Nome</label>
-                  <Input value={editingPessoaFisica.nome} onChange={e => setEditingPessoaFisica({
-                ...editingPessoaFisica,
+                  <Input value={editingPrestador.nome} onChange={e => setEditingPrestador({
+                ...editingPrestador,
                 nome: e.target.value
               })} placeholder="Digite o nome" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Email</label>
-                  <Input type="email" value={editingPessoaFisica.email || ''} onChange={e => setEditingPessoaFisica({
-                ...editingPessoaFisica,
+                  <Input type="email" value={editingPrestador.email || ''} onChange={e => setEditingPrestador({
+                ...editingPrestador,
                 email: e.target.value
               })} placeholder="Digite o email" />
                 </div>
               </div>}
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditPessoaFisicaDialogOpen(false)}>
+              <Button variant="outline" onClick={() => setIsEditPrestadorDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleUpdatePessoaFisica}>Salvar</Button>
+              <Button onClick={handleUpdatePrestador}>Salvar</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

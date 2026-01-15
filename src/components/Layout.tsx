@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, ListTodo, Calendar, MessageSquare, RotateCcw, Shield, LogOut, AlertTriangle, Settings, Map } from 'lucide-react';
+import { LayoutDashboard, ListTodo, Calendar, MessageSquare, RotateCcw, Shield, LogOut, AlertTriangle, Settings, Map, ClipboardList } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from './ui/button';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
@@ -36,6 +36,13 @@ const menuStructure: MenuGroup[] = [
     ],
   },
   {
+    name: 'Produtividade',
+    icon: ClipboardList,
+    items: [
+      { name: 'Produtividade', href: '/produtividade', icon: ClipboardList },
+    ],
+  },
+  {
     name: "Riscos e BO's",
     icon: AlertTriangle,
     items: [
@@ -66,6 +73,7 @@ const menuStructure: MenuGroup[] = [
 const getActiveGroup = (pathname: string): string => {
   if (pathname === '/' || pathname.startsWith('/dashboard-projetos') || pathname.startsWith('/dashboard-clientes')) return "Dashboard's";
   if (pathname.startsWith('/sprint-planning') || pathname.startsWith('/backlog') || pathname.startsWith('/daily') || pathname.startsWith('/retrospectiva') || pathname.startsWith('/roadmap')) return 'Scrum';
+  if (pathname.startsWith('/produtividade')) return 'Produtividade';
   if (pathname.startsWith('/riscos')) return "Riscos e BO's";
   if (pathname.startsWith('/cadastros') || pathname.startsWith('/administracao')) return 'Administração';
   return '';
