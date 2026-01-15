@@ -17,6 +17,7 @@ import AlterarSenha from "./pages/AlterarSenha";
 import Administracao from "./pages/Administracao";
 import CadastrosSistema from "./pages/CadastrosSistema";
 import RoadmapGeral from "./pages/RoadmapGeral";
+import Produtividade from "./pages/Produtividade";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ function App() {
           <Route path="/roadmap" element={<ProtectedRoute><RoadmapGeral /></ProtectedRoute>} />
           <Route path="/administracao" element={<ProtectedRoute><Administracao /></ProtectedRoute>} />
           <Route path="/cadastros" element={<ProtectedRoute><CadastrosSistema /></ProtectedRoute>} />
+          <Route path="/produtividade" element={<ProtectedRoute><Produtividade /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

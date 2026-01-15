@@ -401,7 +401,7 @@ export type Database = {
         }
         Relationships: []
       }
-      pessoa_fisica: {
+      prestador_servico: {
         Row: {
           codigo: number
           created_at: string
@@ -427,6 +427,57 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      produtividade: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          data_fim: string
+          data_inicio: string
+          descricao: string | null
+          horas_trabalhadas: number
+          id: string
+          prestador_id: string
+          updated_at: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          data_fim: string
+          data_inicio: string
+          descricao?: string | null
+          horas_trabalhadas?: number
+          id?: string
+          prestador_id: string
+          updated_at?: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          data_fim?: string
+          data_inicio?: string
+          descricao?: string | null
+          horas_trabalhadas?: number
+          id?: string
+          prestador_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produtividade_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "client_access_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "produtividade_prestador_id_fkey"
+            columns: ["prestador_id"]
+            isOneToOne: false
+            referencedRelation: "prestador_servico"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
