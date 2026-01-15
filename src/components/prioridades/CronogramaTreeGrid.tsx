@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, ChevronRight, ChevronLeft, FileDown, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, FileDown, ChevronDown, ChevronRight } from 'lucide-react';
 import { useScheduleTasks } from '@/hooks/useScheduleTasks';
 import { useResources } from '@/hooks/useResources';
 import type { Tables } from '@/integrations/supabase/types';
@@ -110,21 +110,6 @@ export function CronogramaTreeGrid({ projectId }: CronogramaTreeGridProps) {
     }
   };
 
-  const handleIndent = async (taskId: string) => {
-    const taskIndex = tasks.findIndex(t => t.id === taskId);
-    const previousTask = tasks[taskIndex - 1];
-    if (!previousTask) {
-      toast.error('Não há tarefa anterior para indentar');
-      return;
-    }
-    await updateTask(taskId, { parent_id: previousTask.id });
-  };
-
-  const handleOutdent = async (taskId: string) => {
-    const task = tasks.find(t => t.id === taskId);
-    if (!task || !task.parent_id) return;
-    await updateTask(taskId, { parent_id: null });
-  };
 
   const handleUpdateField = async (taskId: string, field: keyof ScheduleTask, value: any) => {
     const task = tasks.find(t => t.id === taskId);
@@ -220,17 +205,9 @@ export function CronogramaTreeGrid({ projectId }: CronogramaTreeGridProps) {
             />
           </TableCell>
           <TableCell>
-            <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" onClick={() => handleIndent(task.id)} className="h-8 w-8 p-0">
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => handleOutdent(task.id)} className="h-8 w-8 p-0">
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => deleteTask(task.id)} className="h-8 w-8 p-0 text-destructive">
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
+            <Button variant="ghost" size="icon" onClick={() => deleteTask(task.id)} className="h-8 w-8 p-0 text-destructive">
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </TableCell>
         </TableRow>
         {isExpanded && hasChildren && task.children.map(child => renderTaskRow(child, level + 1))}
