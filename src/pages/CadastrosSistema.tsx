@@ -14,37 +14,76 @@ import { useTipoTarefa } from '@/hooks/useTipoTarefa';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { usePessoaFisica } from '@/hooks/usePessoaFisica';
 import { toast } from 'sonner';
-
 const CadastrosSistema = () => {
-  const { tiposProduto, isLoading: isLoadingArea, addTipoProduto, updateTipoProduto, deleteTipoProduto } = useTipoProduto();
-  const { tiposTarefa, isLoading: isLoadingTipo, addTipoTarefa, updateTipoTarefa, deleteTipoTarefa } = useTipoTarefa();
-  const { records: clientes, isLoading: isLoadingClientes, createRecord, updateRecord, deleteRecord } = useClientAccessRecords();
-  const { pessoasFisicas, isLoading: isLoadingPessoaFisica, addPessoaFisica, updatePessoaFisica, deletePessoaFisica } = usePessoaFisica();
-  
+  const {
+    tiposProduto,
+    isLoading: isLoadingArea,
+    addTipoProduto,
+    updateTipoProduto,
+    deleteTipoProduto
+  } = useTipoProduto();
+  const {
+    tiposTarefa,
+    isLoading: isLoadingTipo,
+    addTipoTarefa,
+    updateTipoTarefa,
+    deleteTipoTarefa
+  } = useTipoTarefa();
+  const {
+    records: clientes,
+    isLoading: isLoadingClientes,
+    createRecord,
+    updateRecord,
+    deleteRecord
+  } = useClientAccessRecords();
+  const {
+    pessoasFisicas,
+    isLoading: isLoadingPessoaFisica,
+    addPessoaFisica,
+    updatePessoaFisica,
+    deletePessoaFisica
+  } = usePessoaFisica();
+
   // Estado para Área
   const [isAddAreaDialogOpen, setIsAddAreaDialogOpen] = useState(false);
   const [isEditAreaDialogOpen, setIsEditAreaDialogOpen] = useState(false);
   const [newAreaNome, setNewAreaNome] = useState('');
-  const [editingArea, setEditingArea] = useState<{ id: string; nome: string; ativo: boolean } | null>(null);
+  const [editingArea, setEditingArea] = useState<{
+    id: string;
+    nome: string;
+    ativo: boolean;
+  } | null>(null);
 
   // Estado para Tipo
   const [isAddTipoDialogOpen, setIsAddTipoDialogOpen] = useState(false);
   const [isEditTipoDialogOpen, setIsEditTipoDialogOpen] = useState(false);
   const [newTipoNome, setNewTipoNome] = useState('');
-  const [editingTipo, setEditingTipo] = useState<{ id: string; nome: string; ativo: boolean } | null>(null);
+  const [editingTipo, setEditingTipo] = useState<{
+    id: string;
+    nome: string;
+    ativo: boolean;
+  } | null>(null);
 
   // Estado para Cliente
   const [isAddClienteDialogOpen, setIsAddClienteDialogOpen] = useState(false);
   const [isEditClienteDialogOpen, setIsEditClienteDialogOpen] = useState(false);
   const [newClienteNome, setNewClienteNome] = useState('');
-  const [editingCliente, setEditingCliente] = useState<{ id: string; cliente: string } | null>(null);
+  const [editingCliente, setEditingCliente] = useState<{
+    id: string;
+    cliente: string;
+  } | null>(null);
 
   // Estado para Pessoa Física
   const [isAddPessoaFisicaDialogOpen, setIsAddPessoaFisicaDialogOpen] = useState(false);
   const [isEditPessoaFisicaDialogOpen, setIsEditPessoaFisicaDialogOpen] = useState(false);
   const [newPessoaFisicaNome, setNewPessoaFisicaNome] = useState('');
   const [newPessoaFisicaEmail, setNewPessoaFisicaEmail] = useState('');
-  const [editingPessoaFisica, setEditingPessoaFisica] = useState<{ id: string; codigo: number; nome: string; email: string | null } | null>(null);
+  const [editingPessoaFisica, setEditingPessoaFisica] = useState<{
+    id: string;
+    codigo: number;
+    nome: string;
+    email: string | null;
+  } | null>(null);
 
   // Handlers para Área
   const handleAddArea = async () => {
@@ -60,12 +99,16 @@ const CadastrosSistema = () => {
       // Error handled in hook
     }
   };
-
-  const handleEditArea = (item: { id: string; nome: string; ativo: boolean }) => {
-    setEditingArea({ ...item });
+  const handleEditArea = (item: {
+    id: string;
+    nome: string;
+    ativo: boolean;
+  }) => {
+    setEditingArea({
+      ...item
+    });
     setIsEditAreaDialogOpen(true);
   };
-
   const handleUpdateArea = async () => {
     if (!editingArea) return;
     if (!editingArea.nome.trim()) {
@@ -84,7 +127,6 @@ const CadastrosSistema = () => {
       // Error handled in hook
     }
   };
-
   const handleDeleteArea = async (id: string) => {
     if (!confirm('Tem certeza que deseja remover este item?')) return;
     try {
@@ -93,10 +135,12 @@ const CadastrosSistema = () => {
       // Error handled in hook
     }
   };
-
   const handleToggleAreaAtivo = async (id: string, ativo: boolean) => {
     try {
-      await updateTipoProduto({ id, ativo: !ativo });
+      await updateTipoProduto({
+        id,
+        ativo: !ativo
+      });
     } catch (error) {
       // Error handled in hook
     }
@@ -116,12 +160,16 @@ const CadastrosSistema = () => {
       // Error handled in hook
     }
   };
-
-  const handleEditTipo = (item: { id: string; nome: string; ativo: boolean }) => {
-    setEditingTipo({ ...item });
+  const handleEditTipo = (item: {
+    id: string;
+    nome: string;
+    ativo: boolean;
+  }) => {
+    setEditingTipo({
+      ...item
+    });
     setIsEditTipoDialogOpen(true);
   };
-
   const handleUpdateTipo = async () => {
     if (!editingTipo) return;
     if (!editingTipo.nome.trim()) {
@@ -140,7 +188,6 @@ const CadastrosSistema = () => {
       // Error handled in hook
     }
   };
-
   const handleDeleteTipo = async (id: string) => {
     if (!confirm('Tem certeza que deseja remover este item?')) return;
     try {
@@ -149,10 +196,12 @@ const CadastrosSistema = () => {
       // Error handled in hook
     }
   };
-
   const handleToggleTipoAtivo = async (id: string, ativo: boolean) => {
     try {
-      await updateTipoTarefa({ id, ativo: !ativo });
+      await updateTipoTarefa({
+        id,
+        ativo: !ativo
+      });
     } catch (error) {
       // Error handled in hook
     }
@@ -165,7 +214,7 @@ const CadastrosSistema = () => {
       return;
     }
     try {
-      await createRecord.mutateAsync({ 
+      await createRecord.mutateAsync({
         cliente: newClienteNome.trim(),
         vpn_access: [],
         server_access: [],
@@ -179,12 +228,15 @@ const CadastrosSistema = () => {
       // Error handled in hook
     }
   };
-
-  const handleEditCliente = (item: { id: string; cliente: string }) => {
-    setEditingCliente({ ...item });
+  const handleEditCliente = (item: {
+    id: string;
+    cliente: string;
+  }) => {
+    setEditingCliente({
+      ...item
+    });
     setIsEditClienteDialogOpen(true);
   };
-
   const handleUpdateCliente = async () => {
     if (!editingCliente) return;
     if (!editingCliente.cliente.trim()) {
@@ -207,7 +259,6 @@ const CadastrosSistema = () => {
       // Error handled in hook
     }
   };
-
   const handleDeleteCliente = async (id: string) => {
     if (!confirm('Tem certeza que deseja remover este cliente?')) return;
     try {
@@ -224,7 +275,7 @@ const CadastrosSistema = () => {
       return;
     }
     try {
-      await addPessoaFisica({ 
+      await addPessoaFisica({
         nome: newPessoaFisicaNome.trim(),
         email: newPessoaFisicaEmail.trim() || undefined
       });
@@ -235,12 +286,17 @@ const CadastrosSistema = () => {
       // Error handled in hook
     }
   };
-
-  const handleEditPessoaFisica = (item: { id: string; codigo: number; nome: string; email: string | null }) => {
-    setEditingPessoaFisica({ ...item });
+  const handleEditPessoaFisica = (item: {
+    id: string;
+    codigo: number;
+    nome: string;
+    email: string | null;
+  }) => {
+    setEditingPessoaFisica({
+      ...item
+    });
     setIsEditPessoaFisicaDialogOpen(true);
   };
-
   const handleUpdatePessoaFisica = async () => {
     if (!editingPessoaFisica) return;
     if (!editingPessoaFisica.nome.trim()) {
@@ -259,7 +315,6 @@ const CadastrosSistema = () => {
       // Error handled in hook
     }
   };
-
   const handleDeletePessoaFisica = async (id: string) => {
     if (!confirm('Tem certeza que deseja remover esta pessoa?')) return;
     try {
@@ -268,9 +323,7 @@ const CadastrosSistema = () => {
       // Error handled in hook
     }
   };
-
-  return (
-    <Layout>
+  return <Layout>
       <div className="space-y-6">
         <div>
           <h2 className="text-3xl font-bold text-foreground">Cadastros do Sistema</h2>
@@ -301,12 +354,7 @@ const CadastrosSistema = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="px-0 pb-0">
-                  {isLoadingArea ? (
-                    <p className="text-muted-foreground">Carregando...</p>
-                  ) : tiposProduto.length === 0 ? (
-                    <p className="text-muted-foreground">Nenhuma área cadastrada</p>
-                  ) : (
-                    <Table>
+                  {isLoadingArea ? <p className="text-muted-foreground">Carregando...</p> : tiposProduto.length === 0 ? <p className="text-muted-foreground">Nenhuma área cadastrada</p> : <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>Nome</TableHead>
@@ -315,38 +363,24 @@ const CadastrosSistema = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {tiposProduto.map((item) => (
-                          <TableRow key={item.id}>
+                        {tiposProduto.map(item => <TableRow key={item.id}>
                             <TableCell className="font-medium">{item.nome}</TableCell>
                             <TableCell className="text-center">
-                              <Switch
-                                checked={item.ativo}
-                                onCheckedChange={() => handleToggleAreaAtivo(item.id, item.ativo)}
-                              />
+                              <Switch checked={item.ativo} onCheckedChange={() => handleToggleAreaAtivo(item.id, item.ativo)} />
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center justify-center gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleEditArea(item)}
-                                >
+                                <Button variant="ghost" size="icon" onClick={() => handleEditArea(item)}>
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleDeleteArea(item.id)}
-                                >
+                                <Button variant="ghost" size="icon" onClick={() => handleDeleteArea(item.id)}>
                                   <Trash2 className="h-4 w-4 text-destructive" />
                                 </Button>
                               </div>
                             </TableCell>
-                          </TableRow>
-                        ))}
+                          </TableRow>)}
                       </TableBody>
-                    </Table>
-                  )}
+                    </Table>}
                 </CardContent>
               </Card>
             </AccordionContent>
@@ -375,12 +409,7 @@ const CadastrosSistema = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="px-0 pb-0">
-                  {isLoadingTipo ? (
-                    <p className="text-muted-foreground">Carregando...</p>
-                  ) : tiposTarefa.length === 0 ? (
-                    <p className="text-muted-foreground">Nenhum tipo cadastrado</p>
-                  ) : (
-                    <Table>
+                  {isLoadingTipo ? <p className="text-muted-foreground">Carregando...</p> : tiposTarefa.length === 0 ? <p className="text-muted-foreground">Nenhum tipo cadastrado</p> : <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>Nome</TableHead>
@@ -389,38 +418,24 @@ const CadastrosSistema = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {tiposTarefa.map((item) => (
-                          <TableRow key={item.id}>
+                        {tiposTarefa.map(item => <TableRow key={item.id}>
                             <TableCell className="font-medium">{item.nome}</TableCell>
                             <TableCell className="text-center">
-                              <Switch
-                                checked={item.ativo}
-                                onCheckedChange={() => handleToggleTipoAtivo(item.id, item.ativo)}
-                              />
+                              <Switch checked={item.ativo} onCheckedChange={() => handleToggleTipoAtivo(item.id, item.ativo)} />
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center justify-center gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleEditTipo(item)}
-                                >
+                                <Button variant="ghost" size="icon" onClick={() => handleEditTipo(item)}>
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleDeleteTipo(item.id)}
-                                >
+                                <Button variant="ghost" size="icon" onClick={() => handleDeleteTipo(item.id)}>
                                   <Trash2 className="h-4 w-4 text-destructive" />
                                 </Button>
                               </div>
                             </TableCell>
-                          </TableRow>
-                        ))}
+                          </TableRow>)}
                       </TableBody>
-                    </Table>
-                  )}
+                    </Table>}
                 </CardContent>
               </Card>
             </AccordionContent>
@@ -449,12 +464,7 @@ const CadastrosSistema = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="px-0 pb-0">
-                  {isLoadingClientes ? (
-                    <p className="text-muted-foreground">Carregando...</p>
-                  ) : clientes.length === 0 ? (
-                    <p className="text-muted-foreground">Nenhum cliente cadastrado</p>
-                  ) : (
-                    <Table>
+                  {isLoadingClientes ? <p className="text-muted-foreground">Carregando...</p> : clientes.length === 0 ? <p className="text-muted-foreground">Nenhum cliente cadastrado</p> : <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>Nome</TableHead>
@@ -462,32 +472,21 @@ const CadastrosSistema = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {clientes.map((item) => (
-                          <TableRow key={item.id}>
+                        {clientes.map(item => <TableRow key={item.id}>
                             <TableCell className="font-medium">{item.cliente}</TableCell>
                             <TableCell>
                               <div className="flex items-center justify-center gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleEditCliente(item)}
-                                >
+                                <Button variant="ghost" size="icon" onClick={() => handleEditCliente(item)}>
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleDeleteCliente(item.id)}
-                                >
+                                <Button variant="ghost" size="icon" onClick={() => handleDeleteCliente(item.id)}>
                                   <Trash2 className="h-4 w-4 text-destructive" />
                                 </Button>
                               </div>
                             </TableCell>
-                          </TableRow>
-                        ))}
+                          </TableRow>)}
                       </TableBody>
-                    </Table>
-                  )}
+                    </Table>}
                 </CardContent>
               </Card>
             </AccordionContent>
@@ -498,7 +497,7 @@ const CadastrosSistema = () => {
             <AccordionTrigger className="px-6 py-4 hover:no-underline">
               <div className="flex items-center gap-3">
                 <User className="h-5 w-5 text-primary" />
-                <span className="text-lg font-semibold">Pessoa Física</span>
+                <span className="text-lg font-semibold">Prestador de Serviço</span>
                 <Badge variant="secondary" className="ml-2">
                   {pessoasFisicas.length} itens
                 </Badge>
@@ -516,12 +515,7 @@ const CadastrosSistema = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="px-0 pb-0">
-                  {isLoadingPessoaFisica ? (
-                    <p className="text-muted-foreground">Carregando...</p>
-                  ) : pessoasFisicas.length === 0 ? (
-                    <p className="text-muted-foreground">Nenhuma pessoa física cadastrada</p>
-                  ) : (
-                    <Table>
+                  {isLoadingPessoaFisica ? <p className="text-muted-foreground">Carregando...</p> : pessoasFisicas.length === 0 ? <p className="text-muted-foreground">Nenhuma pessoa física cadastrada</p> : <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-[100px]">Código</TableHead>
@@ -531,34 +525,23 @@ const CadastrosSistema = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {pessoasFisicas.map((item) => (
-                          <TableRow key={item.id}>
+                        {pessoasFisicas.map(item => <TableRow key={item.id}>
                             <TableCell className="font-medium">{item.codigo}</TableCell>
                             <TableCell className="font-medium">{item.nome}</TableCell>
                             <TableCell className="text-muted-foreground">{item.email || '-'}</TableCell>
                             <TableCell>
                               <div className="flex items-center justify-center gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleEditPessoaFisica(item)}
-                                >
+                                <Button variant="ghost" size="icon" onClick={() => handleEditPessoaFisica(item)}>
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleDeletePessoaFisica(item.id)}
-                                >
+                                <Button variant="ghost" size="icon" onClick={() => handleDeletePessoaFisica(item.id)}>
                                   <Trash2 className="h-4 w-4 text-destructive" />
                                 </Button>
                               </div>
                             </TableCell>
-                          </TableRow>
-                        ))}
+                          </TableRow>)}
                       </TableBody>
-                    </Table>
-                  )}
+                    </Table>}
                 </CardContent>
               </Card>
             </AccordionContent>
@@ -574,11 +557,7 @@ const CadastrosSistema = () => {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Nome</label>
-                <Input
-                  value={newAreaNome}
-                  onChange={(e) => setNewAreaNome(e.target.value)}
-                  placeholder="Digite o nome da área"
-                />
+                <Input value={newAreaNome} onChange={e => setNewAreaNome(e.target.value)} placeholder="Digite o nome da área" />
               </div>
             </div>
             <DialogFooter>
@@ -596,25 +575,22 @@ const CadastrosSistema = () => {
             <DialogHeader>
               <DialogTitle>Editar Área</DialogTitle>
             </DialogHeader>
-            {editingArea && (
-              <div className="space-y-4 py-4">
+            {editingArea && <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Nome</label>
-                  <Input
-                    value={editingArea.nome}
-                    onChange={(e) => setEditingArea({ ...editingArea, nome: e.target.value })}
-                    placeholder="Digite o nome da área"
-                  />
+                  <Input value={editingArea.nome} onChange={e => setEditingArea({
+                ...editingArea,
+                nome: e.target.value
+              })} placeholder="Digite o nome da área" />
                 </div>
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium">Ativo</label>
-                  <Switch
-                    checked={editingArea.ativo}
-                    onCheckedChange={(checked) => setEditingArea({ ...editingArea, ativo: checked })}
-                  />
+                  <Switch checked={editingArea.ativo} onCheckedChange={checked => setEditingArea({
+                ...editingArea,
+                ativo: checked
+              })} />
                 </div>
-              </div>
-            )}
+              </div>}
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsEditAreaDialogOpen(false)}>
                 Cancelar
@@ -633,11 +609,7 @@ const CadastrosSistema = () => {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Nome</label>
-                <Input
-                  value={newTipoNome}
-                  onChange={(e) => setNewTipoNome(e.target.value)}
-                  placeholder="Digite o nome do tipo"
-                />
+                <Input value={newTipoNome} onChange={e => setNewTipoNome(e.target.value)} placeholder="Digite o nome do tipo" />
               </div>
             </div>
             <DialogFooter>
@@ -655,25 +627,22 @@ const CadastrosSistema = () => {
             <DialogHeader>
               <DialogTitle>Editar Tipo</DialogTitle>
             </DialogHeader>
-            {editingTipo && (
-              <div className="space-y-4 py-4">
+            {editingTipo && <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Nome</label>
-                  <Input
-                    value={editingTipo.nome}
-                    onChange={(e) => setEditingTipo({ ...editingTipo, nome: e.target.value })}
-                    placeholder="Digite o nome do tipo"
-                  />
+                  <Input value={editingTipo.nome} onChange={e => setEditingTipo({
+                ...editingTipo,
+                nome: e.target.value
+              })} placeholder="Digite o nome do tipo" />
                 </div>
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium">Ativo</label>
-                  <Switch
-                    checked={editingTipo.ativo}
-                    onCheckedChange={(checked) => setEditingTipo({ ...editingTipo, ativo: checked })}
-                  />
+                  <Switch checked={editingTipo.ativo} onCheckedChange={checked => setEditingTipo({
+                ...editingTipo,
+                ativo: checked
+              })} />
                 </div>
-              </div>
-            )}
+              </div>}
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsEditTipoDialogOpen(false)}>
                 Cancelar
@@ -692,11 +661,7 @@ const CadastrosSistema = () => {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Nome do Cliente</label>
-                <Input
-                  value={newClienteNome}
-                  onChange={(e) => setNewClienteNome(e.target.value)}
-                  placeholder="Digite o nome do cliente"
-                />
+                <Input value={newClienteNome} onChange={e => setNewClienteNome(e.target.value)} placeholder="Digite o nome do cliente" />
               </div>
             </div>
             <DialogFooter>
@@ -714,18 +679,15 @@ const CadastrosSistema = () => {
             <DialogHeader>
               <DialogTitle>Editar Cliente</DialogTitle>
             </DialogHeader>
-            {editingCliente && (
-              <div className="space-y-4 py-4">
+            {editingCliente && <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Nome do Cliente</label>
-                  <Input
-                    value={editingCliente.cliente}
-                    onChange={(e) => setEditingCliente({ ...editingCliente, cliente: e.target.value })}
-                    placeholder="Digite o nome do cliente"
-                  />
+                  <Input value={editingCliente.cliente} onChange={e => setEditingCliente({
+                ...editingCliente,
+                cliente: e.target.value
+              })} placeholder="Digite o nome do cliente" />
                 </div>
-              </div>
-            )}
+              </div>}
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsEditClienteDialogOpen(false)}>
                 Cancelar
@@ -744,20 +706,11 @@ const CadastrosSistema = () => {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Nome</label>
-                <Input
-                  value={newPessoaFisicaNome}
-                  onChange={(e) => setNewPessoaFisicaNome(e.target.value)}
-                  placeholder="Digite o nome"
-                />
+                <Input value={newPessoaFisicaNome} onChange={e => setNewPessoaFisicaNome(e.target.value)} placeholder="Digite o nome" />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Email</label>
-                <Input
-                  type="email"
-                  value={newPessoaFisicaEmail}
-                  onChange={(e) => setNewPessoaFisicaEmail(e.target.value)}
-                  placeholder="Digite o email"
-                />
+                <Input type="email" value={newPessoaFisicaEmail} onChange={e => setNewPessoaFisicaEmail(e.target.value)} placeholder="Digite o email" />
               </div>
             </div>
             <DialogFooter>
@@ -775,35 +728,26 @@ const CadastrosSistema = () => {
             <DialogHeader>
               <DialogTitle>Editar Pessoa Física</DialogTitle>
             </DialogHeader>
-            {editingPessoaFisica && (
-              <div className="space-y-4 py-4">
+            {editingPessoaFisica && <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Código</label>
-                  <Input
-                    value={editingPessoaFisica.codigo}
-                    disabled
-                    className="bg-muted"
-                  />
+                  <Input value={editingPessoaFisica.codigo} disabled className="bg-muted" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Nome</label>
-                  <Input
-                    value={editingPessoaFisica.nome}
-                    onChange={(e) => setEditingPessoaFisica({ ...editingPessoaFisica, nome: e.target.value })}
-                    placeholder="Digite o nome"
-                  />
+                  <Input value={editingPessoaFisica.nome} onChange={e => setEditingPessoaFisica({
+                ...editingPessoaFisica,
+                nome: e.target.value
+              })} placeholder="Digite o nome" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Email</label>
-                  <Input
-                    type="email"
-                    value={editingPessoaFisica.email || ''}
-                    onChange={(e) => setEditingPessoaFisica({ ...editingPessoaFisica, email: e.target.value })}
-                    placeholder="Digite o email"
-                  />
+                  <Input type="email" value={editingPessoaFisica.email || ''} onChange={e => setEditingPessoaFisica({
+                ...editingPessoaFisica,
+                email: e.target.value
+              })} placeholder="Digite o email" />
                 </div>
-              </div>
-            )}
+              </div>}
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsEditPessoaFisicaDialogOpen(false)}>
                 Cancelar
@@ -813,8 +757,6 @@ const CadastrosSistema = () => {
           </DialogContent>
         </Dialog>
       </div>
-    </Layout>
-  );
+    </Layout>;
 };
-
 export default CadastrosSistema;
