@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
+import DashboardProjetos from "./pages/DashboardProjetos";
 import Backlog from "./pages/Backlog";
 import SprintPlanning from "./pages/SprintPlanning";
 import Daily from "./pages/Daily";
@@ -29,6 +30,7 @@ function App() {
           <Route path="/auth" element={<Auth />} />
           <Route path="/alterar-senha" element={<ProtectedRoute><AlterarSenha /></ProtectedRoute>} />
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/dashboard-projetos" element={<ProtectedRoute><DashboardProjetos /></ProtectedRoute>} />
           <Route path="/backlog" element={<ProtectedRoute><Backlog /></ProtectedRoute>} />
           <Route path="/sprint-planning" element={<ProtectedRoute><SprintPlanning /></ProtectedRoute>} />
           <Route path="/daily" element={<ProtectedRoute><Daily /></ProtectedRoute>} />
