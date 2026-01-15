@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, CheckCircle, Users, Building2 } from 'lucide-react';
+import { Plus, Trash2, CheckCircle } from 'lucide-react';
 import { useProdutividade } from '@/hooks/useProdutividade';
 import { usePrestadorServico } from '@/hooks/usePrestadorServico';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
@@ -45,14 +45,20 @@ const Produtividade = () => {
     });
   };
 
-  const checkDuplicateEntry = (prestadorId: string, clienteId: string, dataInicio: string, dataFim: string) => {
-    return produtividades.some(
-      (p) =>
-        p.prestador_id === prestadorId &&
-        p.cliente_id === clienteId &&
-        p.data_inicio === dataInicio &&
-        p.data_fim === dataFim
-    );
+  const checkOverlappingPeriod = (prestadorId: string, clienteId: string, dataInicio: string, dataFim: string) => {
+    const newStart = new Date(dataInicio);
+    const newEnd = new Date(dataFim);
+    
+    return produtividades.some((p) => {
+      if (p.prestador_id !== prestadorId || p.cliente_id !== clienteId) return false;
+      
+      const existingStart = new Date(p.data_inicio);
+      const existingEnd = new Date(p.data_fim);
+      
+      // Check if periods overlap: new period overlaps with existing if
+      // newStart <= existingEnd AND newEnd >= existingStart
+      return newStart <= existingEnd && newEnd >= existingStart;
+    });
   };
 
   const handleAdd = async () => {
@@ -66,9 +72,9 @@ const Produtividade = () => {
       return;
     }
 
-    // Check for duplicate entry
-    if (checkDuplicateEntry(formData.prestador_id, formData.cliente_id, formData.data_inicio, formData.data_fim)) {
-      toast.error('Já existe um registro para este prestador, cliente e período');
+    // Check for overlapping period
+    if (checkOverlappingPeriod(formData.prestador_id, formData.cliente_id, formData.data_inicio, formData.data_fim)) {
+      toast.error('Já existe um registro para este prestador e cliente com período que se sobrepõe');
       return;
     }
 
@@ -110,9 +116,6 @@ const Produtividade = () => {
       return true;
     });
   }, [produtividades, filterPrestador, filterCliente, filterDataInicio, filterDataFim]);
-
-  // Calculate totals based on filtered data
-  const totalChamados = filteredProdutividades.length;
 
   const clearFilters = () => {
     setFilterPrestador('all');
@@ -209,7 +212,7 @@ const Produtividade = () => {
         </Card>
 
         {/* KPIs */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
@@ -218,33 +221,7 @@ const Produtividade = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Total de Chamados Encerrados</p>
-                  <p className="text-2xl font-bold">{totalChamados}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-primary/10">
-                  <Users className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Prestadores</p>
-                  <p className="text-2xl font-bold">{prestadoresServico.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-primary/10">
-                  <Building2 className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Clientes</p>
-                  <p className="text-2xl font-bold">{clientes.length}</p>
+                  <p className="text-2xl font-bold">{filteredProdutividades.reduce((sum, p) => sum + Number(p.horas_trabalhadas), 0)}</p>
                 </div>
               </div>
             </CardContent>
@@ -268,7 +245,7 @@ const Produtividade = () => {
                     <TableHead>Prestador</TableHead>
                     <TableHead>Cliente</TableHead>
                     <TableHead>Período</TableHead>
-                    <TableHead className="text-right">Horas</TableHead>
+                    <TableHead className="text-right">Total de Chamados Encerrados</TableHead>
                     <TableHead className="w-[80px] text-center">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -283,7 +260,7 @@ const Produtividade = () => {
                         {formatDate(prod.data_inicio)} - {formatDate(prod.data_fim)}
                       </TableCell>
                       <TableCell className="text-right font-medium">
-                        {Number(prod.horas_trabalhadas).toFixed(1)}h
+                        {Number(prod.horas_trabalhadas)}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center">
@@ -367,13 +344,13 @@ const Produtividade = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="horas">Horas Trabalhadas *</Label>
+                <Label htmlFor="horas">Total de Chamados Encerrados *</Label>
                 <Input
                   id="horas"
                   type="number"
-                  step="0.5"
+                  step="1"
                   min="0"
-                  placeholder="Ex: 8.5"
+                  placeholder="Ex: 10"
                   value={formData.horas_trabalhadas}
                   onChange={(e) => setFormData({ ...formData, horas_trabalhadas: e.target.value })}
                 />
