@@ -25,14 +25,6 @@ type MenuGroup = {
 
 const menuStructure: MenuGroup[] = [
   {
-    name: 'Sprint Planning',
-    icon: Calendar,
-    adminOnly: true,
-    items: [
-      { name: 'Sprint Planning', href: '/sprint-planning', icon: Calendar },
-    ],
-  },
-  {
     name: 'Dashboard',
     icon: LayoutDashboard,
     items: [
@@ -43,6 +35,7 @@ const menuStructure: MenuGroup[] = [
     name: 'SCRUM',
     icon: ListTodo,
     items: [
+      { name: 'Sprint Planning', href: '/sprint-planning', icon: Calendar, adminOnly: true },
       { name: 'Sprint', href: '/backlog', icon: ListTodo },
       { name: 'Daily', href: '/daily', icon: MessageSquare },
       { name: 'Retrospectiva', href: '/retrospectiva', icon: RotateCcw },
@@ -82,9 +75,8 @@ const menuStructure: MenuGroup[] = [
 
 // Função para detectar o grupo ativo com base na rota
 const getActiveGroup = (pathname: string): string => {
-  if (pathname.startsWith('/sprint-planning')) return 'Sprint Planning';
   if (pathname === '/') return 'Dashboard';
-  if (pathname.startsWith('/backlog') || pathname.startsWith('/daily') || pathname.startsWith('/retrospectiva')) return 'SCRUM';
+  if (pathname.startsWith('/sprint-planning') || pathname.startsWith('/backlog') || pathname.startsWith('/daily') || pathname.startsWith('/retrospectiva')) return 'SCRUM';
   if (pathname.startsWith('/roadmap')) return 'Roadmap';
   if (pathname.startsWith('/riscos')) return 'Riscos';
   if (pathname.startsWith('/cadastros')) return 'Cadastros';
