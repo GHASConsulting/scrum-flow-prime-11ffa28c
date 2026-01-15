@@ -7,9 +7,13 @@ export interface PrestadorServico {
   codigo: number;
   nome: string;
   email: string | null;
+  nivel: string | null;
   created_at: string;
   updated_at: string;
 }
+
+export const NIVEL_OPTIONS = ['N1', 'N2', 'Especialidade'] as const;
+export type NivelType = typeof NIVEL_OPTIONS[number];
 
 export function usePrestadorServico() {
   const queryClient = useQueryClient();
@@ -28,10 +32,14 @@ export function usePrestadorServico() {
   });
 
   const addPrestadorServico = useMutation({
-    mutationFn: async (prestador: { nome: string; email?: string }) => {
+    mutationFn: async (prestador: { nome: string; email?: string; nivel?: string }) => {
       const { data, error } = await supabase
         .from('prestador_servico')
-        .insert({ nome: prestador.nome, email: prestador.email || null })
+        .insert({ 
+          nome: prestador.nome, 
+          email: prestador.email || null,
+          nivel: prestador.nivel || 'N1'
+        })
         .select()
         .single();
       
@@ -48,10 +56,14 @@ export function usePrestadorServico() {
   });
 
   const updatePrestadorServico = useMutation({
-    mutationFn: async (prestador: { id: string; nome: string; email?: string }) => {
+    mutationFn: async (prestador: { id: string; nome: string; email?: string; nivel?: string }) => {
       const { data, error } = await supabase
         .from('prestador_servico')
-        .update({ nome: prestador.nome, email: prestador.email || null })
+        .update({ 
+          nome: prestador.nome, 
+          email: prestador.email || null,
+          nivel: prestador.nivel || 'N1'
+        })
         .eq('id', prestador.id)
         .select()
         .single();
