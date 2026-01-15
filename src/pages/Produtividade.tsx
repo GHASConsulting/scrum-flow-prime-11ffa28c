@@ -44,6 +44,7 @@ const Produtividade = () => {
   const [filterAnoInicio, setFilterAnoInicio] = useState<string>('');
   const [filterMesFim, setFilterMesFim] = useState<string>('');
   const [filterAnoFim, setFilterAnoFim] = useState<string>('');
+  const [filterImportado, setFilterImportado] = useState<string>('all');
 
   // Sorting states
   type SortColumn = 'codigo' | 'prestador' | 'cliente' | 'data_inicio' | 'data_fim' | 'horas_trabalhadas' | 'importado';
@@ -422,6 +423,10 @@ const Produtividade = () => {
     const filtered = produtividades.filter((p) => {
       if (filterPrestador !== 'all' && p.prestador_id !== filterPrestador) return false;
       if (filterCliente !== 'all' && p.cliente_id !== filterCliente) return false;
+      if (filterImportado !== 'all') {
+        const isImportado = filterImportado === 'sim';
+        if (p.importado !== isImportado) return false;
+      }
       
       // Filter by month/year range
       if (filterMesInicio && filterAnoInicio) {
@@ -483,7 +488,7 @@ const Produtividade = () => {
     }
 
     return filtered;
-  }, [produtividades, filterPrestador, filterCliente, filterMesInicio, filterAnoInicio, filterMesFim, filterAnoFim, sortColumn, sortDirection]);
+  }, [produtividades, filterPrestador, filterCliente, filterImportado, filterMesInicio, filterAnoInicio, filterMesFim, filterAnoFim, sortColumn, sortDirection]);
 
   const SortIcon = ({ column }: { column: SortColumn }) => {
     if (sortColumn !== column) return null;
@@ -498,6 +503,7 @@ const Produtividade = () => {
   const clearFilters = () => {
     setFilterPrestador('all');
     setFilterCliente('all');
+    setFilterImportado('all');
     setFilterMesInicio('');
     setFilterAnoInicio('');
     setFilterMesFim('');
@@ -656,6 +662,20 @@ const Produtividade = () => {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Importado</Label>
+                <Select value={filterImportado} onValueChange={setFilterImportado}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="sim">Sim</SelectItem>
+                    <SelectItem value="nao">Não</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex items-end">
