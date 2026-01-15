@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Plus, Edit, Trash2, Eye } from 'lucide-react';
 import { useRiscos, type RiscoInsert, type Risco } from '@/hooks/useRiscos';
 import { useProfiles } from '@/hooks/useProfiles';
@@ -64,6 +65,7 @@ export default function Riscos() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRisco, setEditingRisco] = useState<Risco | null>(null);
   const [viewingRisco, setViewingRisco] = useState<Risco | null>(null);
+  const [tipoIdentificacao, setTipoIdentificacao] = useState<'Risco' | 'BO'>('Risco');
   
   const [formData, setFormData] = useState<RiscoInsert>({
     projeto: '',
@@ -108,6 +110,7 @@ export default function Riscos() {
       licao_aprendida: null,
     });
     setEditingRisco(null);
+    setTipoIdentificacao('Risco');
   };
 
   const handleOpenDialog = (risco?: Risco) => {
@@ -166,14 +169,14 @@ export default function Riscos() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">Riscos</h1>
-            <p className="text-muted-foreground">Gerencie os riscos do projeto</p>
+            <h1 className="text-3xl font-bold">Riscos/BO</h1>
+            <p className="text-muted-foreground">Gerencie os riscos e BOs do projeto</p>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
               <Button onClick={() => handleOpenDialog()}>
                 <Plus className="mr-2 h-4 w-4" />
-                Novo Risco
+                Novo Registro
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -181,12 +184,29 @@ export default function Riscos() {
                 <DialogTitle>{editingRisco ? 'Editar Risco' : 'Registrar Novo Risco'}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Bloco 1: Identificação do Risco */}
+                {/* Bloco 1: Identificação */}
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">1. Identificação do Risco</CardTitle>
+                    <CardTitle className="text-lg">1. Identificação</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Identificação *</Label>
+                      <RadioGroup 
+                        value={tipoIdentificacao} 
+                        onValueChange={(value) => setTipoIdentificacao(value as 'Risco' | 'BO')}
+                        className="flex gap-6"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="Risco" id="tipo-risco" />
+                          <Label htmlFor="tipo-risco" className="font-normal cursor-pointer">Risco</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="BO" id="tipo-bo" />
+                          <Label htmlFor="tipo-bo" className="font-normal cursor-pointer">BO</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="projeto">Projeto *</Label>
@@ -266,10 +286,10 @@ export default function Riscos() {
                   </CardContent>
                 </Card>
 
-                {/* Bloco 2: Avaliação do Risco */}
+                {/* Bloco 2: Avaliação */}
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">2. Avaliação do Risco</CardTitle>
+                    <CardTitle className="text-lg">2. Avaliação</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-3 gap-4">
