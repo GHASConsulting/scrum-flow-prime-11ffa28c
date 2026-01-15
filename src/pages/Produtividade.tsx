@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,16 +7,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, CheckCircle, Users, Building2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Trash2, CheckCircle, Users, Building2, Upload } from 'lucide-react';
 import { useProdutividade } from '@/hooks/useProdutividade';
 import { usePrestadorServico } from '@/hooks/usePrestadorServico';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import * as XLSX from 'xlsx';
 
 const Produtividade = () => {
-  const { produtividades, isLoading, addProdutividade, deleteProdutividade } = useProdutividade();
+  const { produtividades, isLoading, addProdutividade, addMultipleProdutividade, deleteProdutividade } = useProdutividade();
   const { prestadoresServico, isLoading: isLoadingPrestadores } = usePrestadorServico();
   const { records: clientes, isLoading: isLoadingClientes } = useClientAccessRecords();
 
@@ -144,11 +146,215 @@ const Produtividade = () => {
         data_inicio: formData.data_inicio,
         data_fim: formData.data_fim,
         horas_trabalhadas: parseFloat(formData.horas_trabalhadas),
+        importado: false,
       });
+      toast.success('Produtividade registrada com sucesso!');
       resetForm();
       setIsAddDialogOpen(false);
     } catch (error) {
       // Error handled in hook
+    }
+  };
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isImporting, setIsImporting] = useState(false);
+
+  const parseExcelDate = (value: unknown): string | null => {
+    if (value === null || value === undefined) return null;
+    
+    // If it's a number (Excel serial date)
+    if (typeof value === 'number') {
+      const date = XLSX.SSF.parse_date_code(value);
+      if (date) {
+        const year = date.y;
+        const month = String(date.m).padStart(2, '0');
+        const day = String(date.d).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+      return null;
+    }
+    
+    // If it's a string, try to parse it
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      
+      // Try DD/MM/YYYY format
+      const brMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (brMatch) {
+        const [, day, month, year] = brMatch;
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+      
+      // Try YYYY-MM-DD format
+      const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (isoMatch) {
+        return trimmed;
+      }
+      
+      return null;
+    }
+    
+    // If it's a Date object
+    if (value instanceof Date) {
+      const year = value.getFullYear();
+      const month = String(value.getMonth() + 1).padStart(2, '0');
+      const day = String(value.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    
+    return null;
+  };
+
+  const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as unknown[][];
+
+      // Skip header row
+      const rows = data.slice(1).filter(row => row.length > 0 && row.some(cell => cell !== null && cell !== undefined && cell !== ''));
+
+      if (rows.length === 0) {
+        toast.error('Nenhum registro encontrado na planilha');
+        return;
+      }
+
+      const errors: string[] = [];
+      const validRecords: {
+        prestador_id: string;
+        cliente_id: string;
+        data_inicio: string;
+        data_fim: string;
+        horas_trabalhadas: number;
+        importado: boolean;
+      }[] = [];
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const rowNumber = i + 2; // Account for header and 0-based index
+        const rowErrors: string[] = [];
+
+        // Column A: Código do Prestador
+        const codigoPrestador = row[0];
+        if (codigoPrestador === null || codigoPrestador === undefined || codigoPrestador === '') {
+          rowErrors.push('Código do Prestador está vazio');
+        }
+        const prestador = prestadoresServico.find(p => p.codigo === Number(codigoPrestador));
+        if (!prestador && codigoPrestador !== null && codigoPrestador !== undefined && codigoPrestador !== '') {
+          rowErrors.push(`Código do Prestador ${codigoPrestador} não encontrado`);
+        }
+
+        // Column B: Código do Cliente
+        const codigoCliente = row[1];
+        if (codigoCliente === null || codigoCliente === undefined || codigoCliente === '') {
+          rowErrors.push('Código do Cliente está vazio');
+        }
+        const cliente = clientes.find(c => c.codigo === Number(codigoCliente));
+        if (!cliente && codigoCliente !== null && codigoCliente !== undefined && codigoCliente !== '') {
+          rowErrors.push(`Código do Cliente ${codigoCliente} não encontrado`);
+        }
+
+        // Column C: Data de Início
+        const dataInicio = parseExcelDate(row[2]);
+        if (!dataInicio) {
+          rowErrors.push('Data de Início inválida ou vazia');
+        }
+
+        // Column D: Data Fim
+        const dataFim = parseExcelDate(row[3]);
+        if (!dataFim) {
+          rowErrors.push('Data Fim inválida ou vazia');
+        }
+
+        // Validate date range
+        if (dataInicio && dataFim && new Date(dataFim) < new Date(dataInicio)) {
+          rowErrors.push('Data Fim deve ser maior ou igual à Data de Início');
+        }
+
+        // Column E: Total de Chamados Encerrados
+        const totalChamados = row[4];
+        const totalChamadosNum = Number(totalChamados);
+        if (totalChamados === null || totalChamados === undefined || totalChamados === '' || isNaN(totalChamadosNum) || totalChamadosNum < 0) {
+          rowErrors.push('Total de Chamados Encerrados inválido');
+        }
+
+        // Check for overlapping period if valid data
+        if (prestador && cliente && dataInicio && dataFim) {
+          const hasOverlap = produtividades.some((p) => {
+            if (p.prestador_id !== prestador.id || p.cliente_id !== cliente.id) return false;
+            const existingStart = new Date(p.data_inicio);
+            const existingEnd = new Date(p.data_fim);
+            const newStart = new Date(dataInicio);
+            const newEnd = new Date(dataFim);
+            return newStart <= existingEnd && newEnd >= existingStart;
+          });
+
+          // Also check against records being imported
+          const hasOverlapInImport = validRecords.some((vr) => {
+            if (vr.prestador_id !== prestador.id || vr.cliente_id !== cliente.id) return false;
+            const existingStart = new Date(vr.data_inicio);
+            const existingEnd = new Date(vr.data_fim);
+            const newStart = new Date(dataInicio);
+            const newEnd = new Date(dataFim);
+            return newStart <= existingEnd && newEnd >= existingStart;
+          });
+
+          if (hasOverlap || hasOverlapInImport) {
+            rowErrors.push('Período se sobrepõe com registro existente');
+          }
+        }
+
+        if (rowErrors.length > 0) {
+          errors.push(`Linha ${rowNumber}: ${rowErrors.join('; ')}`);
+        } else if (prestador && cliente && dataInicio && dataFim) {
+          validRecords.push({
+            prestador_id: prestador.id,
+            cliente_id: cliente.id,
+            data_inicio: dataInicio,
+            data_fim: dataFim,
+            horas_trabalhadas: totalChamadosNum,
+            importado: true,
+          });
+        }
+      }
+
+      if (errors.length > 0) {
+        toast.error(
+          <div className="max-h-96 overflow-auto">
+            <p className="font-semibold mb-2">Erros encontrados na importação:</p>
+            <ul className="list-disc pl-4 space-y-1">
+              {errors.map((error, idx) => (
+                <li key={idx} className="text-sm">{error}</li>
+              ))}
+            </ul>
+          </div>,
+          { duration: 15000 }
+        );
+        return;
+      }
+
+      if (validRecords.length === 0) {
+        toast.error('Nenhum registro válido para importar');
+        return;
+      }
+
+      await addMultipleProdutividade(validRecords);
+      toast.success(`${validRecords.length} registro(s) importado(s) com sucesso!`);
+    } catch (error) {
+      console.error('Error importing file:', error);
+      toast.error('Erro ao processar o arquivo. Verifique o formato da planilha.');
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -210,13 +416,30 @@ const Produtividade = () => {
               Registre a produtividade dos prestadores de serviço por cliente e período
             </p>
           </div>
-          <Button onClick={() => {
-            resetForm();
-            setIsAddDialogOpen(true);
-          }}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Registro
-          </Button>
+          <div className="flex gap-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept=".xlsx,.xls"
+              onChange={handleImportFile}
+              className="hidden"
+            />
+            <Button 
+              variant="outline" 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isImporting}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              {isImporting ? 'Importando...' : 'Importar Excel'}
+            </Button>
+            <Button onClick={() => {
+              resetForm();
+              setIsAddDialogOpen(true);
+            }}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Registro
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -391,6 +614,7 @@ const Produtividade = () => {
                     <TableHead>Data Início</TableHead>
                     <TableHead>Data Fim</TableHead>
                     <TableHead className="text-right">Total de Chamados Encerrados</TableHead>
+                    <TableHead className="text-center">Importado</TableHead>
                     <TableHead className="w-[80px] text-center">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -400,11 +624,18 @@ const Produtividade = () => {
                       <TableCell className="font-medium">
                         {prod.prestador ? `${prod.prestador.codigo} - ${prod.prestador.nome}` : '-'}
                       </TableCell>
-                      <TableCell>{prod.cliente?.cliente || '-'}</TableCell>
+                      <TableCell>
+                        {prod.cliente ? `${prod.cliente.codigo} - ${prod.cliente.cliente}` : '-'}
+                      </TableCell>
                       <TableCell>{formatDate(prod.data_inicio)}</TableCell>
                       <TableCell>{formatDate(prod.data_fim)}</TableCell>
                       <TableCell className="text-right font-medium">
                         {Number(prod.horas_trabalhadas)}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant={prod.importado ? 'default' : 'secondary'}>
+                          {prod.importado ? 'Sim' : 'Não'}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center">
