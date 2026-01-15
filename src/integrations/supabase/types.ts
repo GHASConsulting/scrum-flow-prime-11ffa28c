@@ -842,6 +842,7 @@ export type Database = {
           project_id: string
           responsavel: string | null
           start_at: string | null
+          status: string | null
           tipo_produto: string | null
           updated_at: string
         }
@@ -860,6 +861,7 @@ export type Database = {
           project_id: string
           responsavel?: string | null
           start_at?: string | null
+          status?: string | null
           tipo_produto?: string | null
           updated_at?: string
         }
@@ -878,6 +880,7 @@ export type Database = {
           project_id?: string
           responsavel?: string | null
           start_at?: string | null
+          status?: string | null
           tipo_produto?: string | null
           updated_at?: string
         }
