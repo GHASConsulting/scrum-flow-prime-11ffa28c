@@ -49,6 +49,7 @@ export type Database = {
       }
       backlog: {
         Row: {
+          cliente_id: string | null
           created_at: string
           descricao: string | null
           id: string
@@ -62,6 +63,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          cliente_id?: string | null
           created_at?: string
           descricao?: string | null
           id?: string
@@ -75,6 +77,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          cliente_id?: string | null
           created_at?: string
           descricao?: string | null
           id?: string
@@ -87,7 +90,15 @@ export type Database = {
           titulo?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "backlog_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "client_access_records"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       client_access_records: {
         Row: {
