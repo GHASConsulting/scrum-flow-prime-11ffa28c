@@ -12,7 +12,8 @@ import { Plus, Edit, Trash2, Package, Tag, Users, User } from 'lucide-react';
 import { useTipoProduto } from '@/hooks/useTipoProduto';
 import { useTipoTarefa } from '@/hooks/useTipoTarefa';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
-import { usePrestadorServico } from '@/hooks/usePrestadorServico';
+import { usePrestadorServico, NIVEL_OPTIONS } from '@/hooks/usePrestadorServico';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 const CadastrosSistema = () => {
   const {
@@ -79,11 +80,13 @@ const CadastrosSistema = () => {
   const [isEditPrestadorDialogOpen, setIsEditPrestadorDialogOpen] = useState(false);
   const [newPrestadorNome, setNewPrestadorNome] = useState('');
   const [newPrestadorEmail, setNewPrestadorEmail] = useState('');
+  const [newPrestadorNivel, setNewPrestadorNivel] = useState('N1');
   const [editingPrestador, setEditingPrestador] = useState<{
     id: string;
     codigo: number;
     nome: string;
     email: string | null;
+    nivel: string | null;
   } | null>(null);
 
   // Handlers para Área
@@ -279,10 +282,12 @@ const CadastrosSistema = () => {
     try {
       await addPrestadorServico({
         nome: newPrestadorNome.trim(),
-        email: newPrestadorEmail.trim() || undefined
+        email: newPrestadorEmail.trim() || undefined,
+        nivel: newPrestadorNivel
       });
       setNewPrestadorNome('');
       setNewPrestadorEmail('');
+      setNewPrestadorNivel('N1');
       setIsAddPrestadorDialogOpen(false);
     } catch (error) {
       // Error handled in hook
@@ -293,6 +298,7 @@ const CadastrosSistema = () => {
     codigo: number;
     nome: string;
     email: string | null;
+    nivel: string | null;
   }) => {
     setEditingPrestador({
       ...item
@@ -309,7 +315,8 @@ const CadastrosSistema = () => {
       await updatePrestadorServico({
         id: editingPrestador.id,
         nome: editingPrestador.nome.trim(),
-        email: editingPrestador.email?.trim() || undefined
+        email: editingPrestador.email?.trim() || undefined,
+        nivel: editingPrestador.nivel || 'N1'
       });
       setIsEditPrestadorDialogOpen(false);
       setEditingPrestador(null);
@@ -525,6 +532,7 @@ const CadastrosSistema = () => {
                           <TableHead className="w-[100px]">Código</TableHead>
                           <TableHead>Nome</TableHead>
                           <TableHead>Email</TableHead>
+                          <TableHead className="w-[100px]">Nível</TableHead>
                           <TableHead className="w-[100px] text-center">Ações</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -533,6 +541,7 @@ const CadastrosSistema = () => {
                             <TableCell className="font-medium">{item.codigo}</TableCell>
                             <TableCell className="font-medium">{item.nome}</TableCell>
                             <TableCell className="text-muted-foreground">{item.email || '-'}</TableCell>
+                            <TableCell className="font-medium">{item.nivel || 'N1'}</TableCell>
                             <TableCell>
                               <div className="flex items-center justify-center gap-2">
                                 <Button variant="ghost" size="icon" onClick={() => handleEditPrestador(item)}>
@@ -716,6 +725,19 @@ const CadastrosSistema = () => {
                 <label className="text-sm font-medium">Email</label>
                 <Input type="email" value={newPrestadorEmail} onChange={e => setNewPrestadorEmail(e.target.value)} placeholder="Digite o email" />
               </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nível</label>
+                <Select value={newPrestadorNivel} onValueChange={setNewPrestadorNivel}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o nível" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {NIVEL_OPTIONS.map(nivel => (
+                      <SelectItem key={nivel} value={nivel}>{nivel}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddPrestadorDialogOpen(false)}>
@@ -750,6 +772,22 @@ const CadastrosSistema = () => {
                 ...editingPrestador,
                 email: e.target.value
               })} placeholder="Digite o email" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Nível</label>
+                  <Select value={editingPrestador.nivel || 'N1'} onValueChange={nivel => setEditingPrestador({
+                ...editingPrestador,
+                nivel
+              })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o nível" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {NIVEL_OPTIONS.map(nivel => (
+                        <SelectItem key={nivel} value={nivel}>{nivel}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>}
             <DialogFooter>
