@@ -8,16 +8,18 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Plus, Edit, Trash2, Package, Tag, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, Tag, Users, User } from 'lucide-react';
 import { useTipoProduto } from '@/hooks/useTipoProduto';
 import { useTipoTarefa } from '@/hooks/useTipoTarefa';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
+import { usePessoaFisica } from '@/hooks/usePessoaFisica';
 import { toast } from 'sonner';
 
 const CadastrosSistema = () => {
   const { tiposProduto, isLoading: isLoadingArea, addTipoProduto, updateTipoProduto, deleteTipoProduto } = useTipoProduto();
   const { tiposTarefa, isLoading: isLoadingTipo, addTipoTarefa, updateTipoTarefa, deleteTipoTarefa } = useTipoTarefa();
   const { records: clientes, isLoading: isLoadingClientes, createRecord, updateRecord, deleteRecord } = useClientAccessRecords();
+  const { pessoasFisicas, isLoading: isLoadingPessoaFisica, addPessoaFisica, updatePessoaFisica, deletePessoaFisica } = usePessoaFisica();
   
   // Estado para Área
   const [isAddAreaDialogOpen, setIsAddAreaDialogOpen] = useState(false);
@@ -36,6 +38,13 @@ const CadastrosSistema = () => {
   const [isEditClienteDialogOpen, setIsEditClienteDialogOpen] = useState(false);
   const [newClienteNome, setNewClienteNome] = useState('');
   const [editingCliente, setEditingCliente] = useState<{ id: string; cliente: string } | null>(null);
+
+  // Estado para Pessoa Física
+  const [isAddPessoaFisicaDialogOpen, setIsAddPessoaFisicaDialogOpen] = useState(false);
+  const [isEditPessoaFisicaDialogOpen, setIsEditPessoaFisicaDialogOpen] = useState(false);
+  const [newPessoaFisicaNome, setNewPessoaFisicaNome] = useState('');
+  const [newPessoaFisicaEmail, setNewPessoaFisicaEmail] = useState('');
+  const [editingPessoaFisica, setEditingPessoaFisica] = useState<{ id: string; codigo: number; nome: string; email: string | null } | null>(null);
 
   // Handlers para Área
   const handleAddArea = async () => {
@@ -203,6 +212,58 @@ const CadastrosSistema = () => {
     if (!confirm('Tem certeza que deseja remover este cliente?')) return;
     try {
       await deleteRecord.mutateAsync(id);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+
+  // Handlers para Pessoa Física
+  const handleAddPessoaFisica = async () => {
+    if (!newPessoaFisicaNome.trim()) {
+      toast.error('Nome é obrigatório');
+      return;
+    }
+    try {
+      await addPessoaFisica({ 
+        nome: newPessoaFisicaNome.trim(),
+        email: newPessoaFisicaEmail.trim() || undefined
+      });
+      setNewPessoaFisicaNome('');
+      setNewPessoaFisicaEmail('');
+      setIsAddPessoaFisicaDialogOpen(false);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+
+  const handleEditPessoaFisica = (item: { id: string; codigo: number; nome: string; email: string | null }) => {
+    setEditingPessoaFisica({ ...item });
+    setIsEditPessoaFisicaDialogOpen(true);
+  };
+
+  const handleUpdatePessoaFisica = async () => {
+    if (!editingPessoaFisica) return;
+    if (!editingPessoaFisica.nome.trim()) {
+      toast.error('Nome é obrigatório');
+      return;
+    }
+    try {
+      await updatePessoaFisica({
+        id: editingPessoaFisica.id,
+        nome: editingPessoaFisica.nome.trim(),
+        email: editingPessoaFisica.email?.trim() || undefined
+      });
+      setIsEditPessoaFisicaDialogOpen(false);
+      setEditingPessoaFisica(null);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+
+  const handleDeletePessoaFisica = async (id: string) => {
+    if (!confirm('Tem certeza que deseja remover esta pessoa?')) return;
+    try {
+      await deletePessoaFisica(id);
     } catch (error) {
       // Error handled in hook
     }
@@ -431,6 +492,77 @@ const CadastrosSistema = () => {
               </Card>
             </AccordionContent>
           </AccordionItem>
+
+          {/* Pessoa Física */}
+          <AccordionItem value="pessoa-fisica" className="border rounded-lg bg-card">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline">
+              <div className="flex items-center gap-3">
+                <User className="h-5 w-5 text-primary" />
+                <span className="text-lg font-semibold">Pessoa Física</span>
+                <Badge variant="secondary" className="ml-2">
+                  {pessoasFisicas.length} itens
+                </Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-4">
+              <Card className="border-0 shadow-none">
+                <CardHeader className="px-0 pt-0">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">Lista de Pessoas Físicas</CardTitle>
+                    <Button onClick={() => setIsAddPessoaFisicaDialogOpen(true)} size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="px-0 pb-0">
+                  {isLoadingPessoaFisica ? (
+                    <p className="text-muted-foreground">Carregando...</p>
+                  ) : pessoasFisicas.length === 0 ? (
+                    <p className="text-muted-foreground">Nenhuma pessoa física cadastrada</p>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[100px]">Código</TableHead>
+                          <TableHead>Nome</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead className="w-[100px] text-center">Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {pessoasFisicas.map((item) => (
+                          <TableRow key={item.id}>
+                            <TableCell className="font-medium">{item.codigo}</TableCell>
+                            <TableCell className="font-medium">{item.nome}</TableCell>
+                            <TableCell className="text-muted-foreground">{item.email || '-'}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center justify-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleEditPessoaFisica(item)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleDeletePessoaFisica(item.id)}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            </AccordionContent>
+          </AccordionItem>
         </Accordion>
 
         {/* Dialog Adicionar Área */}
@@ -599,6 +731,84 @@ const CadastrosSistema = () => {
                 Cancelar
               </Button>
               <Button onClick={handleUpdateCliente}>Salvar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Adicionar Pessoa Física */}
+        <Dialog open={isAddPessoaFisicaDialogOpen} onOpenChange={setIsAddPessoaFisicaDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Adicionar Pessoa Física</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nome</label>
+                <Input
+                  value={newPessoaFisicaNome}
+                  onChange={(e) => setNewPessoaFisicaNome(e.target.value)}
+                  placeholder="Digite o nome"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Email</label>
+                <Input
+                  type="email"
+                  value={newPessoaFisicaEmail}
+                  onChange={(e) => setNewPessoaFisicaEmail(e.target.value)}
+                  placeholder="Digite o email"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddPessoaFisicaDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAddPessoaFisica}>Adicionar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Editar Pessoa Física */}
+        <Dialog open={isEditPessoaFisicaDialogOpen} onOpenChange={setIsEditPessoaFisicaDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar Pessoa Física</DialogTitle>
+            </DialogHeader>
+            {editingPessoaFisica && (
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Código</label>
+                  <Input
+                    value={editingPessoaFisica.codigo}
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Nome</label>
+                  <Input
+                    value={editingPessoaFisica.nome}
+                    onChange={(e) => setEditingPessoaFisica({ ...editingPessoaFisica, nome: e.target.value })}
+                    placeholder="Digite o nome"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Email</label>
+                  <Input
+                    type="email"
+                    value={editingPessoaFisica.email || ''}
+                    onChange={(e) => setEditingPessoaFisica({ ...editingPessoaFisica, email: e.target.value })}
+                    placeholder="Digite o email"
+                  />
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditPessoaFisicaDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleUpdatePessoaFisica}>Salvar</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
