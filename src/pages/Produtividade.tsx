@@ -18,6 +18,7 @@ import {
 import { useProdutividade } from '@/hooks/useProdutividade';
 import { usePrestadorServico } from '@/hooks/usePrestadorServico';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
+import { useTemplateFiles } from '@/hooks/useTemplateFiles';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -27,6 +28,7 @@ const Produtividade = () => {
   const { produtividades, isLoading, addProdutividade, addMultipleProdutividade, deleteProdutividade } = useProdutividade();
   const { prestadoresServico, isLoading: isLoadingPrestadores } = usePrestadorServico();
   const { records: clientes, isLoading: isLoadingClientes } = useClientAccessRecords();
+  const { downloadTemplate } = useTemplateFiles();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -540,14 +542,7 @@ const Produtividade = () => {
                   <Upload className="h-4 w-4 mr-2" />
                   Importar Registros
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => {
-                  const link = document.createElement('a');
-                  link.href = '/templates/GHAS_-_Arquivo_Modelo_de_Importacao.xlsx';
-                  link.download = 'GHAS_-_Arquivo_Modelo_de_Importacao.xlsx';
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
-                }}>
+                <DropdownMenuItem onClick={() => downloadTemplate('produtividade', 'GHAS_-_Arquivo_Modelo_de_Importacao.xlsx')}>
                   <Download className="h-4 w-4 mr-2" />
                   Baixar Modelo de Arquivo
                 </DropdownMenuItem>

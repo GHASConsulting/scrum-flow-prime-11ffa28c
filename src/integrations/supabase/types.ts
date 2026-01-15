@@ -1017,6 +1017,33 @@ export type Database = {
           },
         ]
       }
+      template_files: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          storage_path: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          storage_path: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          storage_path?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tipo_produto: {
         Row: {
           ativo: boolean
