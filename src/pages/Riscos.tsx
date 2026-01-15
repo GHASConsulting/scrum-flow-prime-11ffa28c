@@ -181,7 +181,7 @@ export default function Riscos() {
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editingRisco ? 'Editar Risco' : 'Registrar Novo Risco'}</DialogTitle>
+                <DialogTitle>{editingRisco ? 'Editar Risco' : 'Novo Risco'}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Bloco 1: Identificação */}
