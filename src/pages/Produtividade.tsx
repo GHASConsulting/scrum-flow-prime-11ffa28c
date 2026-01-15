@@ -32,8 +32,28 @@ const Produtividade = () => {
   // Filter states
   const [filterPrestador, setFilterPrestador] = useState<string>('all');
   const [filterCliente, setFilterCliente] = useState<string>('all');
-  const [filterDataInicio, setFilterDataInicio] = useState('');
-  const [filterDataFim, setFilterDataFim] = useState('');
+  const [filterMesInicio, setFilterMesInicio] = useState<string>('');
+  const [filterAnoInicio, setFilterAnoInicio] = useState<string>('');
+  const [filterMesFim, setFilterMesFim] = useState<string>('');
+  const [filterAnoFim, setFilterAnoFim] = useState<string>('');
+
+  // Generate years for dropdown (from 2020 to current year + 1)
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - 2020 + 2 }, (_, i) => 2020 + i);
+  const months = [
+    { value: '01', label: 'Janeiro' },
+    { value: '02', label: 'Fevereiro' },
+    { value: '03', label: 'Março' },
+    { value: '04', label: 'Abril' },
+    { value: '05', label: 'Maio' },
+    { value: '06', label: 'Junho' },
+    { value: '07', label: 'Julho' },
+    { value: '08', label: 'Agosto' },
+    { value: '09', label: 'Setembro' },
+    { value: '10', label: 'Outubro' },
+    { value: '11', label: 'Novembro' },
+    { value: '12', label: 'Dezembro' },
+  ];
 
   const resetForm = () => {
     setFormData({
@@ -111,11 +131,21 @@ const Produtividade = () => {
     return produtividades.filter((p) => {
       if (filterPrestador !== 'all' && p.prestador_id !== filterPrestador) return false;
       if (filterCliente !== 'all' && p.cliente_id !== filterCliente) return false;
-      if (filterDataInicio && p.data_inicio < filterDataInicio) return false;
-      if (filterDataFim && p.data_fim > filterDataFim) return false;
+      
+      // Filter by month/year range
+      if (filterMesInicio && filterAnoInicio) {
+        const filterStartDate = `${filterAnoInicio}-${filterMesInicio}-01`;
+        if (p.data_inicio < filterStartDate) return false;
+      }
+      if (filterMesFim && filterAnoFim) {
+        // Last day of the selected month
+        const lastDay = new Date(parseInt(filterAnoFim), parseInt(filterMesFim), 0).getDate();
+        const filterEndDate = `${filterAnoFim}-${filterMesFim}-${String(lastDay).padStart(2, '0')}`;
+        if (p.data_fim > filterEndDate) return false;
+      }
       return true;
     });
-  }, [produtividades, filterPrestador, filterCliente, filterDataInicio, filterDataFim]);
+  }, [produtividades, filterPrestador, filterCliente, filterMesInicio, filterAnoInicio, filterMesFim, filterAnoFim]);
 
   // Calculate KPIs based on filtered data
   const totalChamados = filteredProdutividades.reduce((sum, p) => sum + Number(p.horas_trabalhadas), 0);
@@ -125,8 +155,10 @@ const Produtividade = () => {
   const clearFilters = () => {
     setFilterPrestador('all');
     setFilterCliente('all');
-    setFilterDataInicio('');
-    setFilterDataFim('');
+    setFilterMesInicio('');
+    setFilterAnoInicio('');
+    setFilterMesFim('');
+    setFilterAnoFim('');
   };
 
   return (
@@ -190,21 +222,63 @@ const Produtividade = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Período Inicial</Label>
-                <Input
-                  type="date"
-                  value={filterDataInicio}
-                  onChange={(e) => setFilterDataInicio(e.target.value)}
-                />
+                <Label>Mês/Ano Inicial</Label>
+                <div className="flex gap-2">
+                  <Select value={filterMesInicio} onValueChange={setFilterMesInicio}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Mês" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {months.map((m) => (
+                        <SelectItem key={m.value} value={m.value}>
+                          {m.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={filterAnoInicio} onValueChange={setFilterAnoInicio}>
+                    <SelectTrigger className="w-[100px]">
+                      <SelectValue placeholder="Ano" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {years.map((year) => (
+                        <SelectItem key={year} value={String(year)}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Período Final</Label>
-                <Input
-                  type="date"
-                  value={filterDataFim}
-                  onChange={(e) => setFilterDataFim(e.target.value)}
-                />
+                <Label>Mês/Ano Final</Label>
+                <div className="flex gap-2">
+                  <Select value={filterMesFim} onValueChange={setFilterMesFim}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Mês" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {months.map((m) => (
+                        <SelectItem key={m.value} value={m.value}>
+                          {m.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={filterAnoFim} onValueChange={setFilterAnoFim}>
+                    <SelectTrigger className="w-[100px]">
+                      <SelectValue placeholder="Ano" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {years.map((year) => (
+                        <SelectItem key={year} value={String(year)}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="flex items-end">
