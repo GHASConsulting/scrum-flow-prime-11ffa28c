@@ -507,7 +507,7 @@ const CadastrosSistema = () => {
               <Card className="border-0 shadow-none">
                 <CardHeader className="px-0 pt-0">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">Lista de Pessoas Físicas</CardTitle>
+                    <CardTitle className="text-base">Lista de Prestadores de Serviço</CardTitle>
                     <Button onClick={() => setIsAddPessoaFisicaDialogOpen(true)} size="sm">
                       <Plus className="h-4 w-4 mr-2" />
                       Adicionar
