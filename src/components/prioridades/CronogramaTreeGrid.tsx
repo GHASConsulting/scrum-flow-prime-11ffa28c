@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { DebouncedInput } from './DebouncedInput';
 
 type ScheduleTask = Tables<'schedule_task'>;
 
@@ -186,7 +187,11 @@ export function CronogramaTreeGrid({ projectId }: CronogramaTreeGridProps) {
                   {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                 </Button>
               )}
-              <Input value={task.name} onChange={(e) => handleUpdateField(task.id, 'name', e.target.value)} className="h-8 w-full" />
+              <DebouncedInput 
+                value={task.name} 
+                onChange={(value) => handleUpdateField(task.id, 'name', value)} 
+                className="h-8 w-full" 
+              />
             </div>
           </TableCell>
           <TableCell>
@@ -199,10 +204,20 @@ export function CronogramaTreeGrid({ projectId }: CronogramaTreeGridProps) {
             <Input type="datetime-local" value={task.end_at ? formatDateTimeForInput(new Date(task.end_at)) : ''} onChange={(e) => handleUpdateField(task.id, 'end_at', e.target.value)} className="h-8" disabled={task.is_summary} />
           </TableCell>
           <TableCell>
-            <Input value={task.predecessors || ''} onChange={(e) => handleUpdateField(task.id, 'predecessors', e.target.value)} className="h-8" placeholder="IDs separados por vírgula" />
+            <DebouncedInput 
+              value={task.predecessors || ''} 
+              onChange={(value) => handleUpdateField(task.id, 'predecessors', value)} 
+              className="h-8" 
+              placeholder="IDs separados por vírgula" 
+            />
           </TableCell>
           <TableCell>
-            <Input value={task.responsavel || ''} onChange={(e) => handleUpdateField(task.id, 'responsavel', e.target.value)} className="h-8" placeholder="Nome do responsável" />
+            <DebouncedInput 
+              value={task.responsavel || ''} 
+              onChange={(value) => handleUpdateField(task.id, 'responsavel', value)} 
+              className="h-8" 
+              placeholder="Nome do responsável" 
+            />
           </TableCell>
           <TableCell>
             <div className="flex items-center gap-1">
