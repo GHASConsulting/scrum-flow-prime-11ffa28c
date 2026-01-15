@@ -14,7 +14,6 @@ import Auth from "./pages/Auth";
 import AlterarSenha from "./pages/AlterarSenha";
 import Administracao from "./pages/Administracao";
 import CadastrosSistema from "./pages/CadastrosSistema";
-import Clientes from "./pages/Clientes";
 import RoadmapGeral from "./pages/RoadmapGeral";
 import NotFound from "./pages/NotFound";
 
@@ -39,7 +38,6 @@ function App() {
           <Route path="/roadmap" element={<ProtectedRoute><RoadmapGeral /></ProtectedRoute>} />
           <Route path="/administracao" element={<ProtectedRoute><Administracao /></ProtectedRoute>} />
           <Route path="/cadastros" element={<ProtectedRoute><CadastrosSistema /></ProtectedRoute>} />
-          <Route path="/clientes" element={<ProtectedRoute><Clientes /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

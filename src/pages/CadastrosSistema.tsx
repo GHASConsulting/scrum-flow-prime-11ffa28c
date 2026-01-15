@@ -8,14 +8,16 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Plus, Edit, Trash2, Package, Tag } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, Tag, Users } from 'lucide-react';
 import { useTipoProduto } from '@/hooks/useTipoProduto';
 import { useTipoTarefa } from '@/hooks/useTipoTarefa';
+import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { toast } from 'sonner';
 
 const CadastrosSistema = () => {
   const { tiposProduto, isLoading: isLoadingArea, addTipoProduto, updateTipoProduto, deleteTipoProduto } = useTipoProduto();
   const { tiposTarefa, isLoading: isLoadingTipo, addTipoTarefa, updateTipoTarefa, deleteTipoTarefa } = useTipoTarefa();
+  const { records: clientes, isLoading: isLoadingClientes, createRecord, updateRecord, deleteRecord } = useClientAccessRecords();
   
   // Estado para Área
   const [isAddAreaDialogOpen, setIsAddAreaDialogOpen] = useState(false);
@@ -28,6 +30,12 @@ const CadastrosSistema = () => {
   const [isEditTipoDialogOpen, setIsEditTipoDialogOpen] = useState(false);
   const [newTipoNome, setNewTipoNome] = useState('');
   const [editingTipo, setEditingTipo] = useState<{ id: string; nome: string; ativo: boolean } | null>(null);
+
+  // Estado para Cliente
+  const [isAddClienteDialogOpen, setIsAddClienteDialogOpen] = useState(false);
+  const [isEditClienteDialogOpen, setIsEditClienteDialogOpen] = useState(false);
+  const [newClienteNome, setNewClienteNome] = useState('');
+  const [editingCliente, setEditingCliente] = useState<{ id: string; cliente: string } | null>(null);
 
   // Handlers para Área
   const handleAddArea = async () => {
@@ -136,6 +144,65 @@ const CadastrosSistema = () => {
   const handleToggleTipoAtivo = async (id: string, ativo: boolean) => {
     try {
       await updateTipoTarefa({ id, ativo: !ativo });
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+
+  // Handlers para Cliente
+  const handleAddCliente = async () => {
+    if (!newClienteNome.trim()) {
+      toast.error('Nome do cliente é obrigatório');
+      return;
+    }
+    try {
+      await createRecord.mutateAsync({ 
+        cliente: newClienteNome.trim(),
+        vpn_access: [],
+        server_access: [],
+        docker_access: [],
+        database_access: [],
+        app_access: []
+      });
+      setNewClienteNome('');
+      setIsAddClienteDialogOpen(false);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+
+  const handleEditCliente = (item: { id: string; cliente: string }) => {
+    setEditingCliente({ ...item });
+    setIsEditClienteDialogOpen(true);
+  };
+
+  const handleUpdateCliente = async () => {
+    if (!editingCliente) return;
+    if (!editingCliente.cliente.trim()) {
+      toast.error('Nome do cliente é obrigatório');
+      return;
+    }
+    try {
+      await updateRecord.mutateAsync({
+        id: editingCliente.id,
+        cliente: editingCliente.cliente.trim(),
+        vpn_access: [],
+        server_access: [],
+        docker_access: [],
+        database_access: [],
+        app_access: []
+      });
+      setIsEditClienteDialogOpen(false);
+      setEditingCliente(null);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+
+  const handleDeleteCliente = async (id: string) => {
+    if (!confirm('Tem certeza que deseja remover este cliente?')) return;
+    try {
+      await deleteRecord.mutateAsync(id);
     } catch (error) {
       // Error handled in hook
     }
@@ -297,6 +364,73 @@ const CadastrosSistema = () => {
               </Card>
             </AccordionContent>
           </AccordionItem>
+
+          {/* Clientes */}
+          <AccordionItem value="clientes" className="border rounded-lg bg-card">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline">
+              <div className="flex items-center gap-3">
+                <Users className="h-5 w-5 text-primary" />
+                <span className="text-lg font-semibold">Clientes</span>
+                <Badge variant="secondary" className="ml-2">
+                  {clientes.length} itens
+                </Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-4">
+              <Card className="border-0 shadow-none">
+                <CardHeader className="px-0 pt-0">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">Lista de Clientes</CardTitle>
+                    <Button onClick={() => setIsAddClienteDialogOpen(true)} size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="px-0 pb-0">
+                  {isLoadingClientes ? (
+                    <p className="text-muted-foreground">Carregando...</p>
+                  ) : clientes.length === 0 ? (
+                    <p className="text-muted-foreground">Nenhum cliente cadastrado</p>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nome</TableHead>
+                          <TableHead className="w-[100px] text-center">Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {clientes.map((item) => (
+                          <TableRow key={item.id}>
+                            <TableCell className="font-medium">{item.cliente}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center justify-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleEditCliente(item)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleDeleteCliente(item.id)}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            </AccordionContent>
+          </AccordionItem>
         </Accordion>
 
         {/* Dialog Adicionar Área */}
@@ -413,6 +547,58 @@ const CadastrosSistema = () => {
                 Cancelar
               </Button>
               <Button onClick={handleUpdateTipo}>Salvar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Adicionar Cliente */}
+        <Dialog open={isAddClienteDialogOpen} onOpenChange={setIsAddClienteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Adicionar Cliente</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nome do Cliente</label>
+                <Input
+                  value={newClienteNome}
+                  onChange={(e) => setNewClienteNome(e.target.value)}
+                  placeholder="Digite o nome do cliente"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddClienteDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAddCliente}>Adicionar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Editar Cliente */}
+        <Dialog open={isEditClienteDialogOpen} onOpenChange={setIsEditClienteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar Cliente</DialogTitle>
+            </DialogHeader>
+            {editingCliente && (
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Nome do Cliente</label>
+                  <Input
+                    value={editingCliente.cliente}
+                    onChange={(e) => setEditingCliente({ ...editingCliente, cliente: e.target.value })}
+                    placeholder="Digite o nome do cliente"
+                  />
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditClienteDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleUpdateCliente}>Salvar</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
