@@ -440,6 +440,7 @@ export type Database = {
           descricao: string | null
           horas_trabalhadas: number
           id: string
+          importado: boolean
           prestador_id: string
           updated_at: string
         }
@@ -451,6 +452,7 @@ export type Database = {
           descricao?: string | null
           horas_trabalhadas?: number
           id?: string
+          importado?: boolean
           prestador_id: string
           updated_at?: string
         }
@@ -462,6 +464,7 @@ export type Database = {
           descricao?: string | null
           horas_trabalhadas?: number
           id?: string
+          importado?: boolean
           prestador_id?: string
           updated_at?: string
         }

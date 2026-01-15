@@ -10,6 +10,7 @@ export interface Produtividade {
   data_fim: string;
   horas_trabalhadas: number;
   descricao: string | null;
+  importado: boolean;
   created_at: string;
   updated_at: string;
   prestador?: {
@@ -19,6 +20,7 @@ export interface Produtividade {
   };
   cliente?: {
     id: string;
+    codigo: number;
     cliente: string;
   };
 }
@@ -34,7 +36,7 @@ export function useProdutividade() {
         .select(`
           *,
           prestador:prestador_servico(id, codigo, nome),
-          cliente:client_access_records(id, cliente)
+          cliente:client_access_records(id, codigo, cliente)
         `)
         .order('data_inicio', { ascending: false });
       
@@ -51,6 +53,7 @@ export function useProdutividade() {
       data_fim: string;
       horas_trabalhadas: number;
       descricao?: string;
+      importado?: boolean;
     }) => {
       const { data, error } = await supabase
         .from('produtividade')
@@ -61,6 +64,7 @@ export function useProdutividade() {
           data_fim: prod.data_fim,
           horas_trabalhadas: prod.horas_trabalhadas,
           descricao: prod.descricao || null,
+          importado: prod.importado || false,
         })
         .select()
         .single();
@@ -70,10 +74,34 @@ export function useProdutividade() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['produtividade'] });
-      toast.success('Produtividade registrada com sucesso!');
     },
     onError: (error) => {
       toast.error('Erro ao registrar produtividade: ' + error.message);
+    },
+  });
+
+  const addMultipleProdutividade = useMutation({
+    mutationFn: async (prods: {
+      prestador_id: string;
+      cliente_id: string;
+      data_inicio: string;
+      data_fim: string;
+      horas_trabalhadas: number;
+      importado: boolean;
+    }[]) => {
+      const { data, error } = await supabase
+        .from('produtividade')
+        .insert(prods)
+        .select();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['produtividade'] });
+    },
+    onError: (error) => {
+      toast.error('Erro ao importar produtividades: ' + error.message);
     },
   });
 
@@ -135,6 +163,7 @@ export function useProdutividade() {
     produtividades,
     isLoading,
     addProdutividade: addProdutividade.mutateAsync,
+    addMultipleProdutividade: addMultipleProdutividade.mutateAsync,
     updateProdutividade: updateProdutividade.mutateAsync,
     deleteProdutividade: deleteProdutividade.mutateAsync,
   };
