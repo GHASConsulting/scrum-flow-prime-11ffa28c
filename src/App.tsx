@@ -18,6 +18,7 @@ import Administracao from "./pages/Administracao";
 import CadastrosSistema from "./pages/CadastrosSistema";
 import RoadmapGeral from "./pages/RoadmapGeral";
 import Produtividade from "./pages/Produtividade";
+import Prioridades from "./pages/Prioridades";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ function App() {
           <Route path="/retrospectiva" element={<ProtectedRoute><Retrospectiva /></ProtectedRoute>} />
           <Route path="/riscos" element={<ProtectedRoute><Riscos /></ProtectedRoute>} />
           <Route path="/roadmap" element={<ProtectedRoute><RoadmapGeral /></ProtectedRoute>} />
+          <Route path="/prioridades" element={<ProtectedRoute><Prioridades /></ProtectedRoute>} />
           <Route path="/administracao" element={<ProtectedRoute><Administracao /></ProtectedRoute>} />
           <Route path="/cadastros" element={<ProtectedRoute><CadastrosSistema /></ProtectedRoute>} />
           <Route path="/produtividade" element={<ProtectedRoute><Produtividade /></ProtectedRoute>} />
