@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, CheckCircle, Users, Building2, Upload } from 'lucide-react';
+import { Plus, Trash2, CheckCircle, Users, Building2, Upload, ArrowUp, ArrowDown } from 'lucide-react';
 import { useProdutividade } from '@/hooks/useProdutividade';
 import { usePrestadorServico } from '@/hooks/usePrestadorServico';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
@@ -38,6 +38,20 @@ const Produtividade = () => {
   const [filterAnoInicio, setFilterAnoInicio] = useState<string>('');
   const [filterMesFim, setFilterMesFim] = useState<string>('');
   const [filterAnoFim, setFilterAnoFim] = useState<string>('');
+
+  // Sorting states
+  type SortColumn = 'prestador' | 'cliente' | 'data_inicio' | 'data_fim' | 'horas_trabalhadas' | 'importado';
+  const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
 
   // Sync initial values to final when initial changes
   const handleMesInicioChange = (value: string) => {
@@ -373,7 +387,7 @@ const Produtividade = () => {
 
   // Filtered data
   const filteredProdutividades = useMemo(() => {
-    return produtividades.filter((p) => {
+    const filtered = produtividades.filter((p) => {
       if (filterPrestador !== 'all' && p.prestador_id !== filterPrestador) return false;
       if (filterCliente !== 'all' && p.cliente_id !== filterCliente) return false;
       
@@ -390,7 +404,55 @@ const Produtividade = () => {
       }
       return true;
     });
-  }, [produtividades, filterPrestador, filterCliente, filterMesInicio, filterAnoInicio, filterMesFim, filterAnoFim]);
+
+    // Apply sorting
+    if (sortColumn) {
+      filtered.sort((a, b) => {
+        let aValue: string | number | boolean;
+        let bValue: string | number | boolean;
+
+        switch (sortColumn) {
+          case 'prestador':
+            aValue = a.prestador ? `${a.prestador.codigo} - ${a.prestador.nome}` : '';
+            bValue = b.prestador ? `${b.prestador.codigo} - ${b.prestador.nome}` : '';
+            break;
+          case 'cliente':
+            aValue = a.cliente ? `${a.cliente.codigo} - ${a.cliente.cliente}` : '';
+            bValue = b.cliente ? `${b.cliente.codigo} - ${b.cliente.cliente}` : '';
+            break;
+          case 'data_inicio':
+            aValue = a.data_inicio;
+            bValue = b.data_inicio;
+            break;
+          case 'data_fim':
+            aValue = a.data_fim;
+            bValue = b.data_fim;
+            break;
+          case 'horas_trabalhadas':
+            aValue = Number(a.horas_trabalhadas);
+            bValue = Number(b.horas_trabalhadas);
+            break;
+          case 'importado':
+            aValue = a.importado ? 1 : 0;
+            bValue = b.importado ? 1 : 0;
+            break;
+          default:
+            return 0;
+        }
+
+        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [produtividades, filterPrestador, filterCliente, filterMesInicio, filterAnoInicio, filterMesFim, filterAnoFim, sortColumn, sortDirection]);
+
+  const SortIcon = ({ column }: { column: SortColumn }) => {
+    if (sortColumn !== column) return null;
+    return sortDirection === 'asc' ? <ArrowUp className="h-4 w-4 ml-1 inline" /> : <ArrowDown className="h-4 w-4 ml-1 inline" />;
+  };
 
   // Calculate KPIs based on filtered data
   const totalChamados = filteredProdutividades.reduce((sum, p) => sum + Number(p.horas_trabalhadas), 0);
@@ -609,12 +671,24 @@ const Produtividade = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Prestador</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Data Início</TableHead>
-                    <TableHead>Data Fim</TableHead>
-                    <TableHead className="text-right">Total de Chamados Encerrados</TableHead>
-                    <TableHead className="text-center">Importado</TableHead>
+                    <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('prestador')}>
+                      Prestador <SortIcon column="prestador" />
+                    </TableHead>
+                    <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('cliente')}>
+                      Cliente <SortIcon column="cliente" />
+                    </TableHead>
+                    <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('data_inicio')}>
+                      Data Início <SortIcon column="data_inicio" />
+                    </TableHead>
+                    <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('data_fim')}>
+                      Data Fim <SortIcon column="data_fim" />
+                    </TableHead>
+                    <TableHead className="text-right cursor-pointer hover:bg-muted/50" onClick={() => handleSort('horas_trabalhadas')}>
+                      Total de Chamados Encerrados <SortIcon column="horas_trabalhadas" />
+                    </TableHead>
+                    <TableHead className="text-center cursor-pointer hover:bg-muted/50" onClick={() => handleSort('importado')}>
+                      Importado <SortIcon column="importado" />
+                    </TableHead>
                     <TableHead className="w-[80px] text-center">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
