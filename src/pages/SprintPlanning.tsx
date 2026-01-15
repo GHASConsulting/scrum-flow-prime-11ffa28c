@@ -342,6 +342,11 @@ const SprintPlanning = () => {
       return;
     }
 
+    if (!newTask.cliente_id) {
+      toast.error('O cliente é obrigatório');
+      return;
+    }
+
     try {
       const createdBacklogItem = await addBacklogItem({
         titulo: newTask.titulo.trim(),
@@ -444,6 +449,11 @@ const SprintPlanning = () => {
 
     if (!editingTask.responsavel || !editingTask.responsavel.trim()) {
       toast.error('O responsável é obrigatório');
+      return;
+    }
+
+    if (!editingTask.cliente_id) {
+      toast.error('O cliente é obrigatório');
       return;
     }
 
@@ -1246,6 +1256,25 @@ const SprintPlanning = () => {
                   </div>
 
                   <div>
+                    <label className="text-sm font-medium">Cliente *</label>
+                    <Select 
+                      value={newTask.cliente_id || undefined} 
+                      onValueChange={(value) => setNewTask({ ...newTask, cliente_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o cliente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {clientes.map((cliente) => (
+                          <SelectItem key={cliente.id} value={cliente.id}>
+                            {cliente.cliente}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
                     <label className="text-sm font-medium">Área</label>
                     <Select 
                       value={newTask.tipo_produto || undefined} 
@@ -1277,25 +1306,6 @@ const SprintPlanning = () => {
                         {tiposTarefaAtivos.map((tipo) => (
                           <SelectItem key={tipo.id} value={tipo.nome}>
                             {tipo.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium">Cliente</label>
-                    <Select 
-                      value={newTask.cliente_id || undefined} 
-                      onValueChange={(value) => setNewTask({ ...newTask, cliente_id: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o cliente" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {clientes.map((cliente) => (
-                          <SelectItem key={cliente.id} value={cliente.id}>
-                            {cliente.cliente}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -1522,6 +1532,25 @@ const SprintPlanning = () => {
               </div>
 
               <div>
+                <label className="text-sm font-medium">Cliente *</label>
+                <Select 
+                  value={editingTask.cliente_id || undefined} 
+                  onValueChange={(value) => setEditingTask({ ...editingTask, cliente_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o cliente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clientes.map((cliente) => (
+                      <SelectItem key={cliente.id} value={cliente.id}>
+                        {cliente.cliente}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
                 <label className="text-sm font-medium">Área</label>
                 <Select 
                   value={editingTask.tipo_produto || undefined} 
@@ -1553,25 +1582,6 @@ const SprintPlanning = () => {
                     {tiposTarefaAtivos.map((tipo) => (
                       <SelectItem key={tipo.id} value={tipo.nome}>
                         {tipo.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Cliente</label>
-                <Select 
-                  value={editingTask.cliente_id || undefined} 
-                  onValueChange={(value) => setEditingTask({ ...editingTask, cliente_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o cliente" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {clientes.map((cliente) => (
-                      <SelectItem key={cliente.id} value={cliente.id}>
-                        {cliente.cliente}
                       </SelectItem>
                     ))}
                   </SelectContent>
