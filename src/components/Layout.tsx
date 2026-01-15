@@ -25,7 +25,7 @@ type MenuGroup = {
 
 const menuStructure: MenuGroup[] = [
   {
-    name: 'SCRUM',
+    name: 'Scrum',
     icon: ListTodo,
     items: [
       { name: 'Sprint Planning', href: '/sprint-planning', icon: Calendar, adminOnly: true },
@@ -76,7 +76,7 @@ const menuStructure: MenuGroup[] = [
 // Função para detectar o grupo ativo com base na rota
 const getActiveGroup = (pathname: string): string => {
   if (pathname === '/') return 'Dashboard';
-  if (pathname.startsWith('/sprint-planning') || pathname.startsWith('/backlog') || pathname.startsWith('/daily') || pathname.startsWith('/retrospectiva')) return 'SCRUM';
+  if (pathname.startsWith('/sprint-planning') || pathname.startsWith('/backlog') || pathname.startsWith('/daily') || pathname.startsWith('/retrospectiva')) return 'Scrum';
   if (pathname.startsWith('/roadmap')) return 'Roadmap';
   if (pathname.startsWith('/riscos')) return 'Riscos';
   if (pathname.startsWith('/cadastros')) return 'Cadastros';
