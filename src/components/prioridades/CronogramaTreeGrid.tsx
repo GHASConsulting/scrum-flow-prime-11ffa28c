@@ -179,14 +179,14 @@ export function CronogramaTreeGrid({ projectId }: CronogramaTreeGridProps) {
     return (
       <>
         <TableRow key={task.id}>
-          <TableCell>
+          <TableCell className="min-w-[300px]">
             <div className="flex items-center gap-2" style={{ paddingLeft: `${level * 20}px` }}>
               {hasChildren && (
-                <Button variant="ghost" size="icon" onClick={() => toggleExpand(task.id)} className="h-6 w-6 p-0">
+                <Button variant="ghost" size="icon" onClick={() => toggleExpand(task.id)} className="h-6 w-6 p-0 flex-shrink-0">
                   {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                 </Button>
               )}
-              <Input value={task.name} onChange={(e) => handleUpdateField(task.id, 'name', e.target.value)} className="h-8" />
+              <Input value={task.name} onChange={(e) => handleUpdateField(task.id, 'name', e.target.value)} className="h-8 w-full" />
             </div>
           </TableCell>
           <TableCell>
