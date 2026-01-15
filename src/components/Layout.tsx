@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, ListTodo, Calendar, MessageSquare, RotateCcw, Shield, LogOut, AlertTriangle, Settings, Map } from 'lucide-react';
+import { LayoutDashboard, ListTodo, Calendar, MessageSquare, RotateCcw, Shield, LogOut, AlertTriangle, Settings, Map, Users } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from './ui/button';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
@@ -61,6 +61,7 @@ const menuStructure: MenuGroup[] = [
     adminOnly: true,
     items: [
       { name: 'Cadastros do Sistema', href: '/cadastros', icon: Settings },
+      { name: 'Clientes', href: '/clientes', icon: Users },
     ],
   },
   {
@@ -79,7 +80,7 @@ const getActiveGroup = (pathname: string): string => {
   if (pathname.startsWith('/sprint-planning') || pathname.startsWith('/backlog') || pathname.startsWith('/daily') || pathname.startsWith('/retrospectiva')) return 'Scrum';
   if (pathname.startsWith('/roadmap')) return 'Roadmap';
   if (pathname.startsWith('/riscos')) return 'Riscos';
-  if (pathname.startsWith('/cadastros')) return 'Cadastros';
+  if (pathname.startsWith('/cadastros') || pathname.startsWith('/clientes')) return 'Cadastros';
   if (pathname.startsWith('/administracao')) return 'Administração';
   return '';
 };
