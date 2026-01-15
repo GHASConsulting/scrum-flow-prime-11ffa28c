@@ -37,6 +37,17 @@ const Produtividade = () => {
   const [filterMesFim, setFilterMesFim] = useState<string>('');
   const [filterAnoFim, setFilterAnoFim] = useState<string>('');
 
+  // Sync initial values to final when initial changes
+  const handleMesInicioChange = (value: string) => {
+    setFilterMesInicio(value);
+    if (!filterMesFim) setFilterMesFim(value);
+  };
+
+  const handleAnoInicioChange = (value: string) => {
+    setFilterAnoInicio(value);
+    if (!filterAnoFim) setFilterAnoFim(value);
+  };
+
   // Generate years for dropdown (from 2020 to current year + 1)
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 2020 + 2 }, (_, i) => 2020 + i);
@@ -224,7 +235,7 @@ const Produtividade = () => {
               <div className="space-y-2">
                 <Label>Mês/Ano Inicial</Label>
                 <div className="flex gap-2">
-                  <Select value={filterMesInicio} onValueChange={setFilterMesInicio}>
+                  <Select value={filterMesInicio} onValueChange={handleMesInicioChange}>
                     <SelectTrigger className="flex-1">
                       <SelectValue placeholder="Mês" />
                     </SelectTrigger>
@@ -236,7 +247,7 @@ const Produtividade = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Select value={filterAnoInicio} onValueChange={setFilterAnoInicio}>
+                  <Select value={filterAnoInicio} onValueChange={handleAnoInicioChange}>
                     <SelectTrigger className="w-[100px]">
                       <SelectValue placeholder="Ano" />
                     </SelectTrigger>
