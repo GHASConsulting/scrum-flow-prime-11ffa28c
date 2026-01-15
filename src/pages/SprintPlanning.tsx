@@ -17,6 +17,7 @@ import { useSubtarefas } from '@/hooks/useSubtarefas';
 import { useProfiles } from '@/hooks/useProfiles';
 import { useTipoProduto } from '@/hooks/useTipoProduto';
 import { useTipoTarefa } from '@/hooks/useTipoTarefa';
+import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { SubtarefasForm, SubtarefaTemp } from '@/components/SubtarefasForm';
 import { SprintTaskListView } from '@/components/SprintTaskListView';
 import { BacklogTaskListView } from '@/components/BacklogTaskListView';
@@ -50,12 +51,14 @@ const SprintPlanning = () => {
   const { profiles } = useProfiles();
   const { tiposProdutoAtivos } = useTipoProduto();
   const { tiposTarefaAtivos } = useTipoTarefa();
+  const { records: clientes } = useClientAccessRecords();
   
   const [selectedSprint, setSelectedSprint] = useState<string>('');
   const [isCreatingSprint, setIsCreatingSprint] = useState(false);
   const [isEditingSprint, setIsEditingSprint] = useState(false);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
   const [filtroResponsavel, setFiltroResponsavel] = useState<string>('all');
+  const [filtroCliente, setFiltroCliente] = useState<string>('all');
   const [mostrarApenasSemSprint, setMostrarApenasSemSprint] = useState(false);
   const [sprintViewMode, setSprintViewMode] = useState<'card' | 'list'>('card');
   const [backlogViewMode, setBacklogViewMode] = useState<'card' | 'list'>('card');
@@ -87,6 +90,7 @@ const SprintPlanning = () => {
     responsavel: string;
     tipo_produto?: string;
     tipo_tarefa?: string;
+    cliente_id?: string;
   }>({
     titulo: '',
     descricao: '',
@@ -94,7 +98,8 @@ const SprintPlanning = () => {
     prioridade: 'media',
     responsavel: '',
     tipo_produto: undefined,
-    tipo_tarefa: undefined
+    tipo_tarefa: undefined,
+    cliente_id: undefined
   });
   
   const [newSprint, setNewSprint] = useState({
@@ -346,7 +351,8 @@ const SprintPlanning = () => {
         responsavel: newTask.responsavel.trim(),
         status: 'todo',
         ...(newTask.tipo_produto && { tipo_produto: newTask.tipo_produto }),
-        ...(newTask.tipo_tarefa && { tipo_tarefa: newTask.tipo_tarefa })
+        ...(newTask.tipo_tarefa && { tipo_tarefa: newTask.tipo_tarefa }),
+        ...(newTask.cliente_id && { cliente_id: newTask.cliente_id })
       } as any);
 
       // Se há sprint selecionada e subtarefas, criar sprint_tarefa e subtarefas
@@ -387,7 +393,8 @@ const SprintPlanning = () => {
         prioridade: 'media',
         responsavel: '',
         tipo_produto: undefined,
-        tipo_tarefa: undefined
+        tipo_tarefa: undefined,
+        cliente_id: undefined
       });
       setNewTaskSubtarefas([]);
       setIsCreatingTask(false);
@@ -406,7 +413,8 @@ const SprintPlanning = () => {
       status: task.status as Status,
       responsavel: task.responsavel || '',
       tipo_produto: (task as any).tipo_produto as string | undefined,
-      tipo_tarefa: (task as any).tipo_tarefa as string | undefined
+      tipo_tarefa: (task as any).tipo_tarefa as string | undefined,
+      cliente_id: (task as any).cliente_id as string | undefined
     });
     setIsEditDialogOpen(true);
   };
@@ -454,6 +462,12 @@ const SprintPlanning = () => {
       
       if (editingTask.tipo_tarefa) {
         updates.tipo_tarefa = editingTask.tipo_tarefa;
+      }
+
+      if (editingTask.cliente_id) {
+        updates.cliente_id = editingTask.cliente_id;
+      } else {
+        updates.cliente_id = null;
       }
 
       await updateBacklogItem(editingTask.id, updates);
@@ -641,6 +655,11 @@ const SprintPlanning = () => {
     
     if (filtroResponsavel && filtroResponsavel !== 'all') {
       filteredBacklog = filteredBacklog.filter(b => b.responsavel === filtroResponsavel);
+    }
+
+    // Filtrar por cliente
+    if (filtroCliente && filtroCliente !== 'all') {
+      filteredBacklog = filteredBacklog.filter(b => (b as any).cliente_id === filtroCliente);
     }
     
     // Filtrar por tarefas sem sprint
@@ -1102,21 +1121,40 @@ const SprintPlanning = () => {
               </div>
               
               <div className="mt-4 space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Filtrar por Responsável</label>
-                  <Select value={filtroResponsavel} onValueChange={setFiltroResponsavel}>
-                    <SelectTrigger className="w-full sm:w-64">
-                      <SelectValue placeholder="Todos os responsáveis" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os responsáveis</SelectItem>
-                      {Array.from(new Set(backlog.map(b => b.responsavel).filter(Boolean))).map((responsavel) => (
-                        <SelectItem key={responsavel} value={responsavel!}>
-                          {responsavel}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Filtrar por Responsável</label>
+                    <Select value={filtroResponsavel} onValueChange={setFiltroResponsavel}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Todos os responsáveis" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos os responsáveis</SelectItem>
+                        {Array.from(new Set(backlog.map(b => b.responsavel).filter(Boolean))).map((responsavel) => (
+                          <SelectItem key={responsavel} value={responsavel!}>
+                            {responsavel}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Filtrar por Cliente</label>
+                    <Select value={filtroCliente} onValueChange={setFiltroCliente}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Todos os clientes" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos os clientes</SelectItem>
+                        {clientes.map((cliente) => (
+                          <SelectItem key={cliente.id} value={cliente.id}>
+                            {cliente.cliente}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="flex items-center space-x-2">
@@ -1245,6 +1283,25 @@ const SprintPlanning = () => {
                     </Select>
                   </div>
 
+                  <div>
+                    <label className="text-sm font-medium">Cliente</label>
+                    <Select 
+                      value={newTask.cliente_id || undefined} 
+                      onValueChange={(value) => setNewTask({ ...newTask, cliente_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o cliente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {clientes.map((cliente) => (
+                          <SelectItem key={cliente.id} value={cliente.id}>
+                            {cliente.cliente}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   {/* Subtarefas - disponível quando há sprint selecionada */}
                   {selectedSprint && (
                     <SubtarefasForm
@@ -1280,7 +1337,8 @@ const SprintPlanning = () => {
                           prioridade: 'media',
                           responsavel: '',
                           tipo_produto: undefined,
-                          tipo_tarefa: undefined
+                          tipo_tarefa: undefined,
+                          cliente_id: undefined
                         });
                         setNewTaskSubtarefas([]);
                       }} 
@@ -1495,6 +1553,25 @@ const SprintPlanning = () => {
                     {tiposTarefaAtivos.map((tipo) => (
                       <SelectItem key={tipo.id} value={tipo.nome}>
                         {tipo.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium">Cliente</label>
+                <Select 
+                  value={editingTask.cliente_id || undefined} 
+                  onValueChange={(value) => setEditingTask({ ...editingTask, cliente_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o cliente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clientes.map((cliente) => (
+                      <SelectItem key={cliente.id} value={cliente.id}>
+                        {cliente.cliente}
                       </SelectItem>
                     ))}
                   </SelectContent>
