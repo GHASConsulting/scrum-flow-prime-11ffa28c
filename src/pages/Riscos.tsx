@@ -14,6 +14,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Plus, Edit, Trash2, Eye } from 'lucide-react';
 import { useRiscos, type RiscoInsert, type Risco } from '@/hooks/useRiscos';
 import { useProfiles } from '@/hooks/useProfiles';
+import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
@@ -62,6 +63,7 @@ const getStatusBadgeClass = (status: string) => {
 export default function Riscos() {
   const { riscos, loading, addRisco, updateRisco, deleteRisco } = useRiscos();
   const { profiles } = useProfiles();
+  const { records: clientes } = useClientAccessRecords();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRisco, setEditingRisco] = useState<Risco | null>(null);
   const [viewingRisco, setViewingRisco] = useState<Risco | null>(null);
@@ -181,7 +183,7 @@ export default function Riscos() {
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editingRisco ? 'Editar Risco' : 'Novo Risco'}</DialogTitle>
+                <DialogTitle>{editingRisco ? 'Editar Registro' : 'Novo Registro'}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Bloco 1: Identificação */}
@@ -210,13 +212,22 @@ export default function Riscos() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="projeto">Projeto *</Label>
-                        <Input
-                          id="projeto"
-                          placeholder="Ex: Cliente / Instituição"
+                        <Select
                           value={formData.projeto}
-                          onChange={(e) => setFormData({ ...formData, projeto: e.target.value })}
+                          onValueChange={(value) => setFormData({ ...formData, projeto: value })}
                           required
-                        />
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o cliente" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {clientes.map((cliente) => (
+                              <SelectItem key={cliente.id} value={cliente.cliente}>
+                                {cliente.cliente}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="area_impactada">Área Impactada *</Label>
