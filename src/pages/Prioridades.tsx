@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import { Layout } from '@/components/Layout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useProjects } from '@/hooks/useProjects';
 import { CronogramaTab } from '@/components/prioridades/CronogramaTab';
-import { ProjetosListTab } from '@/components/prioridades/ProjetosListTab';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function Prioridades() {
-  const { projects, addProject, loading } = useProjects();
+  const { projects, addProject } = useProjects();
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState<{
@@ -47,7 +45,7 @@ export default function Prioridades() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Projetos</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Lista de Prioridades</h1>
             <p className="text-muted-foreground">Gerencie projetos e cronogramas</p>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -82,9 +80,9 @@ export default function Prioridades() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
-                <Select
+                  <Select
                     value={formData.status}
-                    onValueChange={(value: string) => setFormData({ ...formData, status: value as 'planejamento' | 'ativo' | 'concluido' | 'cancelado' })}
+                    onValueChange={(value: string) => setFormData({ ...formData, status: value })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -103,29 +101,11 @@ export default function Prioridades() {
           </Dialog>
         </div>
 
-        <Tabs defaultValue="lista" className="w-full">
-          <TabsList>
-            <TabsTrigger value="lista">Lista de Projetos</TabsTrigger>
-            <TabsTrigger value="cronograma">Cronograma</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="lista">
-            <ProjetosListTab
-              projects={projects}
-              loading={loading}
-              selectedProjectId={selectedProjectId}
-              onSelectProject={setSelectedProjectId}
-            />
-          </TabsContent>
-          
-          <TabsContent value="cronograma">
-            <CronogramaTab
-              projectId={selectedProjectId}
-              projects={projects}
-              onSelectProject={setSelectedProjectId}
-            />
-          </TabsContent>
-        </Tabs>
+        <CronogramaTab
+          projectId={selectedProjectId}
+          projects={projects}
+          onSelectProject={setSelectedProjectId}
+        />
       </div>
     </Layout>
   );
