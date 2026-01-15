@@ -153,6 +153,20 @@ const Produtividade = () => {
       return;
     }
 
+    // Validate dates are not in the future
+    const today = new Date();
+    today.setHours(23, 59, 59, 999); // End of today
+    
+    if (new Date(formData.data_inicio) > today) {
+      toast.error('Data de início não pode ser maior que a data atual');
+      return;
+    }
+    
+    if (new Date(formData.data_fim) > today) {
+      toast.error('Data fim não pode ser maior que a data atual');
+      return;
+    }
+
     // Check for overlapping period
     if (checkOverlappingPeriod(formData.prestador_id, formData.cliente_id, formData.data_inicio, formData.data_fim)) {
       toast.error('Já existe um registro para este prestador e cliente com período que se sobrepõe');
@@ -296,6 +310,18 @@ const Produtividade = () => {
         // Validate date range
         if (dataInicio && dataFim && new Date(dataFim) < new Date(dataInicio)) {
           rowErrors.push('Data Fim deve ser maior ou igual à Data de Início');
+        }
+
+        // Validate dates are not in the future
+        const today = new Date();
+        today.setHours(23, 59, 59, 999); // End of today
+        
+        if (dataInicio && new Date(dataInicio) > today) {
+          rowErrors.push('Data de Início não pode ser maior que a data atual');
+        }
+        
+        if (dataFim && new Date(dataFim) > today) {
+          rowErrors.push('Data Fim não pode ser maior que a data atual');
         }
 
         // Column E: Total de Chamados Encerrados
