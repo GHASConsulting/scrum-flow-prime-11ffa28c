@@ -40,12 +40,12 @@ const Produtividade = () => {
   // Sync initial values to final when initial changes
   const handleMesInicioChange = (value: string) => {
     setFilterMesInicio(value);
-    if (!filterMesFim) setFilterMesFim(value);
+    setFilterMesFim(value);
   };
 
   const handleAnoInicioChange = (value: string) => {
     setFilterAnoInicio(value);
-    if (!filterAnoFim) setFilterAnoFim(value);
+    setFilterAnoFim(value);
   };
 
   // Generate years for dropdown (from 2020 to current year + 1)
