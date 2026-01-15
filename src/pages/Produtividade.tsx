@@ -534,11 +534,16 @@ const Produtividade = () => {
                   <Upload className="h-4 w-4 mr-2" />
                   Selecionar Arquivo
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <a href="/templates/GHAS_-_Arquivo_Modelo_de_Importacao.xlsx" download>
-                    <Download className="h-4 w-4 mr-2" />
-                    Baixar Modelo de Arquivo
-                  </a>
+                <DropdownMenuItem onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = '/templates/GHAS_-_Arquivo_Modelo_de_Importacao.xlsx';
+                  link.download = 'GHAS_-_Arquivo_Modelo_de_Importacao.xlsx';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Baixar Modelo de Arquivo
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
