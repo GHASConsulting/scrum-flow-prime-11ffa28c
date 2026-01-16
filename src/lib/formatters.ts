@@ -19,7 +19,7 @@ export const formatDate = (dateString: string): string => {
 };
 
 export const statusLabels: Record<string, string> = {
-  todo: 'A Fazer',
+  todo: 'Fazer',
   doing: 'Fazendo',
   done: 'Feito',
   validated: 'Validado'
