@@ -82,7 +82,7 @@ const calculateRoadmapStatus = (
   const hoje = parseDate(hojeStr);
   
   // ENTREGUE - Status do backlog é FEITO ou VALIDADO (independente do status da sprint)
-  if (backlogStatus === 'feito' || backlogStatus === 'validado') {
+  if (backlogStatus === 'done' || backlogStatus === 'validated') {
     return 'ENTREGUE';
   }
   
@@ -93,7 +93,7 @@ const calculateRoadmapStatus = (
   
   // EM ATRASO - Verificar se está atrasado
   // Considera atrasado apenas quando a data atual é MAIOR que a data fim (dia seguinte)
-  const isBacklogNaoConcluido = backlogStatus !== 'feito' && backlogStatus !== 'validado';
+  const isBacklogNaoConcluido = backlogStatus !== 'done' && backlogStatus !== 'validated';
   
   if (isBacklogNaoConcluido) {
     // Regra: se existem subtarefas, a data fim considerada é a MAIOR data fim das subtarefas.
@@ -126,7 +126,7 @@ const calculateRoadmapStatus = (
   }
   
   // EM SPRINT - Sprint ativa
-  if (sprintStatus === 'ativa') {
+  if (sprintStatus === 'ativo') {
     return 'EM_SPRINT';
   }
   
@@ -221,7 +221,7 @@ export const useBacklogRoadmap = () => {
           
           if (sprintsData.length > 0) {
             // Priorizar sprint ativa
-            const sprintAtiva = sprintsData.find((s: any) => s.sprintStatus === 'ativa');
+            const sprintAtiva = sprintsData.find((s: any) => s.sprintStatus === 'ativo');
             const sprintSelecionada = sprintAtiva || sprintsData[0];
             
             const primeiraData = sprintsData.reduce((min: any, d: any) => d.inicio < min.inicio ? d : min, sprintsData[0]);
@@ -236,7 +236,7 @@ export const useBacklogRoadmap = () => {
             
             // Se há sprint ativa, usar o status dela
             if (sprintAtiva) {
-              sprintStatus = 'ativa';
+              sprintStatus = 'ativo';
               sprintNome = sprintAtiva.sprintNome;
             }
           }
