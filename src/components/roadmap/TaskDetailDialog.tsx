@@ -61,15 +61,15 @@ const getSubtaskStatusIcon = (status: string | null) => {
 const getSubtaskStatusLabel = (status: string | null) => {
   switch (status) {
     case 'todo':
-      return 'A Fazer';
+      return 'Fazer';
     case 'doing':
-      return 'Em Progresso';
+      return 'Fazendo';
     case 'done':
       return 'Feito';
     case 'validated':
       return 'Validado';
     default:
-      return status || 'A Fazer';
+      return status || 'Fazer';
   }
 };
 
