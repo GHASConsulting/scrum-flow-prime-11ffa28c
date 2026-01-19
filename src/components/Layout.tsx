@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, ListTodo, Calendar, MessageSquare, RotateCcw, Shield, LogOut, AlertTriangle, Settings, Map, ClipboardList, Target } from 'lucide-react';
+import { LayoutDashboard, ListTodo, Calendar, MessageSquare, RotateCcw, Shield, LogOut, AlertTriangle, Settings, Map, ClipboardList, Target, FileDown } from 'lucide-react';
+import { downloadManualPDF } from './ManualDownload';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from './ui/button';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
@@ -181,6 +182,9 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                     Olá, <span className="font-medium text-foreground">{userName}</span>!
                   </span>
                 )}
+                <Button variant="ghost" size="sm" onClick={downloadManualPDF} title="Baixar Manual do Usuário">
+                  <FileDown className="h-4 w-4" />
+                </Button>
                 <Button variant="ghost" size="sm" onClick={signOut}>
                   <LogOut className="h-4 w-4 mr-2" />
                   Sair
