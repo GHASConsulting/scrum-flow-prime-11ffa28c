@@ -2,39 +2,37 @@ import { useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { useProjects } from '@/hooks/useProjects';
+import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { CronogramaTab } from '@/components/prioridades/CronogramaTab';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
 export default function Prioridades() {
-  const { projects, addProject } = useProjects();
+  const { records: clientes, createRecord } = useClientAccessRecords();
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState<{
-    nome: string;
-    descricao: string;
-    status: string;
-    data_inicio: string | null;
-    data_fim: string | null;
-  }>({
-    nome: '',
-    descricao: '',
-    status: 'planejamento',
-    data_inicio: null,
-    data_fim: null,
-  });
+  const [newClienteNome, setNewClienteNome] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newClienteNome.trim()) {
+      toast.error('Nome do projeto é obrigatório');
+      return;
+    }
     try {
-      const newProject = await addProject(formData);
-      setSelectedProjectId(newProject.id);
+      const newCliente = await createRecord.mutateAsync({
+        cliente: newClienteNome.trim(),
+        vpn_access: [],
+        server_access: [],
+        docker_access: [],
+        database_access: [],
+        app_access: []
+      });
+      setSelectedProjectId(newCliente.id);
       setIsDialogOpen(false);
-      setFormData({ nome: '', descricao: '', status: 'planejamento', data_inicio: null, data_fim: null });
+      setNewClienteNome('');
     } catch (error) {
       console.error('Erro ao criar projeto:', error);
     }
@@ -64,36 +62,10 @@ export default function Prioridades() {
                   <Label htmlFor="nome">Nome do Projeto</Label>
                   <Input
                     id="nome"
-                    value={formData.nome}
-                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                    value={newClienteNome}
+                    onChange={(e) => setNewClienteNome(e.target.value)}
                     required
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="descricao">Descrição</Label>
-                  <Textarea
-                    id="descricao"
-                    value={formData.descricao}
-                    onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value: string) => setFormData({ ...formData, status: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="planejamento">Planejamento</SelectItem>
-                      <SelectItem value="ativo">Ativo</SelectItem>
-                      <SelectItem value="concluido">Concluído</SelectItem>
-                      <SelectItem value="cancelado">Cancelado</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
                 <Button type="submit" className="w-full">Criar Projeto</Button>
               </form>
@@ -103,7 +75,7 @@ export default function Prioridades() {
 
         <CronogramaTab
           projectId={selectedProjectId}
-          projects={projects}
+          clientes={clientes}
           onSelectProject={setSelectedProjectId}
         />
       </div>

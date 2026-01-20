@@ -1,20 +1,18 @@
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import type { Tables } from '@/integrations/supabase/types';
 import { CronogramaTreeGrid } from './CronogramaTreeGrid';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GanttChart } from './GanttChart';
-
-type Project = Tables<'project'>;
+import type { ClientAccessRecord } from '@/hooks/useClientAccessRecords';
 
 interface CronogramaTabProps {
   projectId: string | null;
-  projects: Project[];
+  clientes: ClientAccessRecord[];
   onSelectProject: (id: string) => void;
 }
 
-export function CronogramaTab({ projectId, projects, onSelectProject }: CronogramaTabProps) {
+export function CronogramaTab({ projectId, clientes, onSelectProject }: CronogramaTabProps) {
   return (
     <div className="space-y-4">
       <Card className="p-4">
@@ -25,9 +23,9 @@ export function CronogramaTab({ projectId, projects, onSelectProject }: Cronogra
               <SelectValue placeholder="Selecione um projeto" />
             </SelectTrigger>
             <SelectContent>
-              {projects.map((project) => (
-                <SelectItem key={project.id} value={project.id}>
-                  {project.nome}
+              {clientes.map((cliente) => (
+                <SelectItem key={cliente.id} value={cliente.id}>
+                  {cliente.cliente}
                 </SelectItem>
               ))}
             </SelectContent>
