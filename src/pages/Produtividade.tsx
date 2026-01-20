@@ -156,16 +156,16 @@ const Produtividade = () => {
       return;
     }
 
-    // Validate dates are not in the future
-    const today = new Date();
-    today.setHours(23, 59, 59, 999); // End of today
+    // Validate dates are not in the future (using Brazil timezone)
+    const nowBrazil = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    const todayStr = `${nowBrazil.getFullYear()}-${String(nowBrazil.getMonth() + 1).padStart(2, '0')}-${String(nowBrazil.getDate()).padStart(2, '0')}`;
     
-    if (new Date(formData.data_inicio) > today) {
+    if (formData.data_inicio > todayStr) {
       toast.error('Data de início não pode ser maior que a data atual');
       return;
     }
     
-    if (new Date(formData.data_fim) > today) {
+    if (formData.data_fim > todayStr) {
       toast.error('Data fim não pode ser maior que a data atual');
       return;
     }
@@ -315,15 +315,15 @@ const Produtividade = () => {
           rowErrors.push('Data Fim deve ser maior ou igual à Data de Início');
         }
 
-        // Validate dates are not in the future
-        const today = new Date();
-        today.setHours(23, 59, 59, 999); // End of today
+        // Validate dates are not in the future (using Brazil timezone)
+        const nowBrazil = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+        const todayStr = `${nowBrazil.getFullYear()}-${String(nowBrazil.getMonth() + 1).padStart(2, '0')}-${String(nowBrazil.getDate()).padStart(2, '0')}`;
         
-        if (dataInicio && new Date(dataInicio) > today) {
+        if (dataInicio && dataInicio > todayStr) {
           rowErrors.push('Data de Início não pode ser maior que a data atual');
         }
         
-        if (dataFim && new Date(dataFim) > today) {
+        if (dataFim && dataFim > todayStr) {
           rowErrors.push('Data Fim não pode ser maior que a data atual');
         }
 
