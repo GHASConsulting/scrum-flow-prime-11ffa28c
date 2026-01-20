@@ -650,120 +650,14 @@ export default function Riscos() {
               <CardHeader>
                 <CardTitle>Todos os Riscos Registrados</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Filtros */}
-                <div className="flex flex-wrap gap-4 items-end p-4 bg-muted/50 rounded-lg">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Tipo</Label>
-                    <Select value={filterTipo} onValueChange={setFilterTipo}>
-                      <SelectTrigger className="w-[140px]">
-                        <SelectValue placeholder="Todos" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos</SelectItem>
-                        <SelectItem value="Risco">Risco</SelectItem>
-                        <SelectItem value="BO">BO</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Data Identificação (De)</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-[140px] justify-start text-left font-normal",
-                            !filterDataInicio && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {filterDataInicio ? format(filterDataInicio, "dd/MM/yyyy", { locale: ptBR }) : "Início"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={filterDataInicio}
-                          onSelect={setFilterDataInicio}
-                          initialFocus
-                          locale={ptBR}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Data Identificação (Até)</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-[140px] justify-start text-left font-normal",
-                            !filterDataFim && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {filterDataFim ? format(filterDataFim, "dd/MM/yyyy", { locale: ptBR }) : "Fim"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={filterDataFim}
-                          onSelect={setFilterDataFim}
-                          initialFocus
-                          locale={ptBR}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Responsável</Label>
-                    <Select value={filterResponsavel} onValueChange={setFilterResponsavel}>
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Todos" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos</SelectItem>
-                        {uniqueResponsaveis.map((resp) => (
-                          <SelectItem key={resp} value={resp}>{resp}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Nível do Risco</Label>
-                    <Select value={filterNivelRisco} onValueChange={setFilterNivelRisco}>
-                      <SelectTrigger className="w-[140px]">
-                        <SelectValue placeholder="Todos" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos</SelectItem>
-                        <SelectItem value="Alto">🔴 Alto</SelectItem>
-                        <SelectItem value="Médio">🟡 Médio</SelectItem>
-                        <SelectItem value="Baixo">🟢 Baixo</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <Button variant="outline" size="sm" onClick={clearFilters} className="h-10">
-                    <X className="h-4 w-4 mr-1" />
-                    Limpar
-                  </Button>
-                </div>
-
+              <CardContent>
                 {loading ? (
                   <div className="flex justify-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                   </div>
-                ) : filteredRiscos.length === 0 ? (
+                ) : riscos.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    {riscos.length === 0 ? 'Nenhum risco registrado ainda.' : 'Nenhum risco encontrado com os filtros aplicados.'}
+                    Nenhum risco registrado ainda.
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
@@ -781,7 +675,7 @@ export default function Riscos() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredRiscos.map((risco) => {
+                        {riscos.map((risco) => {
                           const { emoji, color } = getNivelRiscoDisplay(risco.nivel_risco);
                           return (
                             <TableRow key={risco.id}>
@@ -852,6 +746,111 @@ export default function Riscos() {
           
           <TabsContent value="acompanhamento">
             <div className="grid gap-6">
+              {/* Filtros */}
+              <div className="flex flex-wrap gap-4 items-end p-4 bg-muted/50 rounded-lg">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Tipo</Label>
+                  <Select value={filterTipo} onValueChange={setFilterTipo}>
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="Risco">Risco</SelectItem>
+                      <SelectItem value="BO">BO</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Data Identificação (De)</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-[140px] justify-start text-left font-normal",
+                          !filterDataInicio && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {filterDataInicio ? format(filterDataInicio, "dd/MM/yyyy", { locale: ptBR }) : "Início"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={filterDataInicio}
+                        onSelect={setFilterDataInicio}
+                        initialFocus
+                        locale={ptBR}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Data Identificação (Até)</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-[140px] justify-start text-left font-normal",
+                          !filterDataFim && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {filterDataFim ? format(filterDataFim, "dd/MM/yyyy", { locale: ptBR }) : "Fim"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={filterDataFim}
+                        onSelect={setFilterDataFim}
+                        initialFocus
+                        locale={ptBR}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Responsável</Label>
+                  <Select value={filterResponsavel} onValueChange={setFilterResponsavel}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {uniqueResponsaveis.map((resp) => (
+                        <SelectItem key={resp} value={resp}>{resp}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Nível do Risco</Label>
+                  <Select value={filterNivelRisco} onValueChange={setFilterNivelRisco}>
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="Alto">🔴 Alto</SelectItem>
+                      <SelectItem value="Médio">🟡 Médio</SelectItem>
+                      <SelectItem value="Baixo">🟢 Baixo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button variant="outline" size="sm" onClick={clearFilters} className="h-10">
+                  <X className="h-4 w-4 mr-1" />
+                  Limpar
+                </Button>
+              </div>
               <Card>
                 <CardHeader>
                   <CardTitle className="text-red-600">Riscos em Aberto / Em Mitigação ({riscosAbertos.length})</CardTitle>
