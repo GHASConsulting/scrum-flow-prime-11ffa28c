@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, X } from 'lucide-react';
 import { useRiscos, type RiscoInsert, type Risco } from '@/hooks/useRiscos';
 import { useProfiles } from '@/hooks/useProfiles';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
@@ -68,6 +68,13 @@ export default function Riscos() {
   const [editingRisco, setEditingRisco] = useState<Risco | null>(null);
   const [viewingRisco, setViewingRisco] = useState<Risco | null>(null);
   const [tipoIdentificacao, setTipoIdentificacao] = useState<'Risco' | 'BO'>('Risco');
+  
+  // Filtros
+  const [filterTipo, setFilterTipo] = useState<string>('all');
+  const [filterDataInicio, setFilterDataInicio] = useState<Date | undefined>(undefined);
+  const [filterDataFim, setFilterDataFim] = useState<Date | undefined>(undefined);
+  const [filterResponsavel, setFilterResponsavel] = useState<string>('all');
+  const [filterNivelRisco, setFilterNivelRisco] = useState<string>('all');
   
   const [formData, setFormData] = useState<RiscoInsert>({
     projeto: '',
@@ -163,8 +170,61 @@ export default function Riscos() {
     await deleteRisco(id);
   };
 
-  const riscosAbertos = riscos.filter(r => r.status_risco === 'Aberto' || r.status_risco === 'Em mitigação');
-  const riscosResolvidos = riscos.filter(r => r.status_risco === 'Mitigado' || r.status_risco === 'Materializado');
+  // Função para limpar filtros
+  const clearFilters = () => {
+    setFilterTipo('all');
+    setFilterDataInicio(undefined);
+    setFilterDataFim(undefined);
+    setFilterResponsavel('all');
+    setFilterNivelRisco('all');
+  };
+
+  // Lista única de responsáveis
+  const uniqueResponsaveis = Array.from(new Set(riscos.map(r => r.responsavel).filter(Boolean))) as string[];
+
+  // Determinar tipo (Risco ou BO) baseado no tipo_risco_ghas
+  const getTipo = (risco: Risco) => {
+    // Se probabilidade é "Alta" e impacto é "Alta", considera como BO (já ocorreu)
+    // Caso contrário, é Risco (possibilidade)
+    // Simplificando: usamos o campo risco_ocorreu para determinar
+    return risco.risco_ocorreu ? 'BO' : 'Risco';
+  };
+
+  // Aplicar filtros
+  const filteredRiscos = riscos.filter(risco => {
+    // Filtro por tipo (Risco ou BO)
+    if (filterTipo !== 'all') {
+      const tipo = getTipo(risco);
+      if (tipo !== filterTipo) return false;
+    }
+
+    // Filtro por data de identificação (início)
+    if (filterDataInicio) {
+      const dataRisco = new Date(risco.data_identificacao + 'T00:00:00');
+      if (dataRisco < filterDataInicio) return false;
+    }
+
+    // Filtro por data de identificação (fim)
+    if (filterDataFim) {
+      const dataRisco = new Date(risco.data_identificacao + 'T00:00:00');
+      if (dataRisco > filterDataFim) return false;
+    }
+
+    // Filtro por responsável
+    if (filterResponsavel !== 'all') {
+      if (risco.responsavel !== filterResponsavel) return false;
+    }
+
+    // Filtro por nível de risco
+    if (filterNivelRisco !== 'all') {
+      if (risco.nivel_risco !== filterNivelRisco) return false;
+    }
+
+    return true;
+  });
+
+  const riscosAbertos = filteredRiscos.filter(r => r.status_risco === 'Aberto' || r.status_risco === 'Em mitigação');
+  const riscosResolvidos = filteredRiscos.filter(r => r.status_risco === 'Mitigado' || r.status_risco === 'Materializado');
 
   return (
     <Layout>
@@ -590,14 +650,120 @@ export default function Riscos() {
               <CardHeader>
                 <CardTitle>Todos os Riscos Registrados</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                {/* Filtros */}
+                <div className="flex flex-wrap gap-4 items-end p-4 bg-muted/50 rounded-lg">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Tipo</Label>
+                    <Select value={filterTipo} onValueChange={setFilterTipo}>
+                      <SelectTrigger className="w-[140px]">
+                        <SelectValue placeholder="Todos" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="Risco">Risco</SelectItem>
+                        <SelectItem value="BO">BO</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Data Identificação (De)</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-[140px] justify-start text-left font-normal",
+                            !filterDataInicio && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {filterDataInicio ? format(filterDataInicio, "dd/MM/yyyy", { locale: ptBR }) : "Início"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={filterDataInicio}
+                          onSelect={setFilterDataInicio}
+                          initialFocus
+                          locale={ptBR}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Data Identificação (Até)</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-[140px] justify-start text-left font-normal",
+                            !filterDataFim && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {filterDataFim ? format(filterDataFim, "dd/MM/yyyy", { locale: ptBR }) : "Fim"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={filterDataFim}
+                          onSelect={setFilterDataFim}
+                          initialFocus
+                          locale={ptBR}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Responsável</Label>
+                    <Select value={filterResponsavel} onValueChange={setFilterResponsavel}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Todos" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        {uniqueResponsaveis.map((resp) => (
+                          <SelectItem key={resp} value={resp}>{resp}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Nível do Risco</Label>
+                    <Select value={filterNivelRisco} onValueChange={setFilterNivelRisco}>
+                      <SelectTrigger className="w-[140px]">
+                        <SelectValue placeholder="Todos" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="Alto">🔴 Alto</SelectItem>
+                        <SelectItem value="Médio">🟡 Médio</SelectItem>
+                        <SelectItem value="Baixo">🟢 Baixo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button variant="outline" size="sm" onClick={clearFilters} className="h-10">
+                    <X className="h-4 w-4 mr-1" />
+                    Limpar
+                  </Button>
+                </div>
+
                 {loading ? (
                   <div className="flex justify-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                   </div>
-                ) : riscos.length === 0 ? (
+                ) : filteredRiscos.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    Nenhum risco registrado ainda.
+                    {riscos.length === 0 ? 'Nenhum risco registrado ainda.' : 'Nenhum risco encontrado com os filtros aplicados.'}
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
@@ -615,7 +781,7 @@ export default function Riscos() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {riscos.map((risco) => {
+                        {filteredRiscos.map((risco) => {
                           const { emoji, color } = getNivelRiscoDisplay(risco.nivel_risco);
                           return (
                             <TableRow key={risco.id}>
