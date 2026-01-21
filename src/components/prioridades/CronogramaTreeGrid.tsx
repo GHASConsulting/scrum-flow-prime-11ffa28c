@@ -12,9 +12,10 @@ import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { DebouncedInput } from './DebouncedInput';
+import { format } from 'date-fns';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 
-// UTC-3 timezone offset in minutes
-const UTC_MINUS_3_OFFSET = -3 * 60;
+const BRAZIL_TIMEZONE = 'America/Sao_Paulo';
 
 const STATUS_OPTIONS = [
   { value: 'pendente', label: 'Pendente' },
@@ -33,47 +34,36 @@ interface CronogramaTreeGridProps {
   projectId: string;
 }
 
-// Convert date to UTC-3 and format for datetime-local input
-const formatToUTCMinus3 = (date: Date): string => {
-  const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000);
-  const utcMinus3Time = new Date(utcTime + (UTC_MINUS_3_OFFSET * 60000 * -1));
-  const year = utcMinus3Time.getFullYear();
-  const month = String(utcMinus3Time.getMonth() + 1).padStart(2, '0');
-  const day = String(utcMinus3Time.getDate()).padStart(2, '0');
-  const hours = String(utcMinus3Time.getHours()).padStart(2, '0');
-  const minutes = String(utcMinus3Time.getMinutes()).padStart(2, '0');
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
+// Convert UTC date to Brazil timezone and format for datetime-local input
+const formatToBrazil = (date: Date): string => {
+  const zonedDate = toZonedTime(date, BRAZIL_TIMEZONE);
+  return format(zonedDate, "yyyy-MM-dd'T'HH:mm");
 };
 
-// Parse datetime-local input as UTC-3 and convert to ISO
-const parseFromUTCMinus3 = (dateString: string): Date => {
+// Parse datetime-local input (interpreted as Brazil time) and convert to UTC
+const parseFromBrazil = (dateString: string): Date => {
   const [datePart, timePart] = dateString.split('T');
   const [year, month, day] = datePart.split('-').map(Number);
   const [hours, minutes] = timePart.split(':').map(Number);
   
-  // Create date as if it's in UTC-3, then convert to UTC
-  const utcMinus3Date = new Date(Date.UTC(year, month - 1, day, hours, minutes));
-  // Add 3 hours to convert from UTC-3 to UTC
-  return new Date(utcMinus3Date.getTime() + (3 * 60 * 60 * 1000));
+  // Create a date object representing the Brazil time, then convert to UTC
+  const brazilDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
+  return fromZonedTime(brazilDate, BRAZIL_TIMEZONE);
 };
 
-// Helper to create default start/end times in UTC-3
+// Helper to create default start/end times in Brazil timezone
 const createDefaultStartTime = (): Date => {
   const now = new Date();
-  const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-  const utcMinus3Now = new Date(utcTime + (UTC_MINUS_3_OFFSET * 60000 * -1));
-  utcMinus3Now.setHours(8, 0, 0, 0);
-  // Convert back to UTC
-  return new Date(utcMinus3Now.getTime() + (3 * 60 * 60 * 1000));
+  const zonedNow = toZonedTime(now, BRAZIL_TIMEZONE);
+  zonedNow.setHours(8, 0, 0, 0);
+  return fromZonedTime(zonedNow, BRAZIL_TIMEZONE);
 };
 
 const createDefaultEndTime = (): Date => {
   const now = new Date();
-  const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-  const utcMinus3Now = new Date(utcTime + (UTC_MINUS_3_OFFSET * 60000 * -1));
-  utcMinus3Now.setHours(18, 0, 0, 0);
-  // Convert back to UTC
-  return new Date(utcMinus3Now.getTime() + (3 * 60 * 60 * 1000));
+  const zonedNow = toZonedTime(now, BRAZIL_TIMEZONE);
+  zonedNow.setHours(18, 0, 0, 0);
+  return fromZonedTime(zonedNow, BRAZIL_TIMEZONE);
 };
 
 export function CronogramaTreeGrid({ projectId }: CronogramaTreeGridProps) {
@@ -231,7 +221,7 @@ export function CronogramaTreeGrid({ projectId }: CronogramaTreeGridProps) {
     const updates: Partial<ScheduleTask> = { [field]: value };
 
     if (field === 'start_at' && task.duration_days && value) {
-      const startDate = parseFromUTCMinus3(value);
+      const startDate = parseFromBrazil(value);
       const endDate = new Date(startDate);
       endDate.setHours(endDate.getHours() + (Number(task.duration_days) * 9)); // 9 hours per day
       updates.start_at = startDate.toISOString();
@@ -243,7 +233,7 @@ export function CronogramaTreeGrid({ projectId }: CronogramaTreeGridProps) {
       updates.end_at = endDate.toISOString();
     } else if (field === 'end_at' && task.start_at && value) {
       const startDate = new Date(task.start_at);
-      const endDate = parseFromUTCMinus3(value);
+      const endDate = parseFromBrazil(value);
       const duration = calculateWorkingDays(startDate, endDate);
       updates.duration_days = duration;
     }
@@ -348,12 +338,13 @@ export function CronogramaTreeGrid({ projectId }: CronogramaTreeGridProps) {
             <Input type="number" value={task.duration_days || ''} onChange={(e) => handleUpdateField(task.id, 'duration_days', e.target.value)} className="h-8 w-24" disabled={task.is_summary || isParentTask} />
           </TableCell>
           <TableCell>
-            <Input type="datetime-local" value={task.start_at ? formatToUTCMinus3(new Date(task.start_at)) : ''} onChange={(e) => handleUpdateField(task.id, 'start_at', e.target.value)} className="h-8" disabled={task.is_summary || isParentTask} />
+            <Input type="datetime-local" step="1800" value={task.start_at ? formatToBrazil(new Date(task.start_at)) : ''} onChange={(e) => handleUpdateField(task.id, 'start_at', e.target.value)} className="h-8" disabled={task.is_summary || isParentTask} />
           </TableCell>
           <TableCell>
             <Input 
               type="datetime-local" 
-              value={task.end_at ? formatToUTCMinus3(new Date(task.end_at)) : ''} 
+              step="1800"
+              value={task.end_at ? formatToBrazil(new Date(task.end_at)) : ''} 
               onChange={(e) => handleUpdateField(task.id, 'end_at', e.target.value)} 
               className="h-8" 
               disabled={task.is_summary || isParentTask}
