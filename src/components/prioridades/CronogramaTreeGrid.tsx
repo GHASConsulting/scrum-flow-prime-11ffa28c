@@ -1,13 +1,12 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2, FileDown, ChevronDown, ChevronRight } from 'lucide-react';
 import { useScheduleTasks } from '@/hooks/useScheduleTasks';
-import { useResources } from '@/hooks/useResources';
 import type { Tables } from '@/integrations/supabase/types';
-import { formatDateTimeForInput, addWorkingDays, calculateWorkingDays, adjustToWorkingTime, parseDateTimeFromInput } from '@/lib/workingDays';
+import { formatDateTimeForInput, calculateWorkingDays, parseDateTimeFromInput } from '@/lib/workingDays';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
@@ -31,9 +30,21 @@ interface CronogramaTreeGridProps {
   projectId: string;
 }
 
+// Helper to create default start/end times
+const createDefaultStartTime = (): Date => {
+  const now = new Date();
+  now.setHours(8, 0, 0, 0);
+  return now;
+};
+
+const createDefaultEndTime = (): Date => {
+  const now = new Date();
+  now.setHours(18, 0, 0, 0);
+  return now;
+};
+
 export function CronogramaTreeGrid({ projectId }: CronogramaTreeGridProps) {
   const { tasks, loading, addTask, updateTask, deleteTask } = useScheduleTasks(projectId);
-  const { resources } = useResources();
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
 
   const toggleExpand = (taskId: string) => {
@@ -48,6 +59,9 @@ export function CronogramaTreeGrid({ projectId }: CronogramaTreeGridProps) {
 
   const handleAddTask = async () => {
     try {
+      const startTime = createDefaultStartTime();
+      const endTime = createDefaultEndTime();
+      
       await addTask({
         project_id: projectId,
         name: 'Nova Tarefa',
@@ -55,8 +69,8 @@ export function CronogramaTreeGrid({ projectId }: CronogramaTreeGridProps) {
         is_summary: false,
         duration_days: 1,
         duration_is_estimate: false,
-        start_at: new Date().toISOString(),
-        end_at: addWorkingDays(new Date(), 1).toISOString(),
+        start_at: startTime.toISOString(),
+        end_at: endTime.toISOString(),
         predecessors: null,
         parent_id: null,
         notes: null,
@@ -77,22 +91,23 @@ export function CronogramaTreeGrid({ projectId }: CronogramaTreeGridProps) {
       doc.text('Cronograma do Projeto', 14, 15);
       
       const tableData = tasks.map(task => {
-        const indent = task.parent_id ? '  ' : '';
+        const parentTask = task.parent_id ? tasks.find(t => t.id === task.parent_id) : null;
+        const parentIdLabel = parentTask ? `Filho de ID ${parentTask.order_index + 1}` : '';
         const statusLabel = STATUS_OPTIONS.find(s => s.value === task.status)?.label || 'Pendente';
         return [
           (task.order_index + 1).toString(),
-          indent + task.name,
+          task.name,
           task.duration_days ? task.duration_days.toString() : '',
           task.start_at ? new Date(task.start_at).toLocaleString('pt-BR') : '',
           task.end_at ? new Date(task.end_at).toLocaleString('pt-BR') : '',
-          task.predecessors || '',
+          parentIdLabel,
           task.responsavel || '',
           statusLabel
         ];
       });
 
       autoTable(doc, {
-        head: [['ID', 'Nome', 'Duração (dias)', 'Início', 'Fim', 'Antecessores', 'Responsável', 'Status']],
+        head: [['ID', 'Nome', 'Duração (dias)', 'Início', 'Fim', 'Tarefa Pai', 'Responsável', 'Status']],
         body: tableData,
         startY: 25,
         styles: { fontSize: 8, cellPadding: 2 },
@@ -132,13 +147,14 @@ export function CronogramaTreeGrid({ projectId }: CronogramaTreeGridProps) {
 
     if (field === 'start_at' && task.duration_days && value) {
       const startDate = parseDateTimeFromInput(value);
-      const adjustedStart = adjustToWorkingTime(startDate);
-      const endDate = addWorkingDays(adjustedStart, Number(task.duration_days));
-      updates.start_at = adjustedStart.toISOString();
+      const endDate = new Date(startDate);
+      endDate.setHours(endDate.getHours() + (Number(task.duration_days) * 9)); // 9 hours per day
+      updates.start_at = startDate.toISOString();
       updates.end_at = endDate.toISOString();
     } else if (field === 'duration_days' && task.start_at && value) {
       const startDate = new Date(task.start_at);
-      const endDate = addWorkingDays(startDate, Number(value));
+      const endDate = new Date(startDate);
+      endDate.setHours(endDate.getHours() + (Number(value) * 9));
       updates.end_at = endDate.toISOString();
     } else if (field === 'end_at' && task.start_at && value) {
       const startDate = new Date(task.start_at);
@@ -148,6 +164,39 @@ export function CronogramaTreeGrid({ projectId }: CronogramaTreeGridProps) {
     }
 
     await updateTask(taskId, updates);
+  };
+
+  const handleUpdateParentId = async (taskId: string, parentIdInput: string) => {
+    if (!parentIdInput.trim()) {
+      await updateTask(taskId, { parent_id: null });
+      return;
+    }
+
+    const parentIndex = parseInt(parentIdInput, 10) - 1;
+    if (isNaN(parentIndex) || parentIndex < 0) {
+      toast.error('ID inválido');
+      return;
+    }
+
+    const parentTask = tasks.find(t => t.order_index === parentIndex);
+    if (!parentTask) {
+      toast.error(`Tarefa com ID ${parentIdInput} não encontrada`);
+      return;
+    }
+
+    if (parentTask.id === taskId) {
+      toast.error('Uma tarefa não pode ser filha de si mesma');
+      return;
+    }
+
+    await updateTask(taskId, { parent_id: parentTask.id });
+    toast.success(`Tarefa definida como filha do ID ${parentIdInput}`);
+  };
+
+  const getParentIdDisplay = (task: ScheduleTask): string => {
+    if (!task.parent_id) return '';
+    const parentTask = tasks.find(t => t.id === task.parent_id);
+    return parentTask ? (parentTask.order_index + 1).toString() : '';
   };
 
   const buildTree = (): TaskWithChildren[] => {
@@ -207,17 +256,17 @@ export function CronogramaTreeGrid({ projectId }: CronogramaTreeGridProps) {
           </TableCell>
           <TableCell>
             <DebouncedInput 
-              value={task.predecessors || ''} 
-              onChange={(value) => handleUpdateField(task.id, 'predecessors', value)} 
-              className="h-8" 
-              placeholder="IDs separados por vírgula" 
+              value={getParentIdDisplay(task)} 
+              onChange={(value) => handleUpdateParentId(task.id, value)} 
+              className="h-8 w-20" 
+              placeholder="ID pai" 
             />
           </TableCell>
           <TableCell>
             <DebouncedInput 
               value={task.responsavel || ''} 
               onChange={(value) => handleUpdateField(task.id, 'responsavel', value)} 
-              className="h-8" 
+              className="h-8"
               placeholder="Nome do responsável" 
             />
           </TableCell>
@@ -281,7 +330,7 @@ export function CronogramaTreeGrid({ projectId }: CronogramaTreeGridProps) {
                 <TableHead>Duração (dias)</TableHead>
                 <TableHead>Início</TableHead>
                 <TableHead>Fim</TableHead>
-                <TableHead>Antecessores</TableHead>
+                <TableHead className="w-24">Tarefa Pai</TableHead>
                 <TableHead>Responsável</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Ações</TableHead>
