@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, ListTodo, Calendar, MessageSquare, RotateCcw, Shield, LogOut, AlertTriangle, Settings, Map, ClipboardList, Target, FileDown } from 'lucide-react';
+import { LayoutDashboard, ListTodo, Calendar, MessageSquare, RotateCcw, Shield, LogOut, AlertTriangle, Settings, Map, ClipboardList, Target, FileDown, ChevronDown, BookOpen } from 'lucide-react';
 import { downloadManualPDF } from './ManualDownload';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from './ui/button';
@@ -8,6 +8,12 @@ import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import logoGhas from '@/assets/logo-ghas.png';
 import { LucideIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 
 type MenuItem = {
   name: string;
@@ -177,18 +183,28 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
             </div>
             {user && (
               <div className="flex items-center gap-3">
-                {userName && (
-                  <span className="text-sm text-muted-foreground">
-                    Olá, <span className="font-medium text-foreground">{userName}</span>!
-                  </span>
-                )}
-                <Button variant="ghost" size="sm" onClick={downloadManualPDF} title="Baixar Manual do Usuário">
-                  <FileDown className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={signOut}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sair
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                      {userName && (
+                        <span className="text-sm">
+                          Olá, <span className="font-medium">{userName}</span>!
+                        </span>
+                      )}
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 bg-popover border shadow-lg z-50">
+                    <DropdownMenuItem onClick={downloadManualPDF} className="cursor-pointer">
+                      <BookOpen className="h-4 w-4 mr-2" />
+                      Manual de Uso Sistema AVAnça
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={signOut} className="cursor-pointer text-destructive focus:text-destructive">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sair do Sistema
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             )}
           </div>
