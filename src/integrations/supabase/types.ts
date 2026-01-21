@@ -892,6 +892,13 @@ export type Database = {
             referencedRelation: "schedule_task"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "schedule_task_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "client_access_records"
+            referencedColumns: ["id"]
+          },
         ]
       }
       sprint: {
