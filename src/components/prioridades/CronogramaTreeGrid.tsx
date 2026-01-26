@@ -430,6 +430,14 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
           </TableCell>
           <TableCell>
             <DebouncedInput 
+              value={task.responsavel || ''} 
+              onChange={(value) => handleUpdateField(task.id, 'responsavel', value)} 
+              className="h-8"
+              placeholder="Nome do responsável" 
+            />
+          </TableCell>
+          <TableCell>
+            <DebouncedInput 
               value={getParentIdDisplay(task)} 
               onChange={(value) => handleUpdateParentId(task.id, value)} 
               className="h-8 w-20" 
@@ -595,8 +603,8 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
                 <TableHead>Duração (dias)</TableHead>
                 <TableHead>Início</TableHead>
                 <TableHead>Fim</TableHead>
-                <TableHead className="w-24">Tarefa Pai</TableHead>
                 <TableHead>Responsável</TableHead>
+                <TableHead className="w-24">Tarefa Pai</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
