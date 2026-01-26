@@ -8,13 +8,16 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Plus, Edit, Trash2, Package, Tag, Users, User } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, Tag, Users, User, FileText, FolderOpen } from 'lucide-react';
 import { useTipoProduto } from '@/hooks/useTipoProduto';
 import { useTipoTarefa } from '@/hooks/useTipoTarefa';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { usePrestadorServico, NIVEL_OPTIONS } from '@/hooks/usePrestadorServico';
+import { useTipoDocumento } from '@/hooks/useTipoDocumento';
+import { useAreaDocumento } from '@/hooks/useAreaDocumento';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+
 const CadastrosSistema = () => {
   const {
     tiposProduto,
@@ -44,6 +47,20 @@ const CadastrosSistema = () => {
     updatePrestadorServico,
     deletePrestadorServico
   } = usePrestadorServico();
+  const {
+    tiposDocumento,
+    isLoading: isLoadingTipoDoc,
+    addTipoDocumento,
+    updateTipoDocumento,
+    deleteTipoDocumento
+  } = useTipoDocumento();
+  const {
+    areasDocumento,
+    isLoading: isLoadingAreaDoc,
+    addAreaDocumento,
+    updateAreaDocumento,
+    deleteAreaDocumento
+  } = useAreaDocumento();
 
   // Estado para Área
   const [isAddAreaDialogOpen, setIsAddAreaDialogOpen] = useState(false);
@@ -87,6 +104,26 @@ const CadastrosSistema = () => {
     nome: string;
     email: string | null;
     nivel: string | null;
+  } | null>(null);
+
+  // Estado para Tipo de Documento
+  const [isAddTipoDocDialogOpen, setIsAddTipoDocDialogOpen] = useState(false);
+  const [isEditTipoDocDialogOpen, setIsEditTipoDocDialogOpen] = useState(false);
+  const [newTipoDocNome, setNewTipoDocNome] = useState('');
+  const [editingTipoDoc, setEditingTipoDoc] = useState<{
+    id: string;
+    nome: string;
+    ativo: boolean;
+  } | null>(null);
+
+  // Estado para Área de Documento
+  const [isAddAreaDocDialogOpen, setIsAddAreaDocDialogOpen] = useState(false);
+  const [isEditAreaDocDialogOpen, setIsEditAreaDocDialogOpen] = useState(false);
+  const [newAreaDocNome, setNewAreaDocNome] = useState('');
+  const [editingAreaDoc, setEditingAreaDoc] = useState<{
+    id: string;
+    nome: string;
+    ativo: boolean;
   } | null>(null);
 
   // Handlers para Área
@@ -332,6 +369,110 @@ const CadastrosSistema = () => {
       // Error handled in hook
     }
   };
+
+  // Handlers para Tipo de Documento
+  const handleAddTipoDoc = async () => {
+    if (!newTipoDocNome.trim()) {
+      toast.error('Nome é obrigatório');
+      return;
+    }
+    try {
+      await addTipoDocumento(newTipoDocNome.trim());
+      setNewTipoDocNome('');
+      setIsAddTipoDocDialogOpen(false);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+  const handleEditTipoDoc = (item: { id: string; nome: string; ativo: boolean }) => {
+    setEditingTipoDoc({ ...item });
+    setIsEditTipoDocDialogOpen(true);
+  };
+  const handleUpdateTipoDoc = async () => {
+    if (!editingTipoDoc) return;
+    if (!editingTipoDoc.nome.trim()) {
+      toast.error('Nome é obrigatório');
+      return;
+    }
+    try {
+      await updateTipoDocumento({
+        id: editingTipoDoc.id,
+        nome: editingTipoDoc.nome.trim(),
+        ativo: editingTipoDoc.ativo
+      });
+      setIsEditTipoDocDialogOpen(false);
+      setEditingTipoDoc(null);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+  const handleDeleteTipoDoc = async (id: string) => {
+    if (!confirm('Tem certeza que deseja remover este item?')) return;
+    try {
+      await deleteTipoDocumento(id);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+  const handleToggleTipoDocAtivo = async (id: string, ativo: boolean) => {
+    try {
+      await updateTipoDocumento({ id, ativo: !ativo });
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+
+  // Handlers para Área de Documento
+  const handleAddAreaDoc = async () => {
+    if (!newAreaDocNome.trim()) {
+      toast.error('Nome é obrigatório');
+      return;
+    }
+    try {
+      await addAreaDocumento(newAreaDocNome.trim());
+      setNewAreaDocNome('');
+      setIsAddAreaDocDialogOpen(false);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+  const handleEditAreaDoc = (item: { id: string; nome: string; ativo: boolean }) => {
+    setEditingAreaDoc({ ...item });
+    setIsEditAreaDocDialogOpen(true);
+  };
+  const handleUpdateAreaDoc = async () => {
+    if (!editingAreaDoc) return;
+    if (!editingAreaDoc.nome.trim()) {
+      toast.error('Nome é obrigatório');
+      return;
+    }
+    try {
+      await updateAreaDocumento({
+        id: editingAreaDoc.id,
+        nome: editingAreaDoc.nome.trim(),
+        ativo: editingAreaDoc.ativo
+      });
+      setIsEditAreaDocDialogOpen(false);
+      setEditingAreaDoc(null);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+  const handleDeleteAreaDoc = async (id: string) => {
+    if (!confirm('Tem certeza que deseja remover este item?')) return;
+    try {
+      await deleteAreaDocumento(id);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+  const handleToggleAreaDocAtivo = async (id: string, ativo: boolean) => {
+    try {
+      await updateAreaDocumento({ id, ativo: !ativo });
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
   return <Layout>
       <div className="space-y-6">
         <div>
@@ -548,6 +689,116 @@ const CadastrosSistema = () => {
                                   <Edit className="h-4 w-4" />
                                 </Button>
                                 <Button variant="ghost" size="icon" onClick={() => handleDeletePrestador(item.id)}>
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>)}
+                      </TableBody>
+                    </Table>}
+                </CardContent>
+              </Card>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Tipo de Documento */}
+          <AccordionItem value="tipo-documento" className="border rounded-lg bg-card">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline">
+              <div className="flex items-center gap-3">
+                <FileText className="h-5 w-5 text-primary" />
+                <span className="text-lg font-semibold">Tipo de Documento</span>
+                <Badge variant="secondary" className="ml-2">
+                  {tiposDocumento.length} itens
+                </Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-4">
+              <Card className="border-0 shadow-none">
+                <CardHeader className="px-0 pt-0">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">Lista de Tipos de Documento</CardTitle>
+                    <Button onClick={() => setIsAddTipoDocDialogOpen(true)} size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="px-0 pb-0">
+                  {isLoadingTipoDoc ? <p className="text-muted-foreground">Carregando...</p> : tiposDocumento.length === 0 ? <p className="text-muted-foreground">Nenhum tipo de documento cadastrado</p> : <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nome</TableHead>
+                          <TableHead className="w-[100px] text-center">Ativo</TableHead>
+                          <TableHead className="w-[100px] text-center">Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {tiposDocumento.map(item => <TableRow key={item.id}>
+                            <TableCell className="font-medium">{item.nome}</TableCell>
+                            <TableCell className="text-center">
+                              <Switch checked={item.ativo} onCheckedChange={() => handleToggleTipoDocAtivo(item.id, item.ativo)} />
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center justify-center gap-2">
+                                <Button variant="ghost" size="icon" onClick={() => handleEditTipoDoc(item)}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" onClick={() => handleDeleteTipoDoc(item.id)}>
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>)}
+                      </TableBody>
+                    </Table>}
+                </CardContent>
+              </Card>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Área de Documento */}
+          <AccordionItem value="area-documento" className="border rounded-lg bg-card">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline">
+              <div className="flex items-center gap-3">
+                <FolderOpen className="h-5 w-5 text-primary" />
+                <span className="text-lg font-semibold">Área de Documento</span>
+                <Badge variant="secondary" className="ml-2">
+                  {areasDocumento.length} itens
+                </Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-4">
+              <Card className="border-0 shadow-none">
+                <CardHeader className="px-0 pt-0">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">Lista de Áreas de Documento</CardTitle>
+                    <Button onClick={() => setIsAddAreaDocDialogOpen(true)} size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="px-0 pb-0">
+                  {isLoadingAreaDoc ? <p className="text-muted-foreground">Carregando...</p> : areasDocumento.length === 0 ? <p className="text-muted-foreground">Nenhuma área de documento cadastrada</p> : <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nome</TableHead>
+                          <TableHead className="w-[100px] text-center">Ativo</TableHead>
+                          <TableHead className="w-[100px] text-center">Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {areasDocumento.map(item => <TableRow key={item.id}>
+                            <TableCell className="font-medium">{item.nome}</TableCell>
+                            <TableCell className="text-center">
+                              <Switch checked={item.ativo} onCheckedChange={() => handleToggleAreaDocAtivo(item.id, item.ativo)} />
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center justify-center gap-2">
+                                <Button variant="ghost" size="icon" onClick={() => handleEditAreaDoc(item)}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" onClick={() => handleDeleteAreaDoc(item.id)}>
                                   <Trash2 className="h-4 w-4 text-destructive" />
                                 </Button>
                               </div>
@@ -795,6 +1046,110 @@ const CadastrosSistema = () => {
                 Cancelar
               </Button>
               <Button onClick={handleUpdatePrestador}>Salvar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Adicionar Tipo de Documento */}
+        <Dialog open={isAddTipoDocDialogOpen} onOpenChange={setIsAddTipoDocDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Adicionar Tipo de Documento</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nome</label>
+                <Input value={newTipoDocNome} onChange={e => setNewTipoDocNome(e.target.value)} placeholder="Digite o nome do tipo" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddTipoDocDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAddTipoDoc}>Adicionar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Editar Tipo de Documento */}
+        <Dialog open={isEditTipoDocDialogOpen} onOpenChange={setIsEditTipoDocDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar Tipo de Documento</DialogTitle>
+            </DialogHeader>
+            {editingTipoDoc && <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Nome</label>
+                  <Input value={editingTipoDoc.nome} onChange={e => setEditingTipoDoc({
+                ...editingTipoDoc,
+                nome: e.target.value
+              })} placeholder="Digite o nome do tipo" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Ativo</label>
+                  <Switch checked={editingTipoDoc.ativo} onCheckedChange={checked => setEditingTipoDoc({
+                ...editingTipoDoc,
+                ativo: checked
+              })} />
+                </div>
+              </div>}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditTipoDocDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleUpdateTipoDoc}>Salvar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Adicionar Área de Documento */}
+        <Dialog open={isAddAreaDocDialogOpen} onOpenChange={setIsAddAreaDocDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Adicionar Área de Documento</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nome</label>
+                <Input value={newAreaDocNome} onChange={e => setNewAreaDocNome(e.target.value)} placeholder="Digite o nome da área" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddAreaDocDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAddAreaDoc}>Adicionar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Editar Área de Documento */}
+        <Dialog open={isEditAreaDocDialogOpen} onOpenChange={setIsEditAreaDocDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar Área de Documento</DialogTitle>
+            </DialogHeader>
+            {editingAreaDoc && <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Nome</label>
+                  <Input value={editingAreaDoc.nome} onChange={e => setEditingAreaDoc({
+                ...editingAreaDoc,
+                nome: e.target.value
+              })} placeholder="Digite o nome da área" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Ativo</label>
+                  <Switch checked={editingAreaDoc.ativo} onCheckedChange={checked => setEditingAreaDoc({
+                ...editingAreaDoc,
+                ativo: checked
+              })} />
+                </div>
+              </div>}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditAreaDocDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleUpdateAreaDoc}>Salvar</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

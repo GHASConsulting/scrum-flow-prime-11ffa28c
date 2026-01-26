@@ -1,0 +1,622 @@
+import { useState, useMemo } from 'react';
+import { Layout } from '@/components/Layout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, Edit, Trash2, Eye, Download, FileText, Search, X } from 'lucide-react';
+import { useDocumentos, Documento, DocumentoInsert, DocumentoUpdate } from '@/hooks/useDocumentos';
+import { useTipoDocumento } from '@/hooks/useTipoDocumento';
+import { useAreaDocumento } from '@/hooks/useAreaDocumento';
+import { useAuth } from '@/hooks/useAuth';
+import { formatDate } from '@/lib/formatters';
+import { toast } from 'sonner';
+
+const SharepointDocumentos = () => {
+  const { userRole } = useAuth();
+  const isAdmin = userRole === 'administrador';
+  
+  const { documentos, isLoading, uploadFile, getFileUrl, addDocumento, updateDocumento, deleteDocumento, isAdding, isUpdating } = useDocumentos();
+  const { tiposDocumento } = useTipoDocumento();
+  const { areasDocumento } = useAreaDocumento();
+
+  // Dialogs state
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [selectedDocumento, setSelectedDocumento] = useState<Documento | null>(null);
+
+  // Filters state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterTipo, setFilterTipo] = useState<string>('all');
+  const [filterArea, setFilterArea] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'data' | 'versao'>('data');
+
+  // Form state
+  const [formData, setFormData] = useState<{
+    nome: string;
+    tipo_documento_id: string;
+    area_documento_id: string;
+    versao: string;
+    descricao: string;
+    data_publicacao: string;
+    status: 'ativo' | 'inativo';
+    file: File | null;
+  }>({
+    nome: '',
+    tipo_documento_id: '',
+    area_documento_id: '',
+    versao: '',
+    descricao: '',
+    data_publicacao: new Date().toISOString().split('T')[0],
+    status: 'ativo',
+    file: null,
+  });
+
+  const resetForm = () => {
+    setFormData({
+      nome: '',
+      tipo_documento_id: '',
+      area_documento_id: '',
+      versao: '',
+      descricao: '',
+      data_publicacao: new Date().toISOString().split('T')[0],
+      status: 'ativo',
+      file: null,
+    });
+  };
+
+  const handleOpenAdd = () => {
+    resetForm();
+    setIsAddDialogOpen(true);
+  };
+
+  const handleOpenEdit = (doc: Documento) => {
+    setSelectedDocumento(doc);
+    setFormData({
+      nome: doc.nome,
+      tipo_documento_id: doc.tipo_documento_id || '',
+      area_documento_id: doc.area_documento_id || '',
+      versao: doc.versao || '',
+      descricao: doc.descricao || '',
+      data_publicacao: doc.data_publicacao,
+      status: doc.status,
+      file: null,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleOpenView = (doc: Documento) => {
+    setSelectedDocumento(doc);
+    setIsViewDialogOpen(true);
+  };
+
+  const handleAdd = async () => {
+    if (!formData.nome.trim()) {
+      toast.error('Nome é obrigatório');
+      return;
+    }
+    if (!formData.file) {
+      toast.error('Arquivo é obrigatório');
+      return;
+    }
+
+    try {
+      const fileInfo = await uploadFile(formData.file);
+      
+      const documento: DocumentoInsert = {
+        nome: formData.nome.trim(),
+        tipo_documento_id: formData.tipo_documento_id || null,
+        area_documento_id: formData.area_documento_id || null,
+        versao: formData.versao.trim() || null,
+        descricao: formData.descricao.trim() || null,
+        data_publicacao: formData.data_publicacao,
+        status: formData.status,
+        arquivo_path: fileInfo.path,
+        arquivo_nome: fileInfo.name,
+        arquivo_tipo: fileInfo.type,
+      };
+
+      await addDocumento(documento);
+      setIsAddDialogOpen(false);
+      resetForm();
+    } catch (error) {
+      console.error('Erro ao adicionar documento:', error);
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!selectedDocumento) return;
+    if (!formData.nome.trim()) {
+      toast.error('Nome é obrigatório');
+      return;
+    }
+
+    try {
+      const updateData: DocumentoUpdate = {
+        id: selectedDocumento.id,
+        nome: formData.nome.trim(),
+        tipo_documento_id: formData.tipo_documento_id || null,
+        area_documento_id: formData.area_documento_id || null,
+        versao: formData.versao.trim() || null,
+        descricao: formData.descricao.trim() || null,
+        data_publicacao: formData.data_publicacao,
+        status: formData.status,
+      };
+
+      // If new file uploaded, replace the old one
+      if (formData.file) {
+        const fileInfo = await uploadFile(formData.file);
+        updateData.arquivo_path = fileInfo.path;
+        updateData.arquivo_nome = fileInfo.name;
+        updateData.arquivo_tipo = fileInfo.type;
+      }
+
+      await updateDocumento(updateData);
+      setIsEditDialogOpen(false);
+      setSelectedDocumento(null);
+      resetForm();
+    } catch (error) {
+      console.error('Erro ao atualizar documento:', error);
+    }
+  };
+
+  const handleDelete = async (doc: Documento) => {
+    if (!confirm('Tem certeza que deseja remover este documento?')) return;
+    
+    try {
+      await deleteDocumento({ id: doc.id, arquivoPath: doc.arquivo_path });
+    } catch (error) {
+      console.error('Erro ao remover documento:', error);
+    }
+  };
+
+  const handleDownload = (doc: Documento) => {
+    const url = getFileUrl(doc.arquivo_path);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = doc.arquivo_nome;
+    link.click();
+  };
+
+  const handleViewFile = (doc: Documento) => {
+    const url = getFileUrl(doc.arquivo_path);
+    
+    // PDFs open in a new tab for viewing
+    if (doc.arquivo_tipo === 'application/pdf') {
+      window.open(url, '_blank');
+    } else {
+      // Other formats trigger download
+      handleDownload(doc);
+    }
+  };
+
+  // Filtered documents
+  const filteredDocumentos = useMemo(() => {
+    let filtered = [...documentos];
+
+    // Search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(doc => 
+        doc.nome.toLowerCase().includes(term)
+      );
+    }
+
+    // Type filter
+    if (filterTipo !== 'all') {
+      filtered = filtered.filter(doc => doc.tipo_documento_id === filterTipo);
+    }
+
+    // Area filter
+    if (filterArea !== 'all') {
+      filtered = filtered.filter(doc => doc.area_documento_id === filterArea);
+    }
+
+    // Status filter
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(doc => doc.status === filterStatus);
+    }
+
+    // Sorting
+    filtered.sort((a, b) => {
+      if (sortBy === 'data') {
+        return new Date(b.data_publicacao).getTime() - new Date(a.data_publicacao).getTime();
+      } else {
+        return (a.versao || '').localeCompare(b.versao || '');
+      }
+    });
+
+    return filtered;
+  }, [documentos, searchTerm, filterTipo, filterArea, filterStatus, sortBy]);
+
+  const activeTipos = tiposDocumento.filter(t => t.ativo);
+  const activeAreas = areasDocumento.filter(a => a.ativo);
+
+  return (
+    <Layout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold text-foreground">Documentos</h2>
+            <p className="text-muted-foreground mt-1">Documentos institucionais da GHAS</p>
+          </div>
+          {isAdmin && (
+            <Button onClick={handleOpenAdd}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Documento
+            </Button>
+          )}
+        </div>
+
+        {/* Filters */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nome..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Select value={filterTipo} onValueChange={setFilterTipo}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filtrar por tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os tipos</SelectItem>
+                  {activeTipos.map(tipo => (
+                    <SelectItem key={tipo.id} value={tipo.id}>{tipo.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={filterArea} onValueChange={setFilterArea}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filtrar por área" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as áreas</SelectItem>
+                  {activeAreas.map(area => (
+                    <SelectItem key={area.id} value={area.id}>{area.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="ativo">Ativo</SelectItem>
+                  <SelectItem value="inativo">Inativo</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as 'data' | 'versao')}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Ordenar por" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="data">Data de Publicação</SelectItem>
+                  <SelectItem value="versao">Versão</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Documents Table */}
+        <Card>
+          <CardContent className="pt-6">
+            {isLoading ? (
+              <p className="text-muted-foreground">Carregando...</p>
+            ) : filteredDocumentos.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">
+                {documentos.length === 0 ? 'Nenhum documento cadastrado' : 'Nenhum documento encontrado com os filtros aplicados'}
+              </p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Área</TableHead>
+                    <TableHead>Versão</TableHead>
+                    <TableHead>Data de Publicação</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-center">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredDocumentos.map(doc => (
+                    <TableRow key={doc.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          {doc.nome}
+                        </div>
+                      </TableCell>
+                      <TableCell>{doc.tipo_documento?.nome || '-'}</TableCell>
+                      <TableCell>{doc.area_documento?.nome || '-'}</TableCell>
+                      <TableCell>{doc.versao || '-'}</TableCell>
+                      <TableCell>{formatDate(doc.data_publicacao)}</TableCell>
+                      <TableCell>
+                        <Badge variant={doc.status === 'ativo' ? 'default' : 'secondary'}>
+                          {doc.status === 'ativo' ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-center gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => handleViewFile(doc)} title="Visualizar">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDownload(doc)} title="Download">
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          {isAdmin && (
+                            <>
+                              <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(doc)} title="Editar">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => handleDelete(doc)} title="Excluir">
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Add Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Novo Documento</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="nome">Nome do Documento *</Label>
+              <Input
+                id="nome"
+                value={formData.nome}
+                onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
+                placeholder="Digite o nome do documento"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="tipo">Tipo de Documento</Label>
+                <Select 
+                  value={formData.tipo_documento_id} 
+                  onValueChange={(v) => setFormData(prev => ({ ...prev, tipo_documento_id: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activeTipos.map(tipo => (
+                      <SelectItem key={tipo.id} value={tipo.id}>{tipo.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="area">Área / Categoria</Label>
+                <Select 
+                  value={formData.area_documento_id} 
+                  onValueChange={(v) => setFormData(prev => ({ ...prev, area_documento_id: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a área" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activeAreas.map(area => (
+                      <SelectItem key={area.id} value={area.id}>{area.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="versao">Versão</Label>
+                <Input
+                  id="versao"
+                  value={formData.versao}
+                  onChange={(e) => setFormData(prev => ({ ...prev, versao: e.target.value }))}
+                  placeholder="Ex: 1.0"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="data">Data de Publicação</Label>
+                <Input
+                  id="data"
+                  type="date"
+                  value={formData.data_publicacao}
+                  onChange={(e) => setFormData(prev => ({ ...prev, data_publicacao: e.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="status">Status</Label>
+                <Select 
+                  value={formData.status} 
+                  onValueChange={(v) => setFormData(prev => ({ ...prev, status: v as 'ativo' | 'inativo' }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ativo">Ativo</SelectItem>
+                    <SelectItem value="inativo">Inativo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="descricao">Descrição</Label>
+              <Textarea
+                id="descricao"
+                value={formData.descricao}
+                onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
+                placeholder="Descrição do documento"
+                rows={3}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="arquivo">Arquivo *</Label>
+              <Input
+                id="arquivo"
+                type="file"
+                accept=".pdf,.docx,.pptx,.xlsx"
+                onChange={(e) => setFormData(prev => ({ ...prev, file: e.target.files?.[0] || null }))}
+              />
+              <p className="text-xs text-muted-foreground">Formatos aceitos: PDF, DOCX, PPTX, XLSX</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleAdd} disabled={isAdding}>
+              {isAdding ? 'Salvando...' : 'Salvar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Editar Documento</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="edit-nome">Nome do Documento *</Label>
+              <Input
+                id="edit-nome"
+                value={formData.nome}
+                onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
+                placeholder="Digite o nome do documento"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-tipo">Tipo de Documento</Label>
+                <Select 
+                  value={formData.tipo_documento_id} 
+                  onValueChange={(v) => setFormData(prev => ({ ...prev, tipo_documento_id: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activeTipos.map(tipo => (
+                      <SelectItem key={tipo.id} value={tipo.id}>{tipo.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-area">Área / Categoria</Label>
+                <Select 
+                  value={formData.area_documento_id} 
+                  onValueChange={(v) => setFormData(prev => ({ ...prev, area_documento_id: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a área" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activeAreas.map(area => (
+                      <SelectItem key={area.id} value={area.id}>{area.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-versao">Versão</Label>
+                <Input
+                  id="edit-versao"
+                  value={formData.versao}
+                  onChange={(e) => setFormData(prev => ({ ...prev, versao: e.target.value }))}
+                  placeholder="Ex: 1.0"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-data">Data de Publicação</Label>
+                <Input
+                  id="edit-data"
+                  type="date"
+                  value={formData.data_publicacao}
+                  onChange={(e) => setFormData(prev => ({ ...prev, data_publicacao: e.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-status">Status</Label>
+                <Select 
+                  value={formData.status} 
+                  onValueChange={(v) => setFormData(prev => ({ ...prev, status: v as 'ativo' | 'inativo' }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ativo">Ativo</SelectItem>
+                    <SelectItem value="inativo">Inativo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-descricao">Descrição</Label>
+              <Textarea
+                id="edit-descricao"
+                value={formData.descricao}
+                onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
+                placeholder="Descrição do documento"
+                rows={3}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-arquivo">Arquivo (deixe vazio para manter o atual)</Label>
+              <Input
+                id="edit-arquivo"
+                type="file"
+                accept=".pdf,.docx,.pptx,.xlsx"
+                onChange={(e) => setFormData(prev => ({ ...prev, file: e.target.files?.[0] || null }))}
+              />
+              {selectedDocumento && (
+                <p className="text-xs text-muted-foreground">
+                  Arquivo atual: {selectedDocumento.arquivo_nome}
+                </p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleUpdate} disabled={isUpdating}>
+              {isUpdating ? 'Salvando...' : 'Salvar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Layout>
+  );
+};
+
+export default SharepointDocumentos;
