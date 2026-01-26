@@ -4,13 +4,13 @@ import { format, differenceInDays, startOfMonth, endOfMonth, eachDayOfInterval, 
 import { toZonedTime } from 'date-fns-tz';
 
 interface GanttChartProps {
-  projectId: string;
+  priorityListId: string;
 }
 
 const TIMEZONE = 'America/Sao_Paulo';
 
-export function GanttChart({ projectId }: GanttChartProps) {
-  const { tasks, loading } = useScheduleTasks(projectId);
+export function GanttChart({ priorityListId }: GanttChartProps) {
+  const { tasks, loading } = useScheduleTasks(priorityListId);
 
   if (loading) {
     return <Card className="p-8 text-center">Carregando gráfico de Gantt...</Card>;

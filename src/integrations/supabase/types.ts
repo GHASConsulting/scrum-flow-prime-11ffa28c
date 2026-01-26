@@ -434,6 +434,41 @@ export type Database = {
         }
         Relationships: []
       }
+      priority_list: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "priority_list_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "client_access_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       produtividade: {
         Row: {
           cliente_id: string
@@ -839,6 +874,7 @@ export type Database = {
           order_index: number
           parent_id: string | null
           predecessors: string | null
+          priority_list_id: string | null
           project_id: string
           responsavel: string | null
           start_at: string | null
@@ -858,6 +894,7 @@ export type Database = {
           order_index?: number
           parent_id?: string | null
           predecessors?: string | null
+          priority_list_id?: string | null
           project_id: string
           responsavel?: string | null
           start_at?: string | null
@@ -877,6 +914,7 @@ export type Database = {
           order_index?: number
           parent_id?: string | null
           predecessors?: string | null
+          priority_list_id?: string | null
           project_id?: string
           responsavel?: string | null
           start_at?: string | null
@@ -890,6 +928,13 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "schedule_task"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_task_priority_list_id_fkey"
+            columns: ["priority_list_id"]
+            isOneToOne: false
+            referencedRelation: "priority_list"
             referencedColumns: ["id"]
           },
           {

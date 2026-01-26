@@ -31,7 +31,7 @@ interface TaskWithChildren extends ScheduleTask {
 }
 
 interface CronogramaTreeGridProps {
-  projectId: string;
+  priorityListId: string;
 }
 
 // Convert UTC date to Brazil timezone and format for datetime-local input
@@ -66,8 +66,8 @@ const createDefaultEndTime = (): Date => {
   return fromZonedTime(zonedNow, BRAZIL_TIMEZONE);
 };
 
-export function CronogramaTreeGrid({ projectId }: CronogramaTreeGridProps) {
-  const { tasks, loading, addTask, updateTask, deleteTask } = useScheduleTasks(projectId);
+export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) {
+  const { tasks, loading, addTask, updateTask, deleteTask } = useScheduleTasks(priorityListId);
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
 
   const toggleExpand = (taskId: string) => {
@@ -86,7 +86,7 @@ export function CronogramaTreeGrid({ projectId }: CronogramaTreeGridProps) {
       const endTime = createDefaultEndTime();
       
       await addTask({
-        project_id: projectId,
+        priority_list_id: priorityListId,
         name: 'Nova Tarefa',
         order_index: tasks.length,
         is_summary: false,
@@ -405,7 +405,7 @@ export function CronogramaTreeGrid({ projectId }: CronogramaTreeGridProps) {
     <Card>
       <div className="p-4">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Cronograma do Projeto</h3>
+          <h3 className="text-lg font-semibold">Cronograma</h3>
           <div className="flex gap-2">
             <Button onClick={handleAddTask}>
               <Plus className="h-4 w-4 mr-2" />
