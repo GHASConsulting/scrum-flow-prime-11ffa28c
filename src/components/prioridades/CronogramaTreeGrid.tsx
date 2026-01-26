@@ -401,11 +401,18 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
 
   const tree = buildTree();
 
+  // Calculate completion percentage
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(t => t.status === 'concluida').length;
+  const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
   return (
     <Card>
       <div className="p-4">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Cronograma</h3>
+          <h3 className="text-lg font-semibold">
+            Cronograma <span className="font-bold text-primary ml-2">{completionPercentage}%</span>
+          </h3>
           <div className="flex gap-2">
             <Button onClick={handleAddTask}>
               <Plus className="h-4 w-4 mr-2" />
