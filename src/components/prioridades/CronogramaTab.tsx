@@ -94,7 +94,7 @@ export function CronogramaTab({ projectId, clientes, onSelectProject }: Cronogra
                     <SelectContent>
                       {priorityLists.map((list) => (
                         <SelectItem key={list.id} value={list.id}>
-                          {list.codigo} - {list.nome}
+                          {String(list.codigo).padStart(2, '0')} - {list.nome}
                         </SelectItem>
                       ))}
                     </SelectContent>
