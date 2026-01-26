@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      area_documento: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ava_evento: {
         Row: {
           created_at: string
@@ -379,6 +403,69 @@ export type Database = {
             columns: ["sprint_id"]
             isOneToOne: false
             referencedRelation: "sprint"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documento: {
+        Row: {
+          area_documento_id: string | null
+          arquivo_nome: string
+          arquivo_path: string
+          arquivo_tipo: string
+          created_at: string
+          data_publicacao: string
+          descricao: string | null
+          id: string
+          nome: string
+          status: string
+          tipo_documento_id: string | null
+          updated_at: string
+          versao: string | null
+        }
+        Insert: {
+          area_documento_id?: string | null
+          arquivo_nome: string
+          arquivo_path: string
+          arquivo_tipo: string
+          created_at?: string
+          data_publicacao?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          status?: string
+          tipo_documento_id?: string | null
+          updated_at?: string
+          versao?: string | null
+        }
+        Update: {
+          area_documento_id?: string | null
+          arquivo_nome?: string
+          arquivo_path?: string
+          arquivo_tipo?: string
+          created_at?: string
+          data_publicacao?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          status?: string
+          tipo_documento_id?: string | null
+          updated_at?: string
+          versao?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documento_area_documento_id_fkey"
+            columns: ["area_documento_id"]
+            isOneToOne: false
+            referencedRelation: "area_documento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documento_tipo_documento_id_fkey"
+            columns: ["tipo_documento_id"]
+            isOneToOne: false
+            referencedRelation: "tipo_documento"
             referencedColumns: ["id"]
           },
         ]
@@ -1088,6 +1175,30 @@ export type Database = {
           nome?: string
           storage_path?: string
           tipo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tipo_documento: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
           updated_at?: string
         }
         Relationships: []

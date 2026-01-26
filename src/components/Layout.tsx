@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, ListTodo, Calendar, MessageSquare, RotateCcw, Shield, LogOut, AlertTriangle, Settings, Map, ClipboardList, Target, FileDown, ChevronDown, BookOpen } from 'lucide-react';
+import { LayoutDashboard, ListTodo, Calendar, MessageSquare, RotateCcw, Shield, LogOut, AlertTriangle, Settings, Map, ClipboardList, Target, FileDown, ChevronDown, BookOpen, FolderOpen, GraduationCap } from 'lucide-react';
 import { downloadManualPDF } from './ManualDownload';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from './ui/button';
@@ -73,6 +73,14 @@ const menuStructure: MenuGroup[] = [
     ],
   },
   {
+    name: 'SharePoint GHAS',
+    icon: FolderOpen,
+    items: [
+      { name: 'Documentos', href: '/sharepoint/documentos', icon: FolderOpen },
+      { name: 'Treinamentos', href: '/sharepoint/treinamentos', icon: GraduationCap },
+    ],
+  },
+  {
     name: 'Administração',
     icon: Shield,
     adminOnly: true,
@@ -90,6 +98,7 @@ const getActiveGroup = (pathname: string): string => {
   if (pathname.startsWith('/prioridades')) return 'Prioridades';
   if (pathname.startsWith('/produtividade')) return 'Produtividade';
   if (pathname.startsWith('/riscos')) return "Riscos e BO's";
+  if (pathname.startsWith('/sharepoint')) return 'SharePoint GHAS';
   if (pathname.startsWith('/cadastros') || pathname.startsWith('/administracao')) return 'Administração';
   return '';
 };
