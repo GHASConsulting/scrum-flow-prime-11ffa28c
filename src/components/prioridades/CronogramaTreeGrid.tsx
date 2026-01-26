@@ -310,10 +310,39 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
     return roots;
   };
 
+  // Check if a task is overdue (for status styling)
+  const isTaskOverdue = (task: ScheduleTask): boolean => {
+    if (!task.end_at || task.status === 'concluida' || task.status === 'cancelada') return false;
+    const now = new Date();
+    const brazilNow = toZonedTime(now, BRAZIL_TIMEZONE);
+    brazilNow.setHours(23, 59, 59, 999);
+    const taskEndDate = toZonedTime(new Date(task.end_at), BRAZIL_TIMEZONE);
+    return taskEndDate < brazilNow;
+  };
+
+  // Get status styling based on task state
+  const getStatusStyle = (task: ScheduleTask): string => {
+    const status = task.status || 'pendente';
+    
+    if (status === 'concluida') {
+      return 'font-bold text-green-700';
+    }
+    
+    if (status === 'em_andamento') {
+      if (isTaskOverdue(task)) {
+        return 'font-bold text-red-600';
+      }
+      return 'font-bold text-foreground';
+    }
+    
+    return '';
+  };
+
   const renderTaskRow = (task: TaskWithChildren, level: number = 0): React.ReactNode => {
     const isExpanded = expandedTasks.has(task.id);
     const hasChildren = task.children.length > 0;
     const isParentTask = hasChildTasks(task.id);
+    const statusStyle = getStatusStyle(task);
 
     return (
       <>
@@ -334,6 +363,23 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
                 className="h-8 w-full" 
               />
             </div>
+          </TableCell>
+          <TableCell>
+            <Select 
+              value={task.status || 'pendente'} 
+              onValueChange={(value) => handleUpdateField(task.id, 'status', value)}
+            >
+              <SelectTrigger className={`h-8 w-32 ${statusStyle}`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </TableCell>
           <TableCell>
             <Input type="number" value={task.duration_days || ''} onChange={(e) => handleUpdateField(task.id, 'duration_days', e.target.value)} className="h-8 w-24" disabled={task.is_summary || isParentTask} />
@@ -367,23 +413,6 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
               className="h-8"
               placeholder="Nome do responsável" 
             />
-          </TableCell>
-          <TableCell>
-            <Select 
-              value={task.status || 'pendente'} 
-              onValueChange={(value) => handleUpdateField(task.id, 'status', value)}
-            >
-              <SelectTrigger className="h-8 w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUS_OPTIONS.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </TableCell>
           <TableCell>
             <Button variant="ghost" size="icon" onClick={() => deleteTask(task.id)} className="h-8 w-8 p-0 text-destructive">
@@ -540,12 +569,12 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
               <TableRow>
                 <TableHead className="w-16">ID</TableHead>
                 <TableHead>Nome</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Duração (dias)</TableHead>
                 <TableHead>Início</TableHead>
                 <TableHead>Fim</TableHead>
                 <TableHead className="w-24">Tarefa Pai</TableHead>
                 <TableHead>Responsável</TableHead>
-                <TableHead>Status</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
