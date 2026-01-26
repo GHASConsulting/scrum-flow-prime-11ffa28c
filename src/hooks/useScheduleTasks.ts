@@ -6,12 +6,12 @@ import { toast } from 'sonner';
 type ScheduleTask = Tables<'schedule_task'>;
 type ScheduleTaskInsert = Omit<ScheduleTask, 'id' | 'created_at' | 'updated_at'>;
 
-export const useScheduleTasks = (projectId: string | null) => {
+export const useScheduleTasks = (priorityListId: string | null) => {
   const [tasks, setTasks] = useState<ScheduleTask[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadTasks = async () => {
-    if (!projectId) {
+    if (!priorityListId) {
       setTasks([]);
       setLoading(false);
       return;
@@ -22,7 +22,7 @@ export const useScheduleTasks = (projectId: string | null) => {
       const { data, error } = await supabase
         .from('schedule_task')
         .select('*')
-        .eq('project_id', projectId)
+        .eq('priority_list_id', priorityListId)
         .order('order_index', { ascending: true });
 
       if (error) throw error;
@@ -35,11 +35,20 @@ export const useScheduleTasks = (projectId: string | null) => {
     }
   };
 
-  const addTask = async (task: ScheduleTaskInsert) => {
+  const addTask = async (task: Omit<ScheduleTaskInsert, 'project_id'> & { priority_list_id: string }) => {
     try {
+      // Get the project_id from the priority_list
+      const { data: priorityList, error: plError } = await supabase
+        .from('priority_list')
+        .select('project_id')
+        .eq('id', task.priority_list_id)
+        .single();
+
+      if (plError) throw plError;
+
       const { data, error } = await supabase
         .from('schedule_task')
-        .insert([task])
+        .insert([{ ...task, project_id: priorityList.project_id }])
         .select()
         .single();
 
@@ -93,15 +102,15 @@ export const useScheduleTasks = (projectId: string | null) => {
   useEffect(() => {
     loadTasks();
 
-    if (!projectId) return;
+    if (!priorityListId) return;
 
     const channel = supabase
-      .channel(`schedule-task-changes-${projectId}`)
+      .channel(`schedule-task-changes-${priorityListId}`)
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public', 
         table: 'schedule_task',
-        filter: `project_id=eq.${projectId}`
+        filter: `priority_list_id=eq.${priorityListId}`
       }, () => {
         loadTasks();
       })
@@ -110,7 +119,7 @@ export const useScheduleTasks = (projectId: string | null) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [projectId]);
+  }, [priorityListId]);
 
   return { tasks, loading, addTask, updateTask, deleteTask, loadTasks };
 };
