@@ -64,10 +64,10 @@ export function CronogramaTab({ projectId, clientes, onSelectProject }: Cronogra
       <Card className="p-4">
         <div className="flex flex-wrap items-end gap-4">
           <div className="space-y-2">
-            <Label>Projeto</Label>
+            <Label>Cliente</Label>
             <Select value={projectId || ''} onValueChange={onSelectProject}>
               <SelectTrigger className="w-64">
-                <SelectValue placeholder="Selecione um projeto" />
+                <SelectValue placeholder="Selecione um cliente" />
               </SelectTrigger>
               <SelectContent>
                 {clientes.map((cliente) => (
@@ -94,7 +94,7 @@ export function CronogramaTab({ projectId, clientes, onSelectProject }: Cronogra
                     <SelectContent>
                       {priorityLists.map((list) => (
                         <SelectItem key={list.id} value={list.id}>
-                          {list.nome}
+                          {list.codigo} - {list.nome}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -112,7 +112,7 @@ export function CronogramaTab({ projectId, clientes, onSelectProject }: Cronogra
                       </DialogHeader>
                       <form onSubmit={handleCreateList} className="space-y-4">
                         <div className="space-y-2">
-                          <Label>Projeto</Label>
+                          <Label>Cliente</Label>
                           <Input value={selectedProject?.cliente || ''} disabled />
                         </div>
                         <div className="space-y-2">
@@ -151,7 +151,7 @@ export function CronogramaTab({ projectId, clientes, onSelectProject }: Cronogra
 
       {!projectId ? (
         <Card className="p-8 text-center">
-          <p className="text-muted-foreground">Selecione um projeto para visualizar as listas de prioridades</p>
+          <p className="text-muted-foreground">Selecione um cliente para visualizar as listas de prioridades</p>
         </Card>
       ) : !selectedPriorityListId ? (
         <Card className="p-8 text-center">
