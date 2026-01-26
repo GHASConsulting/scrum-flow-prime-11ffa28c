@@ -396,12 +396,6 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
     );
   };
 
-  if (loading) {
-    return <Card className="p-8 text-center">Carregando cronograma...</Card>;
-  }
-
-  const tree = buildTree();
-
   // Calculate completion percentage
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(t => t.status === 'concluida').length;
@@ -485,6 +479,12 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
         return 'text-muted-foreground';
     }
   };
+
+  if (loading) {
+    return <Card className="p-8 text-center">Carregando cronograma...</Card>;
+  }
+
+  const tree = buildTree();
 
   return (
     <Card>
