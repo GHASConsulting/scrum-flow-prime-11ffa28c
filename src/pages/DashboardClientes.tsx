@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Filter, Circle } from 'lucide-react';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { useClientPrioridadesStatus } from '@/hooks/useClientPrioridadesStatus';
+import { PrioridadesStatusTooltip } from '@/components/dashboard/PrioridadesStatusTooltip';
 
 type StatusColor = 'verde' | 'amarelo' | 'vermelho';
 
@@ -202,7 +203,12 @@ const DashboardClientes = () => {
                       <TableCell>{cliente.nome}</TableCell>
                       <TableCell><StatusIndicator status={cliente.geral} /></TableCell>
                       <TableCell><StatusIndicator status={cliente.scrum} /></TableCell>
-                      <TableCell><StatusIndicator status={cliente.prioridades} /></TableCell>
+                      <TableCell>
+                        <PrioridadesStatusTooltip 
+                          status={cliente.prioridades} 
+                          prioridadesData={prioridadesStatusMap?.[cliente.id]}
+                        />
+                      </TableCell>
                       <TableCell><StatusIndicator status={cliente.produtividade} /></TableCell>
                       <TableCell><StatusIndicator status={cliente.riscos} /></TableCell>
                     </TableRow>

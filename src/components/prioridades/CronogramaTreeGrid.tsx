@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, FileDown, ChevronDown, ChevronRight, Circle } from 'lucide-react';
+import { Plus, Trash2, FileDown, ChevronDown, ChevronRight, Circle, Eye } from 'lucide-react';
 import { useScheduleTasks } from '@/hooks/useScheduleTasks';
 import type { Tables } from '@/integrations/supabase/types';
 import { calculateWorkingDays } from '@/lib/workingDays';
@@ -15,6 +15,7 @@ import { DebouncedInput } from './DebouncedInput';
 import { format, differenceInDays } from 'date-fns';
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import { TaskHistoryDialog } from './TaskHistoryDialog';
 
 const BRAZIL_TIMEZONE = 'America/Sao_Paulo';
 
@@ -70,6 +71,18 @@ const createDefaultEndTime = (): Date => {
 export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) {
   const { tasks, loading, addTask, updateTask, deleteTask } = useScheduleTasks(priorityListId);
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
+  const [selectedTaskForHistory, setSelectedTaskForHistory] = useState<Tables<'schedule_task'> | null>(null);
+  const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
+
+  const handleOpenHistoryDialog = (task: Tables<'schedule_task'>) => {
+    setSelectedTaskForHistory(task);
+    setIsHistoryDialogOpen(true);
+  };
+
+  const handleSaveTaskNotes = async (taskId: string, notes: string) => {
+    await updateTask(taskId, { notes });
+    toast.success('Histórico salvo com sucesso!');
+  };
 
   const toggleExpand = (taskId: string) => {
     const newExpanded = new Set(expandedTasks);
@@ -354,7 +367,18 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
       <>
         <TableRow key={task.id}>
           <TableCell className="w-16 text-center font-medium text-muted-foreground">
-            {task.order_index + 1}
+            <div className="flex items-center justify-center gap-1">
+              {task.order_index + 1}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => handleOpenHistoryDialog(task)} 
+                className="h-6 w-6 p-0"
+                title="Ver histórico e andamento"
+              >
+                <Eye className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+              </Button>
+            </div>
           </TableCell>
           <TableCell className="min-w-[300px]">
             <div className="flex items-center gap-2" style={{ paddingLeft: `${level * 20}px` }}>
@@ -410,14 +434,6 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
               onChange={(value) => handleUpdateParentId(task.id, value)} 
               className="h-8 w-20" 
               placeholder="ID pai" 
-            />
-          </TableCell>
-          <TableCell>
-            <DebouncedInput 
-              value={task.responsavel || ''} 
-              onChange={(value) => handleUpdateField(task.id, 'responsavel', value)} 
-              className="h-8"
-              placeholder="Nome do responsável" 
             />
           </TableCell>
           <TableCell>
@@ -598,6 +614,13 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
           </Table>
         </div>
       </div>
+
+      <TaskHistoryDialog
+        task={selectedTaskForHistory}
+        open={isHistoryDialogOpen}
+        onOpenChange={setIsHistoryDialogOpen}
+        onSave={handleSaveTaskNotes}
+      />
     </Card>
   );
 }
