@@ -523,6 +523,7 @@ export type Database = {
       }
       priority_list: {
         Row: {
+          codigo: number
           created_at: string
           descricao: string | null
           id: string
@@ -531,6 +532,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          codigo: number
           created_at?: string
           descricao?: string | null
           id?: string
@@ -539,6 +541,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          codigo?: number
           created_at?: string
           descricao?: string | null
           id?: string

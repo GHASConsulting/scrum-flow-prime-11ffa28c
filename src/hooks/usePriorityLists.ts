@@ -5,6 +5,7 @@ import { toast } from "sonner";
 export interface PriorityList {
   id: string;
   project_id: string;
+  codigo: number;
   nome: string;
   descricao: string | null;
   created_at: string;
@@ -35,7 +36,7 @@ export const usePriorityLists = (projectId: string | null) => {
     mutationFn: async (data: { project_id: string; nome: string; descricao?: string }) => {
       const { data: newList, error } = await supabase
         .from("priority_list")
-        .insert(data)
+        .insert({ project_id: data.project_id, nome: data.nome, descricao: data.descricao } as any)
         .select()
         .single();
 
