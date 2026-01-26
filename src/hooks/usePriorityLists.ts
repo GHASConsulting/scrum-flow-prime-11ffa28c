@@ -24,7 +24,7 @@ export const usePriorityLists = (projectId: string | null) => {
         .from("priority_list")
         .select("*")
         .eq("project_id", projectId)
-        .order("created_at", { ascending: false });
+        .order("codigo", { ascending: true });
 
       if (error) throw error;
       return data as PriorityList[];
