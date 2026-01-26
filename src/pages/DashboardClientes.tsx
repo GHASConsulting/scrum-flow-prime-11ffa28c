@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Filter, Circle } from 'lucide-react';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
+import { useClientPrioridadesStatus } from '@/hooks/useClientPrioridadesStatus';
 
 type StatusColor = 'verde' | 'amarelo' | 'vermelho';
 
@@ -53,6 +54,7 @@ const StatusIndicator = ({ status }: { status: StatusColor }) => (
 
 const DashboardClientes = () => {
   const { records, isLoading } = useClientAccessRecords();
+  const { data: prioridadesStatusMap, isLoading: isLoadingPrioridades } = useClientPrioridadesStatus();
 
   // Filtros
   const [filterCliente, setFilterCliente] = useState<string>('all');
@@ -62,20 +64,25 @@ const DashboardClientes = () => {
   const [filterProdutividade, setFilterProdutividade] = useState<string>('all');
   const [filterRiscos, setFilterRiscos] = useState<string>('all');
 
-  // Gerar status dos clientes (regras serão especificadas depois - por agora, todos verde)
+  // Gerar status dos clientes
   const clientesStatus: ClienteStatus[] = useMemo(() => {
-    return records.map(record => ({
-      id: record.id,
-      codigo: record.codigo,
-      nome: record.cliente,
-      // Por enquanto, todos os faróis ficam verdes (regras serão definidas posteriormente)
-      geral: 'verde' as StatusColor,
-      scrum: 'verde' as StatusColor,
-      prioridades: 'verde' as StatusColor,
-      produtividade: 'verde' as StatusColor,
-      riscos: 'verde' as StatusColor,
-    }));
-  }, [records]);
+    return records.map(record => {
+      // Get prioridades status from the calculated map
+      const prioridadesStatus = prioridadesStatusMap?.[record.id]?.status || 'verde';
+      
+      return {
+        id: record.id,
+        codigo: record.codigo,
+        nome: record.cliente,
+        // Por enquanto, os outros faróis ficam verdes (regras serão definidas posteriormente)
+        geral: 'verde' as StatusColor,
+        scrum: 'verde' as StatusColor,
+        prioridades: prioridadesStatus,
+        produtividade: 'verde' as StatusColor,
+        riscos: 'verde' as StatusColor,
+      };
+    });
+  }, [records, prioridadesStatusMap]);
 
   // Aplicar filtros
   const filteredClientes = useMemo(() => {
@@ -171,7 +178,7 @@ const DashboardClientes = () => {
             <CardTitle>Indicadores por Cliente</CardTitle>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
+            {isLoading || isLoadingPrioridades ? (
               <div className="text-center py-8 text-muted-foreground">Carregando...</div>
             ) : filteredClientes.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</div>
