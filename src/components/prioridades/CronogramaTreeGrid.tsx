@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, FileDown, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, FileDown, ChevronDown, ChevronRight, Circle } from 'lucide-react';
 import { useScheduleTasks } from '@/hooks/useScheduleTasks';
 import type { Tables } from '@/integrations/supabase/types';
 import { calculateWorkingDays } from '@/lib/workingDays';
@@ -12,8 +12,9 @@ import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { DebouncedInput } from './DebouncedInput';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 
 const BRAZIL_TIMEZONE = 'America/Sao_Paulo';
 
@@ -406,12 +407,120 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
   const completedTasks = tasks.filter(t => t.status === 'concluida').length;
   const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
+  // Calculate traffic light status
+  const trafficLightData = useMemo(() => {
+    if (tasks.length === 0) {
+      return { color: 'verde' as const, reason: 'Nenhuma tarefa cadastrada.', overdueTasks: [] as ScheduleTask[] };
+    }
+
+    // Get current date in Brazil timezone at 23:59
+    const now = new Date();
+    const brazilNow = toZonedTime(now, BRAZIL_TIMEZONE);
+    brazilNow.setHours(23, 59, 59, 999);
+
+    // Filter tasks that are not completed and have end_at
+    const nonCompletedTasks = tasks.filter(t => 
+      t.status !== 'concluida' && 
+      t.status !== 'cancelada' && 
+      t.end_at
+    );
+
+    // Find overdue tasks
+    const overdueTasks = nonCompletedTasks.filter(task => {
+      if (!task.end_at) return false;
+      const taskEndDate = toZonedTime(new Date(task.end_at), BRAZIL_TIMEZONE);
+      return taskEndDate < brazilNow;
+    });
+
+    // Find tasks with more than 7 days overdue
+    const tasksOver7Days = overdueTasks.filter(task => {
+      const taskEndDate = toZonedTime(new Date(task.end_at!), BRAZIL_TIMEZONE);
+      const daysOverdue = differenceInDays(brazilNow, taskEndDate);
+      return daysOverdue > 7;
+    });
+
+    const overduePercentage = totalTasks > 0 ? (overdueTasks.length / totalTasks) * 100 : 0;
+
+    // Determine color based on rules
+    if (overdueTasks.length === 0) {
+      return { 
+        color: 'verde' as const, 
+        reason: '100% das atividades estão em dia.', 
+        overdueTasks: [] as ScheduleTask[] 
+      };
+    }
+
+    if (overduePercentage > 30 || tasksOver7Days.length > 0) {
+      let reason = '';
+      if (overduePercentage > 30) {
+        reason = `Mais de 30% das atividades estão atrasadas (${Math.round(overduePercentage)}%).`;
+      }
+      if (tasksOver7Days.length > 0) {
+        if (reason) reason += ' ';
+        reason += `${tasksOver7Days.length} tarefa(s) com mais de 7 dias de atraso.`;
+      }
+      return { 
+        color: 'vermelho' as const, 
+        reason, 
+        overdueTasks 
+      };
+    }
+
+    return { 
+      color: 'amarelo' as const, 
+      reason: `${overdueTasks.length} atividade(s) atrasada(s).`, 
+      overdueTasks 
+    };
+  }, [tasks, totalTasks]);
+
+  const getTrafficLightColor = (color: 'verde' | 'amarelo' | 'vermelho'): string => {
+    switch (color) {
+      case 'verde':
+        return 'text-green-500';
+      case 'amarelo':
+        return 'text-yellow-500';
+      case 'vermelho':
+        return 'text-red-500';
+      default:
+        return 'text-muted-foreground';
+    }
+  };
+
   return (
     <Card>
       <div className="p-4">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">
-            Cronograma <span className="font-bold text-primary ml-2">{completionPercentage}%</span>
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            Cronograma <span className="font-bold text-primary">{completionPercentage}%</span>
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <button className="cursor-pointer">
+                  <Circle className={`h-4 w-4 fill-current ${getTrafficLightColor(trafficLightData.color)}`} />
+                </button>
+              </HoverCardTrigger>
+              <HoverCardContent className="w-80">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">{trafficLightData.reason}</p>
+                  {trafficLightData.overdueTasks.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-semibold text-muted-foreground">Tarefas que necessitam atenção:</p>
+                      <ul className="text-xs space-y-1">
+                        {trafficLightData.overdueTasks.map(task => {
+                          const taskEndDate = toZonedTime(new Date(task.end_at!), BRAZIL_TIMEZONE);
+                          const brazilNow = toZonedTime(new Date(), BRAZIL_TIMEZONE);
+                          const daysOverdue = differenceInDays(brazilNow, taskEndDate);
+                          return (
+                            <li key={task.id} className="text-destructive">
+                              • ID {task.order_index + 1}: {task.name} ({daysOverdue} dias de atraso)
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </HoverCardContent>
+            </HoverCard>
           </h3>
           <div className="flex gap-2">
             <Button onClick={handleAddTask}>
