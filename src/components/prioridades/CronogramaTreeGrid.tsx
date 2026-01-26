@@ -375,7 +375,7 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
               value={task.status || 'pendente'} 
               onValueChange={(value) => handleUpdateField(task.id, 'status', value)}
             >
-              <SelectTrigger className={`h-8 w-36 text-left ${statusStyle}`}>
+              <SelectTrigger className={`h-8 w-40 text-left ${statusStyle}`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
