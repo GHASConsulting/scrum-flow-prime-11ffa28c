@@ -335,6 +335,12 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
       return 'font-bold text-foreground';
     }
     
+    if (status === 'pendente') {
+      if (isTaskOverdue(task)) {
+        return 'font-bold text-red-600';
+      }
+    }
+    
     return '';
   };
 
@@ -369,7 +375,7 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
               value={task.status || 'pendente'} 
               onValueChange={(value) => handleUpdateField(task.id, 'status', value)}
             >
-              <SelectTrigger className={`h-8 w-32 ${statusStyle}`}>
+              <SelectTrigger className={`h-8 w-36 text-left ${statusStyle}`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -382,7 +388,7 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
             </Select>
           </TableCell>
           <TableCell>
-            <Input type="number" value={task.duration_days || ''} onChange={(e) => handleUpdateField(task.id, 'duration_days', e.target.value)} className="h-8 w-24" disabled={task.is_summary || isParentTask} />
+            <Input type="number" value={task.duration_days || ''} onChange={(e) => handleUpdateField(task.id, 'duration_days', e.target.value)} className="h-8 w-16" disabled={task.is_summary || isParentTask} />
           </TableCell>
           <TableCell>
             <Input type="datetime-local" step="1800" value={task.start_at ? formatToBrazil(new Date(task.start_at)) : ''} onChange={(e) => handleUpdateField(task.id, 'start_at', e.target.value)} className="h-8" disabled={task.is_summary || isParentTask} />
