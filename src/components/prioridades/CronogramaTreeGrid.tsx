@@ -301,15 +301,17 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
           
           // First pass: create tasks without parent links
           for (const row of rows) {
-            // Columns: ID, Nome, Pai, Status, Dias Duração, Data Início, Data Fim, Responsável
-            const excelId = Number(row[0]) || 0;
-            const nome = String(row[1] || '').trim();
-            const paiId = row[2] ? Number(row[2]) : null;
-            const status = mapStatusFromExcel(String(row[3] || ''));
-            const diasDuracao = row[4] ? Number(row[4]) : 1;
-            const dataInicio = parseExcelDate(row[5]);
-            const dataFim = parseExcelDate(row[6]);
-            const responsavel = String(row[7] || '').trim() || null;
+            // Columns: Código Cliente, Código Lista, ID, Nome, Pai, Status, Dias Duração, Data Início, Data Fim, Responsável
+            // const codigoCliente = Number(row[0]) || 0; // For future use
+            // const codigoLista = Number(row[1]) || 0;   // For future use
+            const excelId = Number(row[2]) || 0;
+            const nome = String(row[3] || '').trim();
+            const paiId = row[4] ? Number(row[4]) : null;
+            const status = mapStatusFromExcel(String(row[5] || ''));
+            const diasDuracao = row[6] ? Number(row[6]) : 1;
+            const dataInicio = parseExcelDate(row[7]);
+            const dataFim = parseExcelDate(row[8]);
+            const responsavel = String(row[9] || '').trim() || null;
 
             if (!nome) continue;
 
@@ -343,8 +345,8 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
 
           // Second pass: update parent links
           for (const row of rows) {
-            const excelId = Number(row[0]) || 0;
-            const paiId = row[2] ? Number(row[2]) : null;
+            const excelId = Number(row[2]) || 0;
+            const paiId = row[4] ? Number(row[4]) : null;
             
             if (paiId && excelId > 0) {
               const taskId = importedTasksMap.get(excelId);
