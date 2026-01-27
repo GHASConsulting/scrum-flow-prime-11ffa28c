@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, Edit, Trash2, Eye, Download, FileText, Search, X, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useDocumentos, Documento, DocumentoInsert, DocumentoUpdate } from '@/hooks/useDocumentos';
 import { useTipoDocumento } from '@/hooks/useTipoDocumento';
@@ -71,7 +73,7 @@ const SharepointDocumentos = () => {
   const [formData, setFormData] = useState<{
     nome: string;
     tipo_documento_id: string;
-    area_documento_id: string;
+    setores_ids: string[];
     versao: string;
     descricao: string;
     data_publicacao: string;
@@ -80,7 +82,7 @@ const SharepointDocumentos = () => {
   }>({
     nome: '',
     tipo_documento_id: '',
-    area_documento_id: '',
+    setores_ids: [],
     versao: '',
     descricao: '',
     data_publicacao: new Date().toISOString().split('T')[0],
@@ -92,7 +94,7 @@ const SharepointDocumentos = () => {
     setFormData({
       nome: '',
       tipo_documento_id: '',
-      area_documento_id: '',
+      setores_ids: [],
       versao: '',
       descricao: '',
       data_publicacao: new Date().toISOString().split('T')[0],
@@ -111,7 +113,7 @@ const SharepointDocumentos = () => {
     setFormData({
       nome: doc.nome,
       tipo_documento_id: doc.tipo_documento_id || '',
-      area_documento_id: doc.area_documento_id || '',
+      setores_ids: doc.setores_ids || [],
       versao: doc.versao || '',
       descricao: doc.descricao || '',
       data_publicacao: doc.data_publicacao,
@@ -142,7 +144,7 @@ const SharepointDocumentos = () => {
       const documento: DocumentoInsert = {
         nome: formData.nome.trim(),
         tipo_documento_id: formData.tipo_documento_id || null,
-        area_documento_id: formData.area_documento_id || null,
+        setores_ids: formData.setores_ids,
         versao: formData.versao.trim() || null,
         descricao: formData.descricao.trim() || null,
         data_publicacao: formData.data_publicacao,
@@ -172,7 +174,7 @@ const SharepointDocumentos = () => {
         id: selectedDocumento.id,
         nome: formData.nome.trim(),
         tipo_documento_id: formData.tipo_documento_id || null,
-        area_documento_id: formData.area_documento_id || null,
+        setores_ids: formData.setores_ids,
         versao: formData.versao.trim() || null,
         descricao: formData.descricao.trim() || null,
         data_publicacao: formData.data_publicacao,
@@ -243,9 +245,9 @@ const SharepointDocumentos = () => {
       filtered = filtered.filter(doc => doc.tipo_documento_id === filterTipo);
     }
 
-    // Area filter
+    // Area/Setor filter
     if (filterArea !== 'all') {
-      filtered = filtered.filter(doc => doc.area_documento_id === filterArea);
+      filtered = filtered.filter(doc => doc.setores_ids?.includes(filterArea));
     }
 
     // Status filter
@@ -422,7 +424,7 @@ const SharepointDocumentos = () => {
                     </TableHead>
                     <TableHead className="cursor-pointer select-none" onClick={() => handleColumnSort('setor')}>
                       <div className="flex items-center">
-                        Setor
+                        Setores Destino
                         {getSortIcon('setor')}
                       </div>
                     </TableHead>
@@ -479,7 +481,20 @@ const SharepointDocumentos = () => {
                         </div>
                       </TableCell>
                       <TableCell>{doc.tipo_documento?.nome || '-'}</TableCell>
-                      <TableCell>{doc.area_documento?.nome || '-'}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {doc.setores_ids && doc.setores_ids.length > 0 ? (
+                            doc.setores_ids.map(setorId => {
+                              const setor = areasDocumento.find(a => a.id === setorId);
+                              return setor ? (
+                                <Badge key={setorId} variant="outline" className="text-xs">
+                                  {setor.nome}
+                                </Badge>
+                              ) : null;
+                            })
+                          ) : '-'}
+                        </div>
+                      </TableCell>
                       <TableCell>{doc.versao || '-'}</TableCell>
                       <TableCell>{formatDate(doc.data_publicacao)}</TableCell>
                       <TableCell>
@@ -519,39 +534,69 @@ const SharepointDocumentos = () => {
                 placeholder="Digite o nome do documento"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="tipo">Tipo de Documento</Label>
-                <Select 
-                  value={formData.tipo_documento_id} 
-                  onValueChange={(v) => setFormData(prev => ({ ...prev, tipo_documento_id: v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {activeTipos.map(tipo => (
-                      <SelectItem key={tipo.id} value={tipo.id}>{tipo.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="area">Setor</Label>
-                <Select 
-                  value={formData.area_documento_id} 
-                  onValueChange={(v) => setFormData(prev => ({ ...prev, area_documento_id: v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o setor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {activeAreas.map(area => (
-                      <SelectItem key={area.id} value={area.id}>{area.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="grid gap-2">
+              <Label htmlFor="tipo">Tipo de Documento</Label>
+              <Select 
+                value={formData.tipo_documento_id} 
+                onValueChange={(v) => setFormData(prev => ({ ...prev, tipo_documento_id: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {activeTipos.map(tipo => (
+                    <SelectItem key={tipo.id} value={tipo.id}>{tipo.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="arquivo">Arquivo *</Label>
+              <Input
+                id="arquivo"
+                type="file"
+                accept=".pdf,.docx,.pptx,.xlsx"
+                onChange={(e) => setFormData(prev => ({ ...prev, file: e.target.files?.[0] || null }))}
+              />
+              <p className="text-xs text-muted-foreground">Formatos aceitos: PDF, DOCX, PPTX, XLSX</p>
+            </div>
+            <div className="grid gap-2">
+              <Label>Setores Destino</Label>
+              <ScrollArea className="h-32 border rounded-md p-3">
+                <div className="space-y-2">
+                  {activeAreas.map(area => (
+                    <div key={area.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`setor-add-${area.id}`}
+                        checked={formData.setores_ids.includes(area.id)}
+                        onCheckedChange={(checked) => {
+                          setFormData(prev => ({
+                            ...prev,
+                            setores_ids: checked 
+                              ? [...prev.setores_ids, area.id]
+                              : prev.setores_ids.filter(id => id !== area.id)
+                          }));
+                        }}
+                      />
+                      <label htmlFor={`setor-add-${area.id}`} className="text-sm cursor-pointer">
+                        {area.nome}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+              {formData.setores_ids.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {formData.setores_ids.map(id => {
+                    const setor = activeAreas.find(a => a.id === id);
+                    return setor ? (
+                      <Badge key={id} variant="secondary" className="text-xs">
+                        {setor.nome}
+                      </Badge>
+                    ) : null;
+                  })}
+                </div>
+              )}
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="grid gap-2">
@@ -598,16 +643,6 @@ const SharepointDocumentos = () => {
                 rows={3}
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="arquivo">Arquivo *</Label>
-              <Input
-                id="arquivo"
-                type="file"
-                accept=".pdf,.docx,.pptx,.xlsx"
-                onChange={(e) => setFormData(prev => ({ ...prev, file: e.target.files?.[0] || null }))}
-              />
-              <p className="text-xs text-muted-foreground">Formatos aceitos: PDF, DOCX, PPTX, XLSX</p>
-            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancelar</Button>
@@ -634,39 +669,73 @@ const SharepointDocumentos = () => {
                 placeholder="Digite o nome do documento"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-tipo">Tipo de Documento</Label>
-                <Select 
-                  value={formData.tipo_documento_id} 
-                  onValueChange={(v) => setFormData(prev => ({ ...prev, tipo_documento_id: v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {activeTipos.map(tipo => (
-                      <SelectItem key={tipo.id} value={tipo.id}>{tipo.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-area">Setor</Label>
-                <Select 
-                  value={formData.area_documento_id} 
-                  onValueChange={(v) => setFormData(prev => ({ ...prev, area_documento_id: v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o setor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {activeAreas.map(area => (
-                      <SelectItem key={area.id} value={area.id}>{area.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-tipo">Tipo de Documento</Label>
+              <Select 
+                value={formData.tipo_documento_id} 
+                onValueChange={(v) => setFormData(prev => ({ ...prev, tipo_documento_id: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {activeTipos.map(tipo => (
+                    <SelectItem key={tipo.id} value={tipo.id}>{tipo.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-arquivo">Arquivo (deixe vazio para manter o atual)</Label>
+              <Input
+                id="edit-arquivo"
+                type="file"
+                accept=".pdf,.docx,.pptx,.xlsx"
+                onChange={(e) => setFormData(prev => ({ ...prev, file: e.target.files?.[0] || null }))}
+              />
+              {selectedDocumento && (
+                <p className="text-xs text-muted-foreground">
+                  Arquivo atual: {selectedDocumento.arquivo_nome}
+                </p>
+              )}
+            </div>
+            <div className="grid gap-2">
+              <Label>Setores Destino</Label>
+              <ScrollArea className="h-32 border rounded-md p-3">
+                <div className="space-y-2">
+                  {activeAreas.map(area => (
+                    <div key={area.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`setor-edit-${area.id}`}
+                        checked={formData.setores_ids.includes(area.id)}
+                        onCheckedChange={(checked) => {
+                          setFormData(prev => ({
+                            ...prev,
+                            setores_ids: checked 
+                              ? [...prev.setores_ids, area.id]
+                              : prev.setores_ids.filter(id => id !== area.id)
+                          }));
+                        }}
+                      />
+                      <label htmlFor={`setor-edit-${area.id}`} className="text-sm cursor-pointer">
+                        {area.nome}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+              {formData.setores_ids.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {formData.setores_ids.map(id => {
+                    const setor = activeAreas.find(a => a.id === id);
+                    return setor ? (
+                      <Badge key={id} variant="secondary" className="text-xs">
+                        {setor.nome}
+                      </Badge>
+                    ) : null;
+                  })}
+                </div>
+              )}
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="grid gap-2">
@@ -712,20 +781,6 @@ const SharepointDocumentos = () => {
                 placeholder="Descrição do documento"
                 rows={3}
               />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-arquivo">Arquivo (deixe vazio para manter o atual)</Label>
-              <Input
-                id="edit-arquivo"
-                type="file"
-                accept=".pdf,.docx,.pptx,.xlsx"
-                onChange={(e) => setFormData(prev => ({ ...prev, file: e.target.files?.[0] || null }))}
-              />
-              {selectedDocumento && (
-                <p className="text-xs text-muted-foreground">
-                  Arquivo atual: {selectedDocumento.arquivo_nome}
-                </p>
-              )}
             </div>
           </div>
           <DialogFooter>
