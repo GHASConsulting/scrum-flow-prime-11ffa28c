@@ -18,6 +18,7 @@ import Administracao from "./pages/Administracao";
 import CadastrosSistema from "./pages/CadastrosSistema";
 import RoadmapGeral from "./pages/RoadmapGeral";
 import Produtividade from "./pages/Produtividade";
+import ProdutividadeGlobal from "./pages/ProdutividadeGlobal";
 import Prioridades from "./pages/Prioridades";
 import SharepointDocumentos from "./pages/SharepointDocumentos";
 import SharepointTreinamentos from "./pages/SharepointTreinamentos";
@@ -50,6 +51,7 @@ function App() {
           <Route path="/administracao" element={<ProtectedRoute><Administracao /></ProtectedRoute>} />
           <Route path="/cadastros" element={<ProtectedRoute><CadastrosSistema /></ProtectedRoute>} />
           <Route path="/produtividade" element={<ProtectedRoute><Produtividade /></ProtectedRoute>} />
+          <Route path="/produtividade-global" element={<ProtectedRoute><ProdutividadeGlobal /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
