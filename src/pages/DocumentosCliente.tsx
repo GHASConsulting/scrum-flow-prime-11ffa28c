@@ -306,7 +306,14 @@ const DocumentosCliente = () => {
                     />
                   </div>
 
-                  <div className="flex items-end">
+                  <div className="flex items-end gap-4">
+                    <div className="bg-muted/50 border rounded-lg px-4 py-2 flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <div className="flex flex-col">
+                        <span className="text-xs text-muted-foreground">Documentos</span>
+                        <span className="text-lg font-semibold">{filteredAndSortedDocumentos.length}</span>
+                      </div>
+                    </div>
                     {hasActiveFilters && (
                       <Button variant="outline" onClick={clearFilters}>
                         Limpar Filtros
