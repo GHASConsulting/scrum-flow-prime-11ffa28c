@@ -36,7 +36,6 @@ const DocumentosCliente = () => {
   
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
-    nome: '',
     tipo_documento_cliente_id: '',
     data_publicacao: format(new Date(), 'yyyy-MM-dd'),
   });
@@ -49,7 +48,7 @@ const DocumentosCliente = () => {
   const [filterDataFim, setFilterDataFim] = useState<string>('');
 
   // Sorting states
-  type SortColumn = 'codigo' | 'nome' | 'tipo' | 'arquivo' | 'data_publicacao';
+  type SortColumn = 'codigo' | 'tipo' | 'arquivo' | 'data_publicacao';
   const [sortColumn, setSortColumn] = useState<SortColumn>('codigo');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
@@ -98,10 +97,6 @@ const DocumentosCliente = () => {
           aValue = a.codigo;
           bValue = b.codigo;
           break;
-        case 'nome':
-          aValue = a.nome.toLowerCase();
-          bValue = b.nome.toLowerCase();
-          break;
         case 'tipo':
           aValue = a.tipo_documento_cliente?.nome?.toLowerCase() || '';
           bValue = b.tipo_documento_cliente?.nome?.toLowerCase() || '';
@@ -128,7 +123,6 @@ const DocumentosCliente = () => {
 
   const resetForm = () => {
     setFormData({
-      nome: '',
       tipo_documento_cliente_id: '',
       data_publicacao: format(new Date(), 'yyyy-MM-dd'),
     });
@@ -162,22 +156,11 @@ const DocumentosCliente = () => {
     }
 
     setSelectedFile(file);
-    
-    // Auto-fill name if empty
-    if (!formData.nome) {
-      const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
-      setFormData(prev => ({ ...prev, nome: nameWithoutExt }));
-    }
   };
 
   const handleAdd = async () => {
     if (!selectedClienteId) {
       toast.error('Selecione um cliente');
-      return;
-    }
-
-    if (!formData.nome) {
-      toast.error('Informe o nome do documento');
       return;
     }
 
@@ -200,7 +183,6 @@ const DocumentosCliente = () => {
       await addDocumento({
         cliente_id: selectedClienteId,
         tipo_documento_cliente_id: formData.tipo_documento_cliente_id,
-        nome: formData.nome,
         file: selectedFile,
         data_publicacao: formData.data_publicacao,
       });
@@ -377,12 +359,6 @@ const DocumentosCliente = () => {
                         <TableHead className="w-[120px] text-center">Ações</TableHead>
                         <TableHead 
                           className="cursor-pointer hover:bg-muted/50"
-                          onClick={() => handleSort('nome')}
-                        >
-                          Nome {renderSortIcon('nome')}
-                        </TableHead>
-                        <TableHead 
-                          className="cursor-pointer hover:bg-muted/50"
                           onClick={() => handleSort('tipo')}
                         >
                           Tipo {renderSortIcon('tipo')}
@@ -425,7 +401,6 @@ const DocumentosCliente = () => {
                               </Button>
                             </div>
                           </TableCell>
-                          <TableCell className="font-medium">{doc.nome}</TableCell>
                           <TableCell>{doc.tipo_documento_cliente?.nome || '-'}</TableCell>
                           <TableCell>
                             <span className="text-sm text-muted-foreground">
@@ -456,16 +431,6 @@ const DocumentosCliente = () => {
                   value={selectedCliente ? `${selectedCliente.codigo} - ${selectedCliente.cliente}` : ''}
                   disabled
                   className="bg-muted"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="nome">Nome do Documento *</Label>
-                <Input
-                  id="nome"
-                  value={formData.nome}
-                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  placeholder="Nome do documento"
                 />
               </div>
 

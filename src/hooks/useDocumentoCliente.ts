@@ -7,7 +7,6 @@ export interface DocumentoCliente {
   codigo: number;
   cliente_id: string;
   tipo_documento_cliente_id: string | null;
-  nome: string;
   arquivo_path: string;
   arquivo_nome: string;
   arquivo_tipo: string;
@@ -73,7 +72,6 @@ export function useDocumentoCliente(clienteId?: string) {
     mutationFn: async (doc: {
       cliente_id: string;
       tipo_documento_cliente_id: string;
-      nome: string;
       file: File;
       data_publicacao: string;
     }) => {
@@ -86,7 +84,6 @@ export function useDocumentoCliente(clienteId?: string) {
         .insert({
           cliente_id: doc.cliente_id,
           tipo_documento_cliente_id: doc.tipo_documento_cliente_id,
-          nome: doc.nome,
           arquivo_path: fileInfo.path,
           arquivo_nome: fileInfo.nome,
           arquivo_tipo: fileInfo.tipo,
