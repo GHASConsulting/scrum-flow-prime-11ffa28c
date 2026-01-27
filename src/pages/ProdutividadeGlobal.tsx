@@ -149,6 +149,31 @@ const ProdutividadeGlobal = () => {
       return;
     }
 
+    if (!formData.abertos) {
+      toast.error('Preencha o campo Abertos');
+      return;
+    }
+
+    if (!formData.encerrados) {
+      toast.error('Preencha o campo Encerrados');
+      return;
+    }
+
+    if (!formData.backlog) {
+      toast.error('Preencha o campo Backlog');
+      return;
+    }
+
+    if (!formData.percentual_incidentes) {
+      toast.error('Preencha o campo % Incidentes');
+      return;
+    }
+
+    if (!formData.percentual_solicitacoes) {
+      toast.error('Preencha o campo % Solicitações');
+      return;
+    }
+
     if (new Date(formData.data_fim) < new Date(formData.data_inicio)) {
       toast.error('Data fim deve ser maior ou igual à data início');
       return;
