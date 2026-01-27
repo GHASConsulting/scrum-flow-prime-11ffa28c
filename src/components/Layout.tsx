@@ -52,6 +52,7 @@ const menuStructure: MenuGroup[] = [
       { name: 'Prod Global', href: '/produtividade-global', icon: ClipboardList },
       { name: 'Prod Individual', href: '/produtividade', icon: ClipboardList },
       { name: "Riscos e BO's", href: '/riscos', icon: AlertTriangle },
+      { name: 'Documentos', href: '/documentos-cliente', icon: FolderOpen },
     ],
   },
   {
@@ -76,7 +77,7 @@ const menuStructure: MenuGroup[] = [
 // Função para detectar o grupo ativo com base na rota
 const getActiveGroup = (pathname: string): string => {
   if (pathname === '/' || pathname.startsWith('/sprint-planning') || pathname.startsWith('/backlog') || pathname.startsWith('/daily') || pathname.startsWith('/retrospectiva') || pathname.startsWith('/roadmap')) return 'PMO/CET';
-  if (pathname.startsWith('/prioridades') || pathname.startsWith('/dashboard-clientes') || pathname.startsWith('/produtividade') || pathname.startsWith('/riscos')) return 'CLIENTE';
+  if (pathname.startsWith('/prioridades') || pathname.startsWith('/dashboard-clientes') || pathname.startsWith('/produtividade') || pathname.startsWith('/riscos') || pathname.startsWith('/documentos-cliente')) return 'CLIENTE';
   if (pathname.startsWith('/sharepoint')) return 'GHAS';
   if (pathname.startsWith('/cadastros') || pathname.startsWith('/administracao')) return 'Administração';
   return '';

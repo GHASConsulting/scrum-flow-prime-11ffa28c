@@ -22,6 +22,7 @@ import ProdutividadeGlobal from "./pages/ProdutividadeGlobal";
 import Prioridades from "./pages/Prioridades";
 import SharepointDocumentos from "./pages/SharepointDocumentos";
 import SharepointTreinamentos from "./pages/SharepointTreinamentos";
+import DocumentosCliente from "./pages/DocumentosCliente";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ function App() {
           <Route path="/cadastros" element={<ProtectedRoute><CadastrosSistema /></ProtectedRoute>} />
           <Route path="/produtividade" element={<ProtectedRoute><Produtividade /></ProtectedRoute>} />
           <Route path="/produtividade-global" element={<ProtectedRoute><ProdutividadeGlobal /></ProtectedRoute>} />
+          <Route path="/documentos-cliente" element={<ProtectedRoute><DocumentosCliente /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
