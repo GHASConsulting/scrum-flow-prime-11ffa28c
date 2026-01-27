@@ -78,9 +78,9 @@ const DashboardClientes = () => {
   const [filterProdutividade, setFilterProdutividade] = useState<string>('all');
   const [filterRiscos, setFilterRiscos] = useState<string>('all');
 
-  // Sorting
-  const [sortField, setSortField] = useState<SortField | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+  // Sorting - default to nome ascending
+  const [sortField, setSortField] = useState<SortField | null>('nome');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
