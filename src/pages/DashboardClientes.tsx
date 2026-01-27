@@ -3,12 +3,15 @@ import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Filter, Circle } from 'lucide-react';
+import { Filter, Circle, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { useClientPrioridadesStatus } from '@/hooks/useClientPrioridadesStatus';
 import { PrioridadesStatusTooltip } from '@/components/dashboard/PrioridadesStatusTooltip';
 
 type StatusColor = 'verde' | 'amarelo' | 'vermelho';
+
+type SortField = 'codigo' | 'nome' | 'geral' | 'scrum' | 'prioridades' | 'produtividade' | 'riscos';
+type SortDirection = 'asc' | 'desc' | null;
 
 interface ClienteStatus {
   id: string;
@@ -47,6 +50,16 @@ const getStatusBgColor = (status: StatusColor): string => {
   }
 };
 
+// Status priority for sorting (verde=1, amarelo=2, vermelho=3)
+const getStatusPriority = (status: StatusColor): number => {
+  switch (status) {
+    case 'verde': return 1;
+    case 'amarelo': return 2;
+    case 'vermelho': return 3;
+    default: return 0;
+  }
+};
+
 const StatusIndicator = ({ status }: { status: StatusColor }) => (
   <div className="flex justify-center">
     <Circle className={`h-4 w-4 fill-current ${getStatusColor(status)}`} />
@@ -64,6 +77,40 @@ const DashboardClientes = () => {
   const [filterPrioridades, setFilterPrioridades] = useState<string>('all');
   const [filterProdutividade, setFilterProdutividade] = useState<string>('all');
   const [filterRiscos, setFilterRiscos] = useState<string>('all');
+
+  // Sorting
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Toggle direction: asc -> desc -> null
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else if (sortDirection === 'desc') {
+        setSortDirection(null);
+        setSortField(null);
+      } else {
+        setSortDirection('asc');
+      }
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-3 w-3 ml-1 opacity-50" />;
+    }
+    if (sortDirection === 'asc') {
+      return <ArrowUp className="h-3 w-3 ml-1" />;
+    }
+    if (sortDirection === 'desc') {
+      return <ArrowDown className="h-3 w-3 ml-1" />;
+    }
+    return <ArrowUpDown className="h-3 w-3 ml-1 opacity-50" />;
+  };
 
   // Gerar status dos clientes
   const clientesStatus: ClienteStatus[] = useMemo(() => {
@@ -85,9 +132,9 @@ const DashboardClientes = () => {
     });
   }, [records, prioridadesStatusMap]);
 
-  // Aplicar filtros
-  const filteredClientes = useMemo(() => {
-    return clientesStatus.filter(cliente => {
+  // Aplicar filtros e ordenação
+  const filteredAndSortedClientes = useMemo(() => {
+    let result = clientesStatus.filter(cliente => {
       if (filterCliente !== 'all' && cliente.id !== filterCliente) return false;
       if (filterGeral !== 'all' && cliente.geral !== filterGeral) return false;
       if (filterScrum !== 'all' && cliente.scrum !== filterScrum) return false;
@@ -96,7 +143,29 @@ const DashboardClientes = () => {
       if (filterRiscos !== 'all' && cliente.riscos !== filterRiscos) return false;
       return true;
     });
-  }, [clientesStatus, filterCliente, filterGeral, filterScrum, filterPrioridades, filterProdutividade, filterRiscos]);
+
+    // Apply sorting
+    if (sortField && sortDirection) {
+      result = [...result].sort((a, b) => {
+        let comparison = 0;
+        
+        if (sortField === 'codigo') {
+          comparison = a.codigo - b.codigo;
+        } else if (sortField === 'nome') {
+          comparison = a.nome.localeCompare(b.nome, 'pt-BR');
+        } else {
+          // Status fields - sort by priority
+          const aPriority = getStatusPriority(a[sortField]);
+          const bPriority = getStatusPriority(b[sortField]);
+          comparison = aPriority - bPriority;
+        }
+
+        return sortDirection === 'desc' ? -comparison : comparison;
+      });
+    }
+
+    return result;
+  }, [clientesStatus, filterCliente, filterGeral, filterScrum, filterPrioridades, filterProdutividade, filterRiscos, sortField, sortDirection]);
 
   const StatusFilterSelect = ({ value, onChange, label }: { value: string; onChange: (v: string) => void; label: string }) => (
     <div>
@@ -128,6 +197,18 @@ const DashboardClientes = () => {
         </SelectContent>
       </Select>
     </div>
+  );
+
+  const SortableHeader = ({ field, children, className }: { field: SortField; children: React.ReactNode; className?: string }) => (
+    <TableHead 
+      className={`cursor-pointer hover:bg-muted/50 select-none ${className || ''}`}
+      onClick={() => handleSort(field)}
+    >
+      <div className="flex items-center justify-center">
+        {children}
+        <SortIcon field={field} />
+      </div>
+    </TableHead>
   );
 
   return (
@@ -181,25 +262,25 @@ const DashboardClientes = () => {
           <CardContent>
             {isLoading || isLoadingPrioridades ? (
               <div className="text-center py-8 text-muted-foreground">Carregando...</div>
-            ) : filteredClientes.length === 0 ? (
+            ) : filteredAndSortedClientes.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-16">Código</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead className="text-center w-24">Geral</TableHead>
-                    <TableHead className="text-center w-24">Scrum</TableHead>
-                    <TableHead className="text-center w-24">Prioridades</TableHead>
-                    <TableHead className="text-center w-24">Produtividade</TableHead>
-                    <TableHead className="text-center w-24">Riscos e BO's</TableHead>
+                    <SortableHeader field="codigo" className="w-16">Código</SortableHeader>
+                    <SortableHeader field="nome" className="text-left">Cliente</SortableHeader>
+                    <SortableHeader field="geral" className="w-24">Geral</SortableHeader>
+                    <SortableHeader field="scrum" className="w-24">Scrum</SortableHeader>
+                    <SortableHeader field="prioridades" className="w-24">Prioridades</SortableHeader>
+                    <SortableHeader field="produtividade" className="w-24">Produtividade</SortableHeader>
+                    <SortableHeader field="riscos" className="w-24">Riscos e BO's</SortableHeader>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredClientes.map(cliente => (
+                  {filteredAndSortedClientes.map(cliente => (
                     <TableRow key={cliente.id}>
-                      <TableCell className="font-medium">{cliente.codigo}</TableCell>
+                      <TableCell className="font-medium text-center">{cliente.codigo}</TableCell>
                       <TableCell>{cliente.nome}</TableCell>
                       <TableCell><StatusIndicator status={cliente.geral} /></TableCell>
                       <TableCell><StatusIndicator status={cliente.scrum} /></TableCell>
