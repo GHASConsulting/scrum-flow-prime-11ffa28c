@@ -336,12 +336,24 @@ const CadastrosSistema = () => {
       toast.error('Nome é obrigatório');
       return;
     }
+    if (!newPrestadorEmail.trim()) {
+      toast.error('Email é obrigatório');
+      return;
+    }
+    if (!newPrestadorNivel) {
+      toast.error('Nível é obrigatório');
+      return;
+    }
+    if (!newPrestadorSetor) {
+      toast.error('Setor é obrigatório');
+      return;
+    }
     try {
       await addPrestadorServico({
         nome: newPrestadorNome.trim(),
-        email: newPrestadorEmail.trim() || undefined,
+        email: newPrestadorEmail.trim(),
         nivel: newPrestadorNivel,
-        setor_id: newPrestadorSetor || undefined
+        setor_id: newPrestadorSetor
       });
       setNewPrestadorNome('');
       setNewPrestadorEmail('');
@@ -371,12 +383,24 @@ const CadastrosSistema = () => {
       toast.error('Nome é obrigatório');
       return;
     }
+    if (!editingPrestador.email?.trim()) {
+      toast.error('Email é obrigatório');
+      return;
+    }
+    if (!editingPrestador.nivel) {
+      toast.error('Nível é obrigatório');
+      return;
+    }
+    if (!editingPrestador.setor_id) {
+      toast.error('Setor é obrigatório');
+      return;
+    }
     try {
       await updatePrestadorServico({
         id: editingPrestador.id,
         nome: editingPrestador.nome.trim(),
-        email: editingPrestador.email?.trim() || undefined,
-        nivel: editingPrestador.nivel || 'N1',
+        email: editingPrestador.email.trim(),
+        nivel: editingPrestador.nivel,
         setor_id: editingPrestador.setor_id
       });
       setIsEditPrestadorDialogOpen(false);
@@ -839,12 +863,12 @@ const CadastrosSistema = () => {
             </AccordionContent>
           </AccordionItem>
 
-          {/* Área de Documento */}
-          <AccordionItem value="area-documento" className="border rounded-lg bg-card">
+          {/* Setor */}
+          <AccordionItem value="setor" className="border rounded-lg bg-card">
             <AccordionTrigger className="px-6 py-4 hover:no-underline">
               <div className="flex items-center gap-3">
                 <FolderOpen className="h-5 w-5 text-primary" />
-                <span className="text-lg font-semibold">Área de Documento</span>
+                <span className="text-lg font-semibold">Setor</span>
                 <Badge variant="secondary" className="ml-2">
                   {areasDocumento.length} itens
                 </Badge>
@@ -854,7 +878,7 @@ const CadastrosSistema = () => {
               <Card className="border-0 shadow-none">
                 <CardHeader className="px-0 pt-0">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">Lista de Áreas de Documento</CardTitle>
+                    <CardTitle className="text-base">Lista de Setores</CardTitle>
                     <Button onClick={() => setIsAddAreaDocDialogOpen(true)} size="sm">
                       <Plus className="h-4 w-4 mr-2" />
                       Adicionar
@@ -862,9 +886,10 @@ const CadastrosSistema = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="px-0 pb-0">
-                  {isLoadingAreaDoc ? <p className="text-muted-foreground">Carregando...</p> : areasDocumento.length === 0 ? <p className="text-muted-foreground">Nenhuma área de documento cadastrada</p> : <Table>
+                  {isLoadingAreaDoc ? <p className="text-muted-foreground">Carregando...</p> : areasDocumento.length === 0 ? <p className="text-muted-foreground">Nenhum setor cadastrado</p> : <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="w-[80px]">ID</TableHead>
                           <TableHead>Nome</TableHead>
                           <TableHead className="w-[100px] text-center">Ativo</TableHead>
                           <TableHead className="w-[100px] text-center">Ações</TableHead>
@@ -872,6 +897,7 @@ const CadastrosSistema = () => {
                       </TableHeader>
                       <TableBody>
                         {areasDocumento.map(item => <TableRow key={item.id}>
+                            <TableCell className="font-medium">{item.codigo}</TableCell>
                             <TableCell className="font-medium">{item.nome}</TableCell>
                             <TableCell className="text-center">
                               <Switch checked={item.ativo} onCheckedChange={() => handleToggleAreaDocAtivo(item.id, item.ativo)} />
@@ -1269,16 +1295,16 @@ const CadastrosSistema = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog Adicionar Área de Documento */}
+        {/* Dialog Adicionar Setor */}
         <Dialog open={isAddAreaDocDialogOpen} onOpenChange={setIsAddAreaDocDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Adicionar Área de Documento</DialogTitle>
+              <DialogTitle>Adicionar Setor</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Nome</label>
-                <Input value={newAreaDocNome} onChange={e => setNewAreaDocNome(e.target.value)} placeholder="Digite o nome da área" />
+                <Input value={newAreaDocNome} onChange={e => setNewAreaDocNome(e.target.value)} placeholder="Digite o nome do setor" />
               </div>
             </div>
             <DialogFooter>
@@ -1290,11 +1316,11 @@ const CadastrosSistema = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog Editar Área de Documento */}
+        {/* Dialog Editar Setor */}
         <Dialog open={isEditAreaDocDialogOpen} onOpenChange={setIsEditAreaDocDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Editar Área de Documento</DialogTitle>
+              <DialogTitle>Editar Setor</DialogTitle>
             </DialogHeader>
             {editingAreaDoc && <div className="space-y-4 py-4">
                 <div className="space-y-2">
@@ -1302,7 +1328,7 @@ const CadastrosSistema = () => {
                   <Input value={editingAreaDoc.nome} onChange={e => setEditingAreaDoc({
                 ...editingAreaDoc,
                 nome: e.target.value
-              })} placeholder="Digite o nome da área" />
+              })} placeholder="Digite o nome do setor" />
                 </div>
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium">Ativo</label>

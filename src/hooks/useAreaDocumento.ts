@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 
 export interface AreaDocumento {
   id: string;
+  codigo: number;
   nome: string;
   ativo: boolean;
   created_at: string;
@@ -19,7 +20,7 @@ export const useAreaDocumento = () => {
       const { data, error } = await supabase
         .from('area_documento')
         .select('*')
-        .order('nome');
+        .order('codigo');
       
       if (error) throw error;
       return data as AreaDocumento[];
