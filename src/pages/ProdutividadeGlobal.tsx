@@ -211,8 +211,8 @@ const ProdutividadeGlobal = () => {
       return;
     }
 
-    if (percIncidentes + percSolicitacoes > 100) {
-      toast.error('A soma de % Incidentes e % Solicitações não pode ultrapassar 100%');
+    if (percIncidentes + percSolicitacoes !== 100) {
+      toast.error('A soma de % Incidentes e % Solicitações deve ser igual a 100%');
       return;
     }
 
@@ -386,8 +386,8 @@ const ProdutividadeGlobal = () => {
         }
 
         // Validate sum of percentages
-        if (percIncidentes + percSolicitacoes > 100) {
-          rowErrors.push('A soma de % Incidentes e % Solicitações não pode ultrapassar 100%');
+        if (percIncidentes + percSolicitacoes !== 100) {
+          rowErrors.push('A soma de % Incidentes e % Solicitações deve ser igual a 100%');
         }
 
         if (cliente && dataInicio && dataFim) {
