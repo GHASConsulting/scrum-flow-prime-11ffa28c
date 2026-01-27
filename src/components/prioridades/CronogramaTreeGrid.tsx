@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, FileDown, ChevronDown, ChevronRight, Circle, Eye } from 'lucide-react';
+import { Plus, Trash2, FileDown, ChevronDown, ChevronRight, Circle, Eye, Upload, Download } from 'lucide-react';
 import { useScheduleTasks } from '@/hooks/useScheduleTasks';
 import type { Tables } from '@/integrations/supabase/types';
 import { calculateWorkingDays } from '@/lib/workingDays';
@@ -16,6 +16,8 @@ import { format, differenceInDays } from 'date-fns';
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { TaskHistoryDialog } from './TaskHistoryDialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import * as XLSX from 'xlsx';
 
 const BRAZIL_TIMEZONE = 'America/Sao_Paulo';
 
@@ -69,10 +71,12 @@ const createDefaultEndTime = (): Date => {
 };
 
 export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) {
-  const { tasks, loading, addTask, updateTask, deleteTask } = useScheduleTasks(priorityListId);
+  const { tasks, loading, addTask, updateTask, deleteTask, loadTasks } = useScheduleTasks(priorityListId);
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
   const [selectedTaskForHistory, setSelectedTaskForHistory] = useState<Tables<'schedule_task'> | null>(null);
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleOpenHistoryDialog = (task: Tables<'schedule_task'>) => {
     setSelectedTaskForHistory(task);
@@ -176,6 +180,188 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
     }
   };
 
+  const handleDownloadTemplate = () => {
+    try {
+      // Create template workbook
+      const headers = ['ID', 'Nome da Tarefa', 'Pai', 'Status', 'Dias Duração', 'Data Início', 'Data Fim', 'Responsável'];
+      const exampleData = [
+        [1, 'Tarefa Exemplo 1', '', 'Pendente', 5, '27/01/2026 08:00', '31/01/2026 18:00', 'João'],
+        [2, 'Subtarefa Exemplo', 1, 'Em Andamento', 2, '27/01/2026 08:00', '28/01/2026 18:00', 'Maria'],
+        [3, 'Tarefa Exemplo 2', '', 'Concluída', 3, '01/02/2026 08:00', '03/02/2026 18:00', 'Pedro'],
+      ];
+      
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...exampleData]);
+      
+      // Set column widths
+      ws['!cols'] = [
+        { wch: 8 },   // ID
+        { wch: 35 },  // Nome da Tarefa
+        { wch: 8 },   // Pai
+        { wch: 15 },  // Status
+        { wch: 15 },  // Dias Duração
+        { wch: 20 },  // Data Início
+        { wch: 20 },  // Data Fim
+        { wch: 20 },  // Responsável
+      ];
+      
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Prioridades');
+      
+      XLSX.writeFile(wb, 'GHAS_-_Arquivo_Modelo_de_Importacao_Prioridades.xlsx');
+      toast.success('Download do modelo iniciado!');
+    } catch (error) {
+      console.error('Erro ao gerar modelo:', error);
+      toast.error('Erro ao gerar modelo');
+    }
+  };
+
+  const parseExcelDate = (value: any): Date | null => {
+    if (!value) return null;
+    
+    if (typeof value === 'number') {
+      // Excel serial date
+      const excelEpoch = new Date(1899, 11, 30);
+      const days = Math.floor(value);
+      const fractionalDay = value - days;
+      const date = new Date(excelEpoch.getTime() + days * 24 * 60 * 60 * 1000);
+      
+      // Add time from fractional part
+      const totalSeconds = Math.round(fractionalDay * 24 * 60 * 60);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      date.setHours(hours, minutes, 0, 0);
+      
+      return fromZonedTime(date, BRAZIL_TIMEZONE);
+    }
+    
+    if (typeof value === 'string') {
+      // Try to parse date string
+      const parsed = new Date(value);
+      if (!isNaN(parsed.getTime())) {
+        return fromZonedTime(parsed, BRAZIL_TIMEZONE);
+      }
+    }
+    
+    return null;
+  };
+
+  const mapStatusFromExcel = (status: string): string => {
+    if (!status) return 'pendente';
+    const normalized = status.toLowerCase().trim();
+    if (normalized.includes('andamento') || normalized.includes('fazendo')) return 'em_andamento';
+    if (normalized.includes('conclu')) return 'concluida';
+    if (normalized.includes('cancel')) return 'cancelada';
+    return 'pendente';
+  };
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const data = new Uint8Array(event.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData: any[][] = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+          
+          // Skip header row
+          const rows = jsonData.slice(1).filter(row => row.length > 0 && row[0]);
+          
+          if (rows.length === 0) {
+            toast.error('Nenhum registro encontrado no arquivo');
+            setIsImporting(false);
+            return;
+          }
+
+          let importedCount = 0;
+          const existingOrderIndices = tasks.map(t => t.order_index);
+          let nextOrderIndex = existingOrderIndices.length > 0 ? Math.max(...existingOrderIndices) + 1 : 0;
+          
+          // Map to track imported tasks by their Excel ID for parent linking
+          const importedTasksMap = new Map<number, string>();
+          
+          // First pass: create tasks without parent links
+          for (const row of rows) {
+            // Columns: ID, Nome, Pai, Status, Dias Duração, Data Início, Data Fim, Responsável
+            const excelId = Number(row[0]) || 0;
+            const nome = String(row[1] || '').trim();
+            const paiId = row[2] ? Number(row[2]) : null;
+            const status = mapStatusFromExcel(String(row[3] || ''));
+            const diasDuracao = row[4] ? Number(row[4]) : 1;
+            const dataInicio = parseExcelDate(row[5]);
+            const dataFim = parseExcelDate(row[6]);
+            const responsavel = String(row[7] || '').trim() || null;
+
+            if (!nome) continue;
+
+            const startTime = dataInicio || createDefaultStartTime();
+            const endTime = dataFim || createDefaultEndTime();
+
+            const newTask = await addTask({
+              priority_list_id: priorityListId,
+              name: nome,
+              order_index: nextOrderIndex,
+              is_summary: false,
+              duration_days: diasDuracao,
+              duration_is_estimate: false,
+              start_at: startTime.toISOString(),
+              end_at: endTime.toISOString(),
+              predecessors: null,
+              parent_id: null,
+              notes: null,
+              responsavel: responsavel,
+              tipo_produto: null,
+              status: status,
+            });
+
+            if (newTask && excelId > 0) {
+              importedTasksMap.set(excelId, newTask.id);
+            }
+
+            nextOrderIndex++;
+            importedCount++;
+          }
+
+          // Second pass: update parent links
+          for (const row of rows) {
+            const excelId = Number(row[0]) || 0;
+            const paiId = row[2] ? Number(row[2]) : null;
+            
+            if (paiId && excelId > 0) {
+              const taskId = importedTasksMap.get(excelId);
+              const parentTaskId = importedTasksMap.get(paiId);
+              
+              if (taskId && parentTaskId) {
+                await updateTask(taskId, { parent_id: parentTaskId });
+              }
+            }
+          }
+
+          await loadTasks();
+          toast.success(`${importedCount} tarefa(s) importada(s) com sucesso!`);
+        } catch (error) {
+          console.error('Erro ao processar arquivo:', error);
+          toast.error('Erro ao processar arquivo. Verifique se o formato está correto.');
+        } finally {
+          setIsImporting(false);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+        }
+      };
+      
+      reader.readAsArrayBuffer(file);
+    } catch (error) {
+      console.error('Erro ao importar arquivo:', error);
+      toast.error('Erro ao importar arquivo');
+      setIsImporting(false);
+    }
+  };
 
   // Get all children (recursively) for a task
   const getAllChildren = (taskId: string): ScheduleTask[] => {
@@ -586,6 +772,31 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
               <Plus className="h-4 w-4 mr-2" />
               Adicionar Tarefa
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" disabled={isImporting}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  {isImporting ? 'Importando...' : 'Importar'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={handleDownloadTemplate}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Baixar Modelo
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Importar Registros
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+              onChange={handleImportFile}
+              className="hidden"
+            />
             <Button variant="outline" onClick={handleExportPDF}>
               <FileDown className="h-4 w-4 mr-2" />
               Exportar PDF
