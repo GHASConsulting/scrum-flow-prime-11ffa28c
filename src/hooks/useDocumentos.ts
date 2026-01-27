@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 
 export interface Documento {
   id: string;
+  codigo: number;
   nome: string;
   tipo_documento_id: string | null;
   area_documento_id: string | null;
