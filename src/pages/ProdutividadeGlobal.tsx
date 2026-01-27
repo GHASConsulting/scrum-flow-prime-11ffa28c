@@ -322,8 +322,9 @@ const ProdutividadeGlobal = () => {
         const rowNumber = i + 2;
         const rowErrors: string[] = [];
 
-        // Column 0: Código do Cliente
-        const codigoCliente = row[0];
+        // Column 0: Código do Prestador (ignorado)
+        // Column 1: Código do Cliente
+        const codigoCliente = row[1];
         if (codigoCliente === null || codigoCliente === undefined || codigoCliente === '') {
           rowErrors.push('Código do Cliente está vazio');
         }
@@ -332,14 +333,14 @@ const ProdutividadeGlobal = () => {
           rowErrors.push(`Código do Cliente ${codigoCliente} não encontrado`);
         }
 
-        // Column 1: Data Início
-        const dataInicio = parseExcelDate(row[1]);
+        // Column 2: Data Início
+        const dataInicio = parseExcelDate(row[2]);
         if (!dataInicio) {
           rowErrors.push('Data de Início inválida ou vazia');
         }
 
-        // Column 2: Data Fim
-        const dataFim = parseExcelDate(row[2]);
+        // Column 3: Data Fim
+        const dataFim = parseExcelDate(row[3]);
         if (!dataFim) {
           rowErrors.push('Data Fim inválida ou vazia');
         }
@@ -359,38 +360,38 @@ const ProdutividadeGlobal = () => {
           rowErrors.push('Data Fim não pode ser maior que a data atual');
         }
 
-        // Column 3: Abertos
-        const abertos = Number(row[3]) || 0;
+        // Column 4: Total de Chamados Abertos
+        const abertos = Number(row[4]) || 0;
         if (abertos < 0) {
           rowErrors.push('Abertos não pode ser negativo');
         }
 
-        // Column 4: Encerrados
-        const encerrados = Number(row[4]) || 0;
+        // Column 5: Total de Chamados Encerrados
+        const encerrados = Number(row[5]) || 0;
         if (encerrados < 0) {
           rowErrors.push('Encerrados não pode ser negativo');
         }
 
-        // Column 5: Backlog
-        const backlogVal = Number(row[5]) || 0;
+        // Column 6: Total de Chamados Backlog
+        const backlogVal = Number(row[6]) || 0;
         if (backlogVal < 0) {
           rowErrors.push('Backlog não pode ser negativo');
         }
 
-        // Column 6: Abertos 15 dias
-        const abertos15Dias = Number(row[6]) || 0;
+        // Column 7: Total de Chamados Abertos há 15 Dias
+        const abertos15Dias = Number(row[7]) || 0;
         if (abertos15Dias < 0) {
           rowErrors.push('Chamados abertos há 15 dias não pode ser negativo');
         }
 
-        // Column 7: % Incidentes
-        const percIncidentes = Number(row[7]) || 0;
+        // Column 8: % Incidentes
+        const percIncidentes = Number(row[8]) || 0;
         if (percIncidentes < 0 || percIncidentes > 100) {
           rowErrors.push('% Incidentes deve estar entre 0 e 100');
         }
 
-        // Column 8: % Solicitações
-        const percSolicitacoes = Number(row[8]) || 0;
+        // Column 9: % Solicitações
+        const percSolicitacoes = Number(row[9]) || 0;
         if (percSolicitacoes < 0 || percSolicitacoes > 100) {
           rowErrors.push('% Solicitações deve estar entre 0 e 100');
         }
@@ -621,7 +622,7 @@ const ProdutividadeGlobal = () => {
                   <Upload className="h-4 w-4 mr-2" />
                   Importar Registros
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => downloadTemplate('produtividade', 'GHAS_-_Arquivo_Modelo_de_Importacao.xlsx')}>
+                <DropdownMenuItem onClick={() => downloadTemplate('produtividade-global', 'GHAS_-_Arquivo_Modelo_de_Importacao_Produtividade_Global.xlsx')}>
                   <Download className="h-4 w-4 mr-2" />
                   Baixar Modelo de Arquivo
                 </DropdownMenuItem>
