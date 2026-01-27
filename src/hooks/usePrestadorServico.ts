@@ -8,6 +8,7 @@ export interface PrestadorServico {
   nome: string;
   email: string | null;
   nivel: string | null;
+  setor_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -32,13 +33,14 @@ export function usePrestadorServico() {
   });
 
   const addPrestadorServico = useMutation({
-    mutationFn: async (prestador: { nome: string; email?: string; nivel?: string }) => {
+    mutationFn: async (prestador: { nome: string; email?: string; nivel?: string; setor_id?: string }) => {
       const { data, error } = await supabase
         .from('prestador_servico')
         .insert({ 
           nome: prestador.nome, 
           email: prestador.email || null,
-          nivel: prestador.nivel || 'N1'
+          nivel: prestador.nivel || 'N1',
+          setor_id: prestador.setor_id || null
         })
         .select()
         .single();
@@ -56,13 +58,14 @@ export function usePrestadorServico() {
   });
 
   const updatePrestadorServico = useMutation({
-    mutationFn: async (prestador: { id: string; nome: string; email?: string; nivel?: string }) => {
+    mutationFn: async (prestador: { id: string; nome: string; email?: string; nivel?: string; setor_id?: string | null }) => {
       const { data, error } = await supabase
         .from('prestador_servico')
         .update({ 
           nome: prestador.nome, 
           email: prestador.email || null,
-          nivel: prestador.nivel || 'N1'
+          nivel: prestador.nivel || 'N1',
+          setor_id: prestador.setor_id || null
         })
         .eq('id', prestador.id)
         .select()

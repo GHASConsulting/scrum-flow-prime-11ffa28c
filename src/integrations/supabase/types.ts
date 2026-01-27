@@ -556,6 +556,7 @@ export type Database = {
           id: string
           nivel: string | null
           nome: string
+          setor_id: string | null
           updated_at: string
         }
         Insert: {
@@ -565,6 +566,7 @@ export type Database = {
           id?: string
           nivel?: string | null
           nome: string
+          setor_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -574,9 +576,18 @@ export type Database = {
           id?: string
           nivel?: string | null
           nome?: string
+          setor_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "prestador_servico_setor_id_fkey"
+            columns: ["setor_id"]
+            isOneToOne: false
+            referencedRelation: "area_documento"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       priority_list: {
         Row: {

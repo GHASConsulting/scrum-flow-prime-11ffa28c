@@ -106,12 +106,14 @@ const CadastrosSistema = () => {
   const [newPrestadorNome, setNewPrestadorNome] = useState('');
   const [newPrestadorEmail, setNewPrestadorEmail] = useState('');
   const [newPrestadorNivel, setNewPrestadorNivel] = useState('N1');
+  const [newPrestadorSetor, setNewPrestadorSetor] = useState('');
   const [editingPrestador, setEditingPrestador] = useState<{
     id: string;
     codigo: number;
     nome: string;
     email: string | null;
     nivel: string | null;
+    setor_id: string | null;
   } | null>(null);
 
   // Estado para Tipo de Documento
@@ -338,11 +340,13 @@ const CadastrosSistema = () => {
       await addPrestadorServico({
         nome: newPrestadorNome.trim(),
         email: newPrestadorEmail.trim() || undefined,
-        nivel: newPrestadorNivel
+        nivel: newPrestadorNivel,
+        setor_id: newPrestadorSetor || undefined
       });
       setNewPrestadorNome('');
       setNewPrestadorEmail('');
       setNewPrestadorNivel('N1');
+      setNewPrestadorSetor('');
       setIsAddPrestadorDialogOpen(false);
     } catch (error) {
       // Error handled in hook
@@ -354,6 +358,7 @@ const CadastrosSistema = () => {
     nome: string;
     email: string | null;
     nivel: string | null;
+    setor_id: string | null;
   }) => {
     setEditingPrestador({
       ...item
@@ -371,7 +376,8 @@ const CadastrosSistema = () => {
         id: editingPrestador.id,
         nome: editingPrestador.nome.trim(),
         email: editingPrestador.email?.trim() || undefined,
-        nivel: editingPrestador.nivel || 'N1'
+        nivel: editingPrestador.nivel || 'N1',
+        setor_id: editingPrestador.setor_id
       });
       setIsEditPrestadorDialogOpen(false);
       setEditingPrestador(null);
@@ -737,33 +743,40 @@ const CadastrosSistema = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="px-0 pb-0">
-                  {isLoadingPrestador ? <p className="text-muted-foreground">Carregando...</p> : prestadoresServico.length === 0 ? <p className="text-muted-foreground">Nenhum prestador de serviço cadastrado</p> : <Table>
+                {isLoadingPrestador ? <p className="text-muted-foreground">Carregando...</p> : prestadoresServico.length === 0 ? <p className="text-muted-foreground">Nenhum prestador de serviço cadastrado</p> : <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-[100px]">Código</TableHead>
                           <TableHead>Nome</TableHead>
                           <TableHead>Email</TableHead>
                           <TableHead className="w-[100px]">Nível</TableHead>
+                          <TableHead>Setor</TableHead>
                           <TableHead className="w-[100px] text-center">Ações</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {prestadoresServico.map(item => <TableRow key={item.id}>
-                            <TableCell className="font-medium">{item.codigo}</TableCell>
-                            <TableCell className="font-medium">{item.nome}</TableCell>
-                            <TableCell className="text-muted-foreground">{item.email || '-'}</TableCell>
-                            <TableCell className="font-medium">{item.nivel || 'N1'}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center justify-center gap-2">
-                                <Button variant="ghost" size="icon" onClick={() => handleEditPrestador(item)}>
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleDeletePrestador(item.id)}>
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>)}
+                        {prestadoresServico.map(item => {
+                          const setor = areasDocumento.find(a => a.id === item.setor_id);
+                          return (
+                            <TableRow key={item.id}>
+                              <TableCell className="font-medium">{item.codigo}</TableCell>
+                              <TableCell className="font-medium">{item.nome}</TableCell>
+                              <TableCell className="text-muted-foreground">{item.email || '-'}</TableCell>
+                              <TableCell className="font-medium">{item.nivel || 'N1'}</TableCell>
+                              <TableCell className="text-muted-foreground">{setor?.nome || '-'}</TableCell>
+                              <TableCell>
+                                <div className="flex items-center justify-center gap-2">
+                                  <Button variant="ghost" size="icon" onClick={() => handleEditPrestador(item)}>
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" onClick={() => handleDeletePrestador(item.id)}>
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>}
                 </CardContent>
@@ -1114,6 +1127,19 @@ const CadastrosSistema = () => {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Setor</label>
+                <Select value={newPrestadorSetor} onValueChange={setNewPrestadorSetor}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o setor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {areasDocumento.filter(a => a.ativo).map(area => (
+                      <SelectItem key={area.id} value={area.id}>{area.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddPrestadorDialogOpen(false)}>
@@ -1161,6 +1187,22 @@ const CadastrosSistema = () => {
                     <SelectContent>
                       {NIVEL_OPTIONS.map(nivel => (
                         <SelectItem key={nivel} value={nivel}>{nivel}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Setor</label>
+                  <Select value={editingPrestador.setor_id || ''} onValueChange={setor_id => setEditingPrestador({
+                ...editingPrestador,
+                setor_id: setor_id || null
+              })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o setor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {areasDocumento.filter(a => a.ativo).map(area => (
+                        <SelectItem key={area.id} value={area.id}>{area.nome}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
