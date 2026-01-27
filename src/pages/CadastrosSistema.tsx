@@ -1,14 +1,5 @@
 import { useState } from 'react';
 import { Layout } from '@/components/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Plus, Edit, Trash2, Package, Tag, Users, User, FileText, FolderOpen, Building2 } from 'lucide-react';
 import { useTipoProduto } from '@/hooks/useTipoProduto';
 import { useTipoTarefa } from '@/hooks/useTipoTarefa';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
@@ -16,10 +7,14 @@ import { usePrestadorServico, NIVEL_OPTIONS } from '@/hooks/usePrestadorServico'
 import { useTipoDocumento } from '@/hooks/useTipoDocumento';
 import { useAreaDocumento } from '@/hooks/useAreaDocumento';
 import { useTipoDocumentoCliente } from '@/hooks/useTipoDocumentoCliente';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { CadastrosSidebar, type CadastroType } from '@/components/cadastros/CadastrosSidebar';
+import { CadastrosContent } from '@/components/cadastros/CadastrosContent';
+import { CadastrosDialogs } from '@/components/cadastros/CadastrosDialogs';
 
 const CadastrosSistema = () => {
+  const [selectedCadastro, setSelectedCadastro] = useState<CadastroType | null>(null);
+
   const {
     tiposProduto,
     isLoading: isLoadingArea,
@@ -70,7 +65,7 @@ const CadastrosSistema = () => {
     deleteTipoDocumentoCliente
   } = useTipoDocumentoCliente();
 
-  // Estado para Área
+  // Estado para Área Sprint
   const [isAddAreaDialogOpen, setIsAddAreaDialogOpen] = useState(false);
   const [isEditAreaDialogOpen, setIsEditAreaDialogOpen] = useState(false);
   const [newAreaNome, setNewAreaNome] = useState('');
@@ -80,7 +75,7 @@ const CadastrosSistema = () => {
     ativo: boolean;
   } | null>(null);
 
-  // Estado para Tipo
+  // Estado para Tipo Sprint
   const [isAddTipoDialogOpen, setIsAddTipoDialogOpen] = useState(false);
   const [isEditTipoDialogOpen, setIsEditTipoDialogOpen] = useState(false);
   const [newTipoNome, setNewTipoNome] = useState('');
@@ -126,7 +121,7 @@ const CadastrosSistema = () => {
     ativo: boolean;
   } | null>(null);
 
-  // Estado para Área de Documento
+  // Estado para Setor (Área de Documento)
   const [isAddAreaDocDialogOpen, setIsAddAreaDocDialogOpen] = useState(false);
   const [isEditAreaDocDialogOpen, setIsEditAreaDocDialogOpen] = useState(false);
   const [newAreaDocNome, setNewAreaDocNome] = useState('');
@@ -146,7 +141,7 @@ const CadastrosSistema = () => {
     ativo: boolean;
   } | null>(null);
 
-  // Handlers para Área
+  // Handlers para Área Sprint
   const handleAddArea = async () => {
     if (!newAreaNome.trim()) {
       toast.error('Nome é obrigatório');
@@ -160,14 +155,8 @@ const CadastrosSistema = () => {
       // Error handled in hook
     }
   };
-  const handleEditArea = (item: {
-    id: string;
-    nome: string;
-    ativo: boolean;
-  }) => {
-    setEditingArea({
-      ...item
-    });
+  const handleEditArea = (item: { id: string; nome: string; ativo: boolean }) => {
+    setEditingArea({ ...item });
     setIsEditAreaDialogOpen(true);
   };
   const handleUpdateArea = async () => {
@@ -198,16 +187,13 @@ const CadastrosSistema = () => {
   };
   const handleToggleAreaAtivo = async (id: string, ativo: boolean) => {
     try {
-      await updateTipoProduto({
-        id,
-        ativo: !ativo
-      });
+      await updateTipoProduto({ id, ativo: !ativo });
     } catch (error) {
       // Error handled in hook
     }
   };
 
-  // Handlers para Tipo
+  // Handlers para Tipo Sprint
   const handleAddTipo = async () => {
     if (!newTipoNome.trim()) {
       toast.error('Nome é obrigatório');
@@ -221,14 +207,8 @@ const CadastrosSistema = () => {
       // Error handled in hook
     }
   };
-  const handleEditTipo = (item: {
-    id: string;
-    nome: string;
-    ativo: boolean;
-  }) => {
-    setEditingTipo({
-      ...item
-    });
+  const handleEditTipo = (item: { id: string; nome: string; ativo: boolean }) => {
+    setEditingTipo({ ...item });
     setIsEditTipoDialogOpen(true);
   };
   const handleUpdateTipo = async () => {
@@ -259,10 +239,7 @@ const CadastrosSistema = () => {
   };
   const handleToggleTipoAtivo = async (id: string, ativo: boolean) => {
     try {
-      await updateTipoTarefa({
-        id,
-        ativo: !ativo
-      });
+      await updateTipoTarefa({ id, ativo: !ativo });
     } catch (error) {
       // Error handled in hook
     }
@@ -289,14 +266,8 @@ const CadastrosSistema = () => {
       // Error handled in hook
     }
   };
-  const handleEditCliente = (item: {
-    id: string;
-    codigo: number;
-    cliente: string;
-  }) => {
-    setEditingCliente({
-      ...item
-    });
+  const handleEditCliente = (item: { id: string; codigo: number; cliente: string }) => {
+    setEditingCliente({ ...item });
     setIsEditClienteDialogOpen(true);
   };
   const handleUpdateCliente = async () => {
@@ -372,9 +343,7 @@ const CadastrosSistema = () => {
     nivel: string | null;
     setor_id: string | null;
   }) => {
-    setEditingPrestador({
-      ...item
-    });
+    setEditingPrestador({ ...item });
     setIsEditPrestadorDialogOpen(true);
   };
   const handleUpdatePrestador = async () => {
@@ -470,7 +439,7 @@ const CadastrosSistema = () => {
     }
   };
 
-  // Handlers para Área de Documento
+  // Handlers para Setor (Área de Documento)
   const handleAddAreaDoc = async () => {
     if (!newAreaDocNome.trim()) {
       toast.error('Nome é obrigatório');
@@ -573,832 +542,232 @@ const CadastrosSistema = () => {
       // Error handled in hook
     }
   };
-  return <Layout>
+
+  return (
+    <Layout>
       <div className="space-y-6">
         <div>
           <h2 className="text-3xl font-bold text-foreground">Cadastros do Sistema</h2>
           <p className="text-muted-foreground mt-1">Gerencie os cadastros utilizados na ferramenta</p>
         </div>
 
-        <Accordion type="single" collapsible defaultValue="area" className="space-y-4">
-          {/* Área */}
-          <AccordionItem value="area" className="border rounded-lg bg-card">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline">
-              <div className="flex items-center gap-3">
-                <Package className="h-5 w-5 text-primary" />
-                <span className="text-lg font-semibold">Área</span>
-                <Badge variant="secondary" className="ml-2">
-                  {tiposProduto.length} itens
-                </Badge>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-4">
-              <Card className="border-0 shadow-none">
-                <CardHeader className="px-0 pt-0">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">Lista de Áreas</CardTitle>
-                    <Button onClick={() => setIsAddAreaDialogOpen(true)} size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Adicionar
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="px-0 pb-0">
-                  {isLoadingArea ? <p className="text-muted-foreground">Carregando...</p> : tiposProduto.length === 0 ? <p className="text-muted-foreground">Nenhuma área cadastrada</p> : <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Nome</TableHead>
-                          <TableHead className="w-[100px] text-center">Ativo</TableHead>
-                          <TableHead className="w-[100px] text-center">Ações</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {tiposProduto.map(item => <TableRow key={item.id}>
-                            <TableCell className="font-medium">{item.nome}</TableCell>
-                            <TableCell className="text-center">
-                              <Switch checked={item.ativo} onCheckedChange={() => handleToggleAreaAtivo(item.id, item.ativo)} />
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center justify-center gap-2">
-                                <Button variant="ghost" size="icon" onClick={() => handleEditArea(item)}>
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleDeleteArea(item.id)}>
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>)}
-                      </TableBody>
-                    </Table>}
-                </CardContent>
-              </Card>
-            </AccordionContent>
-          </AccordionItem>
+        <div className="flex border rounded-lg bg-card min-h-[600px] overflow-hidden">
+          <CadastrosSidebar
+            selectedCadastro={selectedCadastro}
+            onSelectCadastro={setSelectedCadastro}
+          />
+          <CadastrosContent
+            selectedCadastro={selectedCadastro}
+            // Area Sprint
+            tiposProduto={tiposProduto}
+            isLoadingArea={isLoadingArea}
+            isAddAreaDialogOpen={isAddAreaDialogOpen}
+            setIsAddAreaDialogOpen={setIsAddAreaDialogOpen}
+            isEditAreaDialogOpen={isEditAreaDialogOpen}
+            setIsEditAreaDialogOpen={setIsEditAreaDialogOpen}
+            newAreaNome={newAreaNome}
+            setNewAreaNome={setNewAreaNome}
+            editingArea={editingArea}
+            setEditingArea={setEditingArea}
+            handleAddArea={handleAddArea}
+            handleEditArea={handleEditArea}
+            handleUpdateArea={handleUpdateArea}
+            handleDeleteArea={handleDeleteArea}
+            handleToggleAreaAtivo={handleToggleAreaAtivo}
+            // Tipo Sprint
+            tiposTarefa={tiposTarefa}
+            isLoadingTipo={isLoadingTipo}
+            isAddTipoDialogOpen={isAddTipoDialogOpen}
+            setIsAddTipoDialogOpen={setIsAddTipoDialogOpen}
+            isEditTipoDialogOpen={isEditTipoDialogOpen}
+            setIsEditTipoDialogOpen={setIsEditTipoDialogOpen}
+            newTipoNome={newTipoNome}
+            setNewTipoNome={setNewTipoNome}
+            editingTipo={editingTipo}
+            setEditingTipo={setEditingTipo}
+            handleAddTipo={handleAddTipo}
+            handleEditTipo={handleEditTipo}
+            handleUpdateTipo={handleUpdateTipo}
+            handleDeleteTipo={handleDeleteTipo}
+            handleToggleTipoAtivo={handleToggleTipoAtivo}
+            // Tipo Documento Cliente
+            tiposDocumentoCliente={tiposDocumentoCliente}
+            isLoadingTipoDocCliente={isLoadingTipoDocCliente}
+            isAddTipoDocClienteDialogOpen={isAddTipoDocClienteDialogOpen}
+            setIsAddTipoDocClienteDialogOpen={setIsAddTipoDocClienteDialogOpen}
+            isEditTipoDocClienteDialogOpen={isEditTipoDocClienteDialogOpen}
+            setIsEditTipoDocClienteDialogOpen={setIsEditTipoDocClienteDialogOpen}
+            newTipoDocClienteNome={newTipoDocClienteNome}
+            setNewTipoDocClienteNome={setNewTipoDocClienteNome}
+            editingTipoDocCliente={editingTipoDocCliente}
+            setEditingTipoDocCliente={setEditingTipoDocCliente}
+            handleAddTipoDocCliente={handleAddTipoDocCliente}
+            handleEditTipoDocCliente={handleEditTipoDocCliente}
+            handleUpdateTipoDocCliente={handleUpdateTipoDocCliente}
+            handleDeleteTipoDocCliente={handleDeleteTipoDocCliente}
+            handleToggleTipoDocClienteAtivo={handleToggleTipoDocClienteAtivo}
+            // Prestador de Serviço
+            prestadoresServico={prestadoresServico}
+            isLoadingPrestador={isLoadingPrestador}
+            isAddPrestadorDialogOpen={isAddPrestadorDialogOpen}
+            setIsAddPrestadorDialogOpen={setIsAddPrestadorDialogOpen}
+            isEditPrestadorDialogOpen={isEditPrestadorDialogOpen}
+            setIsEditPrestadorDialogOpen={setIsEditPrestadorDialogOpen}
+            newPrestadorNome={newPrestadorNome}
+            setNewPrestadorNome={setNewPrestadorNome}
+            newPrestadorEmail={newPrestadorEmail}
+            setNewPrestadorEmail={setNewPrestadorEmail}
+            newPrestadorNivel={newPrestadorNivel}
+            setNewPrestadorNivel={setNewPrestadorNivel}
+            newPrestadorSetor={newPrestadorSetor}
+            setNewPrestadorSetor={setNewPrestadorSetor}
+            editingPrestador={editingPrestador}
+            setEditingPrestador={setEditingPrestador}
+            handleAddPrestador={handleAddPrestador}
+            handleEditPrestador={handleEditPrestador}
+            handleUpdatePrestador={handleUpdatePrestador}
+            handleDeletePrestador={handleDeletePrestador}
+            nivelOptions={NIVEL_OPTIONS}
+            areasDocumento={areasDocumento}
+            // Clientes
+            clientes={clientes}
+            isLoadingClientes={isLoadingClientes}
+            isAddClienteDialogOpen={isAddClienteDialogOpen}
+            setIsAddClienteDialogOpen={setIsAddClienteDialogOpen}
+            isEditClienteDialogOpen={isEditClienteDialogOpen}
+            setIsEditClienteDialogOpen={setIsEditClienteDialogOpen}
+            newClienteNome={newClienteNome}
+            setNewClienteNome={setNewClienteNome}
+            editingCliente={editingCliente}
+            setEditingCliente={setEditingCliente}
+            handleAddCliente={handleAddCliente}
+            handleEditCliente={handleEditCliente}
+            handleUpdateCliente={handleUpdateCliente}
+            handleDeleteCliente={handleDeleteCliente}
+            // Setor
+            isLoadingAreaDoc={isLoadingAreaDoc}
+            isAddAreaDocDialogOpen={isAddAreaDocDialogOpen}
+            setIsAddAreaDocDialogOpen={setIsAddAreaDocDialogOpen}
+            isEditAreaDocDialogOpen={isEditAreaDocDialogOpen}
+            setIsEditAreaDocDialogOpen={setIsEditAreaDocDialogOpen}
+            newAreaDocNome={newAreaDocNome}
+            setNewAreaDocNome={setNewAreaDocNome}
+            editingAreaDoc={editingAreaDoc}
+            setEditingAreaDoc={setEditingAreaDoc}
+            handleAddAreaDoc={handleAddAreaDoc}
+            handleEditAreaDoc={handleEditAreaDoc}
+            handleUpdateAreaDoc={handleUpdateAreaDoc}
+            handleDeleteAreaDoc={handleDeleteAreaDoc}
+            handleToggleAreaDocAtivo={handleToggleAreaDocAtivo}
+            // Tipo de Documento
+            tiposDocumento={tiposDocumento}
+            isLoadingTipoDoc={isLoadingTipoDoc}
+            isAddTipoDocDialogOpen={isAddTipoDocDialogOpen}
+            setIsAddTipoDocDialogOpen={setIsAddTipoDocDialogOpen}
+            isEditTipoDocDialogOpen={isEditTipoDocDialogOpen}
+            setIsEditTipoDocDialogOpen={setIsEditTipoDocDialogOpen}
+            newTipoDocNome={newTipoDocNome}
+            setNewTipoDocNome={setNewTipoDocNome}
+            editingTipoDoc={editingTipoDoc}
+            setEditingTipoDoc={setEditingTipoDoc}
+            handleAddTipoDoc={handleAddTipoDoc}
+            handleEditTipoDoc={handleEditTipoDoc}
+            handleUpdateTipoDoc={handleUpdateTipoDoc}
+            handleDeleteTipoDoc={handleDeleteTipoDoc}
+            handleToggleTipoDocAtivo={handleToggleTipoDocAtivo}
+          />
+        </div>
 
-          {/* Tipo */}
-          <AccordionItem value="tipo" className="border rounded-lg bg-card">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline">
-              <div className="flex items-center gap-3">
-                <Tag className="h-5 w-5 text-primary" />
-                <span className="text-lg font-semibold">Tipo</span>
-                <Badge variant="secondary" className="ml-2">
-                  {tiposTarefa.length} itens
-                </Badge>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-4">
-              <Card className="border-0 shadow-none">
-                <CardHeader className="px-0 pt-0">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">Lista de Tipos</CardTitle>
-                    <Button onClick={() => setIsAddTipoDialogOpen(true)} size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Adicionar
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="px-0 pb-0">
-                  {isLoadingTipo ? <p className="text-muted-foreground">Carregando...</p> : tiposTarefa.length === 0 ? <p className="text-muted-foreground">Nenhum tipo cadastrado</p> : <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Nome</TableHead>
-                          <TableHead className="w-[100px] text-center">Ativo</TableHead>
-                          <TableHead className="w-[100px] text-center">Ações</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {tiposTarefa.map(item => <TableRow key={item.id}>
-                            <TableCell className="font-medium">{item.nome}</TableCell>
-                            <TableCell className="text-center">
-                              <Switch checked={item.ativo} onCheckedChange={() => handleToggleTipoAtivo(item.id, item.ativo)} />
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center justify-center gap-2">
-                                <Button variant="ghost" size="icon" onClick={() => handleEditTipo(item)}>
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleDeleteTipo(item.id)}>
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>)}
-                      </TableBody>
-                    </Table>}
-                </CardContent>
-              </Card>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Clientes */}
-          <AccordionItem value="clientes" className="border rounded-lg bg-card">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline">
-              <div className="flex items-center gap-3">
-                <Users className="h-5 w-5 text-primary" />
-                <span className="text-lg font-semibold">Clientes</span>
-                <Badge variant="secondary" className="ml-2">
-                  {clientes.length} itens
-                </Badge>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-4">
-              <Card className="border-0 shadow-none">
-                <CardHeader className="px-0 pt-0">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">Lista de Clientes</CardTitle>
-                    <Button onClick={() => setIsAddClienteDialogOpen(true)} size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Adicionar
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="px-0 pb-0">
-                  {isLoadingClientes ? <p className="text-muted-foreground">Carregando...</p> : clientes.length === 0 ? <p className="text-muted-foreground">Nenhum cliente cadastrado</p> : <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-[80px]">Código</TableHead>
-                          <TableHead>Nome</TableHead>
-                          <TableHead className="w-[100px] text-center">Ações</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {clientes.map(item => <TableRow key={item.id}>
-                            <TableCell className="font-medium">{item.codigo}</TableCell>
-                            <TableCell className="font-medium">{item.cliente}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center justify-center gap-2">
-                                <Button variant="ghost" size="icon" onClick={() => handleEditCliente(item)}>
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleDeleteCliente(item.id)}>
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>)}
-                      </TableBody>
-                    </Table>}
-                </CardContent>
-              </Card>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Prestador de Serviço */}
-          <AccordionItem value="prestador-servico" className="border rounded-lg bg-card">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline">
-              <div className="flex items-center gap-3">
-                <User className="h-5 w-5 text-primary" />
-                <span className="text-lg font-semibold">Prestador de Serviço</span>
-                <Badge variant="secondary" className="ml-2">
-                  {prestadoresServico.length} itens
-                </Badge>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-4">
-              <Card className="border-0 shadow-none">
-                <CardHeader className="px-0 pt-0">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">Lista de Prestadores de Serviço</CardTitle>
-                    <Button onClick={() => setIsAddPrestadorDialogOpen(true)} size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Adicionar
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="px-0 pb-0">
-                {isLoadingPrestador ? <p className="text-muted-foreground">Carregando...</p> : prestadoresServico.length === 0 ? <p className="text-muted-foreground">Nenhum prestador de serviço cadastrado</p> : <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-[100px]">Código</TableHead>
-                          <TableHead>Nome</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead className="w-[100px]">Nível</TableHead>
-                          <TableHead>Setor</TableHead>
-                          <TableHead className="w-[100px] text-center">Ações</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {prestadoresServico.map(item => {
-                          const setor = areasDocumento.find(a => a.id === item.setor_id);
-                          return (
-                            <TableRow key={item.id}>
-                              <TableCell className="font-medium">{item.codigo}</TableCell>
-                              <TableCell className="font-medium">{item.nome}</TableCell>
-                              <TableCell className="text-muted-foreground">{item.email || '-'}</TableCell>
-                              <TableCell className="font-medium">{item.nivel || 'N1'}</TableCell>
-                              <TableCell className="text-muted-foreground">{setor?.nome || '-'}</TableCell>
-                              <TableCell>
-                                <div className="flex items-center justify-center gap-2">
-                                  <Button variant="ghost" size="icon" onClick={() => handleEditPrestador(item)}>
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" onClick={() => handleDeletePrestador(item.id)}>
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>}
-                </CardContent>
-              </Card>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Tipo de Documento */}
-          <AccordionItem value="tipo-documento" className="border rounded-lg bg-card">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline">
-              <div className="flex items-center gap-3">
-                <FileText className="h-5 w-5 text-primary" />
-                <span className="text-lg font-semibold">Tipo de Documento</span>
-                <Badge variant="secondary" className="ml-2">
-                  {tiposDocumento.length} itens
-                </Badge>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-4">
-              <Card className="border-0 shadow-none">
-                <CardHeader className="px-0 pt-0">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">Lista de Tipos de Documento</CardTitle>
-                    <Button onClick={() => setIsAddTipoDocDialogOpen(true)} size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Adicionar
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="px-0 pb-0">
-                  {isLoadingTipoDoc ? <p className="text-muted-foreground">Carregando...</p> : tiposDocumento.length === 0 ? <p className="text-muted-foreground">Nenhum tipo de documento cadastrado</p> : <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Nome</TableHead>
-                          <TableHead className="w-[100px] text-center">Ativo</TableHead>
-                          <TableHead className="w-[100px] text-center">Ações</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {tiposDocumento.map(item => <TableRow key={item.id}>
-                            <TableCell className="font-medium">{item.nome}</TableCell>
-                            <TableCell className="text-center">
-                              <Switch checked={item.ativo} onCheckedChange={() => handleToggleTipoDocAtivo(item.id, item.ativo)} />
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center justify-center gap-2">
-                                <Button variant="ghost" size="icon" onClick={() => handleEditTipoDoc(item)}>
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleDeleteTipoDoc(item.id)}>
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>)}
-                      </TableBody>
-                    </Table>}
-                </CardContent>
-              </Card>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Setor */}
-          <AccordionItem value="setor" className="border rounded-lg bg-card">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline">
-              <div className="flex items-center gap-3">
-                <FolderOpen className="h-5 w-5 text-primary" />
-                <span className="text-lg font-semibold">Setor</span>
-                <Badge variant="secondary" className="ml-2">
-                  {areasDocumento.length} itens
-                </Badge>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-4">
-              <Card className="border-0 shadow-none">
-                <CardHeader className="px-0 pt-0">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">Lista de Setores</CardTitle>
-                    <Button onClick={() => setIsAddAreaDocDialogOpen(true)} size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Adicionar
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="px-0 pb-0">
-                  {isLoadingAreaDoc ? <p className="text-muted-foreground">Carregando...</p> : areasDocumento.length === 0 ? <p className="text-muted-foreground">Nenhum setor cadastrado</p> : <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-[80px]">ID</TableHead>
-                          <TableHead>Nome</TableHead>
-                          <TableHead className="w-[100px] text-center">Ativo</TableHead>
-                          <TableHead className="w-[100px] text-center">Ações</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {areasDocumento.map(item => <TableRow key={item.id}>
-                            <TableCell className="font-medium">{item.codigo}</TableCell>
-                            <TableCell className="font-medium">{item.nome}</TableCell>
-                            <TableCell className="text-center">
-                              <Switch checked={item.ativo} onCheckedChange={() => handleToggleAreaDocAtivo(item.id, item.ativo)} />
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center justify-center gap-2">
-                                <Button variant="ghost" size="icon" onClick={() => handleEditAreaDoc(item)}>
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleDeleteAreaDoc(item.id)}>
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>)}
-                      </TableBody>
-                    </Table>}
-                </CardContent>
-              </Card>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Tipo de Documento Cliente */}
-          <AccordionItem value="tipo-documento-cliente" className="border rounded-lg bg-card">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline">
-              <div className="flex items-center gap-3">
-                <Building2 className="h-5 w-5 text-primary" />
-                <span className="text-lg font-semibold">Tipo de Documento Cliente</span>
-                <Badge variant="secondary" className="ml-2">
-                  {tiposDocumentoCliente.length} itens
-                </Badge>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-6 pb-4">
-              <Card className="border-0 shadow-none">
-                <CardHeader className="px-0 pt-0">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">Lista de Tipos de Documento Cliente</CardTitle>
-                    <Button onClick={() => setIsAddTipoDocClienteDialogOpen(true)} size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Adicionar
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="px-0 pb-0">
-                  {isLoadingTipoDocCliente ? <p className="text-muted-foreground">Carregando...</p> : tiposDocumentoCliente.length === 0 ? <p className="text-muted-foreground">Nenhum tipo de documento cliente cadastrado</p> : <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Nome</TableHead>
-                          <TableHead className="w-[100px] text-center">Ativo</TableHead>
-                          <TableHead className="w-[100px] text-center">Ações</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {tiposDocumentoCliente.map(item => <TableRow key={item.id}>
-                            <TableCell className="font-medium">{item.nome}</TableCell>
-                            <TableCell className="text-center">
-                              <Switch checked={item.ativo} onCheckedChange={() => handleToggleTipoDocClienteAtivo(item.id, item.ativo)} />
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center justify-center gap-2">
-                                <Button variant="ghost" size="icon" onClick={() => handleEditTipoDocCliente(item)}>
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleDeleteTipoDocCliente(item.id)}>
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>)}
-                      </TableBody>
-                    </Table>}
-                </CardContent>
-              </Card>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-
-        {/* Dialog Adicionar Área */}
-        <Dialog open={isAddAreaDialogOpen} onOpenChange={setIsAddAreaDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Adicionar Área</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Nome</label>
-                <Input value={newAreaNome} onChange={e => setNewAreaNome(e.target.value)} placeholder="Digite o nome da área" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddAreaDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleAddArea}>Adicionar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Dialog Editar Área */}
-        <Dialog open={isEditAreaDialogOpen} onOpenChange={setIsEditAreaDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Editar Área</DialogTitle>
-            </DialogHeader>
-            {editingArea && <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Nome</label>
-                  <Input value={editingArea.nome} onChange={e => setEditingArea({
-                ...editingArea,
-                nome: e.target.value
-              })} placeholder="Digite o nome da área" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Ativo</label>
-                  <Switch checked={editingArea.ativo} onCheckedChange={checked => setEditingArea({
-                ...editingArea,
-                ativo: checked
-              })} />
-                </div>
-              </div>}
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditAreaDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleUpdateArea}>Salvar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Dialog Adicionar Tipo */}
-        <Dialog open={isAddTipoDialogOpen} onOpenChange={setIsAddTipoDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Adicionar Tipo</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Nome</label>
-                <Input value={newTipoNome} onChange={e => setNewTipoNome(e.target.value)} placeholder="Digite o nome do tipo" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddTipoDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleAddTipo}>Adicionar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Dialog Editar Tipo */}
-        <Dialog open={isEditTipoDialogOpen} onOpenChange={setIsEditTipoDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Editar Tipo</DialogTitle>
-            </DialogHeader>
-            {editingTipo && <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Nome</label>
-                  <Input value={editingTipo.nome} onChange={e => setEditingTipo({
-                ...editingTipo,
-                nome: e.target.value
-              })} placeholder="Digite o nome do tipo" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Ativo</label>
-                  <Switch checked={editingTipo.ativo} onCheckedChange={checked => setEditingTipo({
-                ...editingTipo,
-                ativo: checked
-              })} />
-                </div>
-              </div>}
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditTipoDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleUpdateTipo}>Salvar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Dialog Adicionar Cliente */}
-        <Dialog open={isAddClienteDialogOpen} onOpenChange={setIsAddClienteDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Adicionar Cliente</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Nome do Cliente</label>
-                <Input value={newClienteNome} onChange={e => setNewClienteNome(e.target.value)} placeholder="Digite o nome do cliente" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddClienteDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleAddCliente}>Adicionar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Dialog Editar Cliente */}
-        <Dialog open={isEditClienteDialogOpen} onOpenChange={setIsEditClienteDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Editar Cliente</DialogTitle>
-            </DialogHeader>
-            {editingCliente && <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Nome do Cliente</label>
-                  <Input value={editingCliente.cliente} onChange={e => setEditingCliente({
-                ...editingCliente,
-                cliente: e.target.value
-              })} placeholder="Digite o nome do cliente" />
-                </div>
-              </div>}
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditClienteDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleUpdateCliente}>Salvar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Dialog Adicionar Prestador de Serviço */}
-        <Dialog open={isAddPrestadorDialogOpen} onOpenChange={setIsAddPrestadorDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Adicionar Prestador de Serviço</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Nome</label>
-                <Input value={newPrestadorNome} onChange={e => setNewPrestadorNome(e.target.value)} placeholder="Digite o nome" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Email</label>
-                <Input type="email" value={newPrestadorEmail} onChange={e => setNewPrestadorEmail(e.target.value)} placeholder="Digite o email" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Nível</label>
-                <Select value={newPrestadorNivel} onValueChange={setNewPrestadorNivel}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o nível" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {NIVEL_OPTIONS.map(nivel => (
-                      <SelectItem key={nivel} value={nivel}>{nivel}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Setor</label>
-                <Select value={newPrestadorSetor} onValueChange={setNewPrestadorSetor}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o setor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {areasDocumento.filter(a => a.ativo).map(area => (
-                      <SelectItem key={area.id} value={area.id}>{area.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddPrestadorDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleAddPrestador}>Adicionar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Dialog Editar Prestador de Serviço */}
-        <Dialog open={isEditPrestadorDialogOpen} onOpenChange={setIsEditPrestadorDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Editar Prestador de Serviço</DialogTitle>
-            </DialogHeader>
-            {editingPrestador && <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Código</label>
-                  <Input value={editingPrestador.codigo} disabled className="bg-muted" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Nome</label>
-                  <Input value={editingPrestador.nome} onChange={e => setEditingPrestador({
-                ...editingPrestador,
-                nome: e.target.value
-              })} placeholder="Digite o nome" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Email</label>
-                  <Input type="email" value={editingPrestador.email || ''} onChange={e => setEditingPrestador({
-                ...editingPrestador,
-                email: e.target.value
-              })} placeholder="Digite o email" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Nível</label>
-                  <Select value={editingPrestador.nivel || 'N1'} onValueChange={nivel => setEditingPrestador({
-                ...editingPrestador,
-                nivel
-              })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o nível" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {NIVEL_OPTIONS.map(nivel => (
-                        <SelectItem key={nivel} value={nivel}>{nivel}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Setor</label>
-                  <Select value={editingPrestador.setor_id || ''} onValueChange={setor_id => setEditingPrestador({
-                ...editingPrestador,
-                setor_id: setor_id || null
-              })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o setor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {areasDocumento.filter(a => a.ativo).map(area => (
-                        <SelectItem key={area.id} value={area.id}>{area.nome}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>}
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditPrestadorDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleUpdatePrestador}>Salvar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Dialog Adicionar Tipo de Documento */}
-        <Dialog open={isAddTipoDocDialogOpen} onOpenChange={setIsAddTipoDocDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Adicionar Tipo de Documento</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Nome</label>
-                <Input value={newTipoDocNome} onChange={e => setNewTipoDocNome(e.target.value)} placeholder="Digite o nome do tipo" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddTipoDocDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleAddTipoDoc}>Adicionar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Dialog Editar Tipo de Documento */}
-        <Dialog open={isEditTipoDocDialogOpen} onOpenChange={setIsEditTipoDocDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Editar Tipo de Documento</DialogTitle>
-            </DialogHeader>
-            {editingTipoDoc && <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Nome</label>
-                  <Input value={editingTipoDoc.nome} onChange={e => setEditingTipoDoc({
-                ...editingTipoDoc,
-                nome: e.target.value
-              })} placeholder="Digite o nome do tipo" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Ativo</label>
-                  <Switch checked={editingTipoDoc.ativo} onCheckedChange={checked => setEditingTipoDoc({
-                ...editingTipoDoc,
-                ativo: checked
-              })} />
-                </div>
-              </div>}
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditTipoDocDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleUpdateTipoDoc}>Salvar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Dialog Adicionar Setor */}
-        <Dialog open={isAddAreaDocDialogOpen} onOpenChange={setIsAddAreaDocDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Adicionar Setor</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Nome</label>
-                <Input value={newAreaDocNome} onChange={e => setNewAreaDocNome(e.target.value)} placeholder="Digite o nome do setor" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddAreaDocDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleAddAreaDoc}>Adicionar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Dialog Editar Setor */}
-        <Dialog open={isEditAreaDocDialogOpen} onOpenChange={setIsEditAreaDocDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Editar Setor</DialogTitle>
-            </DialogHeader>
-            {editingAreaDoc && <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Nome</label>
-                  <Input value={editingAreaDoc.nome} onChange={e => setEditingAreaDoc({
-                ...editingAreaDoc,
-                nome: e.target.value
-              })} placeholder="Digite o nome do setor" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Ativo</label>
-                  <Switch checked={editingAreaDoc.ativo} onCheckedChange={checked => setEditingAreaDoc({
-                ...editingAreaDoc,
-                ativo: checked
-              })} />
-                </div>
-              </div>}
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditAreaDocDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleUpdateAreaDoc}>Salvar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Dialog Adicionar Tipo de Documento Cliente */}
-        <Dialog open={isAddTipoDocClienteDialogOpen} onOpenChange={setIsAddTipoDocClienteDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Adicionar Tipo de Documento Cliente</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Nome</label>
-                <Input value={newTipoDocClienteNome} onChange={e => setNewTipoDocClienteNome(e.target.value)} placeholder="Digite o nome do tipo" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddTipoDocClienteDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleAddTipoDocCliente}>Adicionar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Dialog Editar Tipo de Documento Cliente */}
-        <Dialog open={isEditTipoDocClienteDialogOpen} onOpenChange={setIsEditTipoDocClienteDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Editar Tipo de Documento Cliente</DialogTitle>
-            </DialogHeader>
-            {editingTipoDocCliente && <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Nome</label>
-                  <Input value={editingTipoDocCliente.nome} onChange={e => setEditingTipoDocCliente({
-                ...editingTipoDocCliente,
-                nome: e.target.value
-              })} placeholder="Digite o nome do tipo" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Ativo</label>
-                  <Switch checked={editingTipoDocCliente.ativo} onCheckedChange={checked => setEditingTipoDocCliente({
-                ...editingTipoDocCliente,
-                ativo: checked
-              })} />
-                </div>
-              </div>}
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditTipoDocClienteDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleUpdateTipoDocCliente}>Salvar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <CadastrosDialogs
+          // Area Sprint
+          isAddAreaDialogOpen={isAddAreaDialogOpen}
+          setIsAddAreaDialogOpen={setIsAddAreaDialogOpen}
+          isEditAreaDialogOpen={isEditAreaDialogOpen}
+          setIsEditAreaDialogOpen={setIsEditAreaDialogOpen}
+          newAreaNome={newAreaNome}
+          setNewAreaNome={setNewAreaNome}
+          editingArea={editingArea}
+          setEditingArea={setEditingArea}
+          handleAddArea={handleAddArea}
+          handleUpdateArea={handleUpdateArea}
+          // Tipo Sprint
+          isAddTipoDialogOpen={isAddTipoDialogOpen}
+          setIsAddTipoDialogOpen={setIsAddTipoDialogOpen}
+          isEditTipoDialogOpen={isEditTipoDialogOpen}
+          setIsEditTipoDialogOpen={setIsEditTipoDialogOpen}
+          newTipoNome={newTipoNome}
+          setNewTipoNome={setNewTipoNome}
+          editingTipo={editingTipo}
+          setEditingTipo={setEditingTipo}
+          handleAddTipo={handleAddTipo}
+          handleUpdateTipo={handleUpdateTipo}
+          // Tipo Documento Cliente
+          isAddTipoDocClienteDialogOpen={isAddTipoDocClienteDialogOpen}
+          setIsAddTipoDocClienteDialogOpen={setIsAddTipoDocClienteDialogOpen}
+          isEditTipoDocClienteDialogOpen={isEditTipoDocClienteDialogOpen}
+          setIsEditTipoDocClienteDialogOpen={setIsEditTipoDocClienteDialogOpen}
+          newTipoDocClienteNome={newTipoDocClienteNome}
+          setNewTipoDocClienteNome={setNewTipoDocClienteNome}
+          editingTipoDocCliente={editingTipoDocCliente}
+          setEditingTipoDocCliente={setEditingTipoDocCliente}
+          handleAddTipoDocCliente={handleAddTipoDocCliente}
+          handleUpdateTipoDocCliente={handleUpdateTipoDocCliente}
+          // Prestador de Serviço
+          isAddPrestadorDialogOpen={isAddPrestadorDialogOpen}
+          setIsAddPrestadorDialogOpen={setIsAddPrestadorDialogOpen}
+          isEditPrestadorDialogOpen={isEditPrestadorDialogOpen}
+          setIsEditPrestadorDialogOpen={setIsEditPrestadorDialogOpen}
+          newPrestadorNome={newPrestadorNome}
+          setNewPrestadorNome={setNewPrestadorNome}
+          newPrestadorEmail={newPrestadorEmail}
+          setNewPrestadorEmail={setNewPrestadorEmail}
+          newPrestadorNivel={newPrestadorNivel}
+          setNewPrestadorNivel={setNewPrestadorNivel}
+          newPrestadorSetor={newPrestadorSetor}
+          setNewPrestadorSetor={setNewPrestadorSetor}
+          editingPrestador={editingPrestador}
+          setEditingPrestador={setEditingPrestador}
+          handleAddPrestador={handleAddPrestador}
+          handleUpdatePrestador={handleUpdatePrestador}
+          nivelOptions={NIVEL_OPTIONS}
+          areasDocumento={areasDocumento}
+          // Clientes
+          isAddClienteDialogOpen={isAddClienteDialogOpen}
+          setIsAddClienteDialogOpen={setIsAddClienteDialogOpen}
+          isEditClienteDialogOpen={isEditClienteDialogOpen}
+          setIsEditClienteDialogOpen={setIsEditClienteDialogOpen}
+          newClienteNome={newClienteNome}
+          setNewClienteNome={setNewClienteNome}
+          editingCliente={editingCliente}
+          setEditingCliente={setEditingCliente}
+          handleAddCliente={handleAddCliente}
+          handleUpdateCliente={handleUpdateCliente}
+          // Setor
+          isAddAreaDocDialogOpen={isAddAreaDocDialogOpen}
+          setIsAddAreaDocDialogOpen={setIsAddAreaDocDialogOpen}
+          isEditAreaDocDialogOpen={isEditAreaDocDialogOpen}
+          setIsEditAreaDocDialogOpen={setIsEditAreaDocDialogOpen}
+          newAreaDocNome={newAreaDocNome}
+          setNewAreaDocNome={setNewAreaDocNome}
+          editingAreaDoc={editingAreaDoc}
+          setEditingAreaDoc={setEditingAreaDoc}
+          handleAddAreaDoc={handleAddAreaDoc}
+          handleUpdateAreaDoc={handleUpdateAreaDoc}
+          // Tipo de Documento
+          isAddTipoDocDialogOpen={isAddTipoDocDialogOpen}
+          setIsAddTipoDocDialogOpen={setIsAddTipoDocDialogOpen}
+          isEditTipoDocDialogOpen={isEditTipoDocDialogOpen}
+          setIsEditTipoDocDialogOpen={setIsEditTipoDocDialogOpen}
+          newTipoDocNome={newTipoDocNome}
+          setNewTipoDocNome={setNewTipoDocNome}
+          editingTipoDoc={editingTipoDoc}
+          setEditingTipoDoc={setEditingTipoDoc}
+          handleAddTipoDoc={handleAddTipoDoc}
+          handleUpdateTipoDoc={handleUpdateTipoDoc}
+        />
       </div>
-    </Layout>;
+    </Layout>
+  );
 };
+
 export default CadastrosSistema;
