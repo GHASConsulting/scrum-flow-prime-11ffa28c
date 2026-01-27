@@ -366,11 +366,11 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
     return (
       <>
         <TableRow key={task.id}>
-          <TableCell className="w-16 text-center font-medium text-muted-foreground">
+          <TableCell className="w-10 text-center font-medium text-muted-foreground">
             {task.order_index + 1}
           </TableCell>
-          <TableCell className="w-20">
-            <div className="flex items-center justify-center gap-1">
+          <TableCell className="w-16">
+            <div className="flex items-center justify-center gap-0.5">
               <Button 
                 variant="ghost" 
                 size="icon" 
@@ -385,26 +385,34 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
               </Button>
             </div>
           </TableCell>
-          <TableCell className="min-w-[300px]">
-            <div className="flex items-center gap-2" style={{ paddingLeft: `${level * 20}px` }}>
+          <TableCell className="min-w-[180px]">
+            <div className="flex items-center gap-1" style={{ paddingLeft: `${level * 16}px` }}>
               {hasChildren && (
-                <Button variant="ghost" size="icon" onClick={() => toggleExpand(task.id)} className="h-6 w-6 p-0 flex-shrink-0">
-                  {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                <Button variant="ghost" size="icon" onClick={() => toggleExpand(task.id)} className="h-5 w-5 p-0 flex-shrink-0">
+                  {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                 </Button>
               )}
               <DebouncedInput 
                 value={task.name} 
                 onChange={(value) => handleUpdateField(task.id, 'name', value)} 
-                className="h-8 w-full" 
+                className="h-7 w-full text-sm" 
               />
             </div>
           </TableCell>
-          <TableCell>
+          <TableCell className="w-14">
+            <DebouncedInput 
+              value={getParentIdDisplay(task)} 
+              onChange={(value) => handleUpdateParentId(task.id, value)} 
+              className="h-7 w-12 text-sm text-center" 
+              placeholder="" 
+            />
+          </TableCell>
+          <TableCell className="w-32">
             <Select 
               value={task.status || 'pendente'} 
               onValueChange={(value) => handleUpdateField(task.id, 'status', value)}
             >
-              <SelectTrigger className={`h-8 w-40 text-left ${statusStyle}`}>
+              <SelectTrigger className={`h-7 w-[120px] text-left text-sm ${statusStyle}`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -416,19 +424,19 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
               </SelectContent>
             </Select>
           </TableCell>
-          <TableCell>
-            <Input type="number" value={task.duration_days || ''} onChange={(e) => handleUpdateField(task.id, 'duration_days', e.target.value)} className="h-8 w-16" disabled={task.is_summary || isParentTask} />
+          <TableCell className="w-14">
+            <Input type="number" value={task.duration_days || ''} onChange={(e) => handleUpdateField(task.id, 'duration_days', e.target.value)} className="h-7 w-12 text-sm text-center" disabled={task.is_summary || isParentTask} />
           </TableCell>
-          <TableCell>
-            <Input type="datetime-local" step="1800" value={task.start_at ? formatToBrazil(new Date(task.start_at)) : ''} onChange={(e) => handleUpdateField(task.id, 'start_at', e.target.value)} className="h-8" disabled={task.is_summary || isParentTask} />
+          <TableCell className="w-40">
+            <Input type="datetime-local" step="1800" value={task.start_at ? formatToBrazil(new Date(task.start_at)) : ''} onChange={(e) => handleUpdateField(task.id, 'start_at', e.target.value)} className="h-7 text-sm" disabled={task.is_summary || isParentTask} />
           </TableCell>
-          <TableCell>
+          <TableCell className="w-40">
             <Input 
               type="datetime-local" 
               step="1800"
               value={task.end_at ? formatToBrazil(new Date(task.end_at)) : ''} 
               onChange={(e) => handleUpdateField(task.id, 'end_at', e.target.value)} 
-              className="h-8" 
+              className="h-7 text-sm" 
               disabled={task.is_summary || isParentTask}
               title={isParentTask ? 'Data fim calculada automaticamente com base nas tarefas filhas' : ''}
             />
@@ -437,16 +445,8 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
             <DebouncedInput 
               value={task.responsavel || ''} 
               onChange={(value) => handleUpdateField(task.id, 'responsavel', value)} 
-              className="h-8"
-              placeholder="Nome do responsável" 
-            />
-          </TableCell>
-          <TableCell>
-            <DebouncedInput 
-              value={getParentIdDisplay(task)} 
-              onChange={(value) => handleUpdateParentId(task.id, value)} 
-              className="h-8 w-20" 
-              placeholder="ID pai" 
+              className="h-7 text-sm"
+              placeholder="Responsável" 
             />
           </TableCell>
         </TableRow>
@@ -597,15 +597,15 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-16">ID</TableHead>
-                <TableHead className="w-20">Ações</TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Duração (dias)</TableHead>
-                <TableHead>Início</TableHead>
-                <TableHead>Fim</TableHead>
-                <TableHead>Responsável</TableHead>
-                <TableHead className="w-24">Tarefa Pai</TableHead>
+                <TableHead className="w-10 text-xs">ID</TableHead>
+                <TableHead className="w-16 text-xs">Ações</TableHead>
+                <TableHead className="text-xs">Nome</TableHead>
+                <TableHead className="w-14 text-xs">Pai</TableHead>
+                <TableHead className="w-32 text-xs">Status</TableHead>
+                <TableHead className="w-14 text-xs">Dias</TableHead>
+                <TableHead className="w-40 text-xs">Início</TableHead>
+                <TableHead className="w-40 text-xs">Fim</TableHead>
+                <TableHead className="text-xs">Responsável</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
