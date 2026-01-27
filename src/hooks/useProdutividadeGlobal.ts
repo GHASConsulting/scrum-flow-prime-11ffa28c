@@ -11,6 +11,7 @@ export interface ProdutividadeGlobal {
   abertos: number;
   encerrados: number;
   backlog: number;
+  abertos_15_dias: number;
   percentual_incidentes: number;
   percentual_solicitacoes: number;
   importado: boolean;
@@ -50,6 +51,7 @@ export function useProdutividadeGlobal() {
       abertos: number;
       encerrados: number;
       backlog: number;
+      abertos_15_dias: number;
       percentual_incidentes: number;
       percentual_solicitacoes: number;
       importado?: boolean;
@@ -63,6 +65,7 @@ export function useProdutividadeGlobal() {
           abertos: prod.abertos,
           encerrados: prod.encerrados,
           backlog: prod.backlog,
+          abertos_15_dias: prod.abertos_15_dias,
           percentual_incidentes: prod.percentual_incidentes,
           percentual_solicitacoes: prod.percentual_solicitacoes,
           importado: prod.importado || false,
@@ -89,6 +92,7 @@ export function useProdutividadeGlobal() {
       abertos: number;
       encerrados: number;
       backlog: number;
+      abertos_15_dias: number;
       percentual_incidentes: number;
       percentual_solicitacoes: number;
       importado: boolean;
@@ -118,6 +122,7 @@ export function useProdutividadeGlobal() {
       abertos: number;
       encerrados: number;
       backlog: number;
+      abertos_15_dias: number;
       percentual_incidentes: number;
       percentual_solicitacoes: number;
     }) => {
@@ -130,6 +135,7 @@ export function useProdutividadeGlobal() {
           abertos: prod.abertos,
           encerrados: prod.encerrados,
           backlog: prod.backlog,
+          abertos_15_dias: prod.abertos_15_dias,
           percentual_incidentes: prod.percentual_incidentes,
           percentual_solicitacoes: prod.percentual_solicitacoes,
         })

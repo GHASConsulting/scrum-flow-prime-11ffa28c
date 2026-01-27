@@ -693,6 +693,7 @@ export type Database = {
       produtividade_global: {
         Row: {
           abertos: number
+          abertos_15_dias: number
           backlog: number
           cliente_id: string
           codigo: number
@@ -708,6 +709,7 @@ export type Database = {
         }
         Insert: {
           abertos?: number
+          abertos_15_dias?: number
           backlog?: number
           cliente_id: string
           codigo?: number
@@ -723,6 +725,7 @@ export type Database = {
         }
         Update: {
           abertos?: number
+          abertos_15_dias?: number
           backlog?: number
           cliente_id?: string
           codigo?: number
