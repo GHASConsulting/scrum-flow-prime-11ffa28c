@@ -320,14 +320,12 @@ const DocumentosCliente = () => {
             {/* Documents Table */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                   <FileText className="h-5 w-5" />
                   Documentos de {selectedCliente?.cliente}
-                  {filteredAndSortedDocumentos.length !== documentos.length && (
-                    <span className="text-sm font-normal text-muted-foreground ml-2">
-                      ({filteredAndSortedDocumentos.length} de {documentos.length})
-                    </span>
-                  )}
+                  <span className="text-sm font-normal text-muted-foreground">
+                    ({filteredAndSortedDocumentos.length})
+                  </span>
                 </CardTitle>
                 <Button onClick={() => {
                   resetForm();
