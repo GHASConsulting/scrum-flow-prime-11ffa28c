@@ -133,8 +133,28 @@ const SharepointDocumentos = () => {
       toast.error('Nome é obrigatório');
       return;
     }
+    if (!formData.tipo_documento_id) {
+      toast.error('Tipo de Documento é obrigatório');
+      return;
+    }
+    if (!formData.versao.trim()) {
+      toast.error('Versão é obrigatória');
+      return;
+    }
+    if (!formData.descricao.trim()) {
+      toast.error('Descrição é obrigatória');
+      return;
+    }
+    if (!formData.data_publicacao) {
+      toast.error('Data de Publicação é obrigatória');
+      return;
+    }
     if (!formData.file) {
       toast.error('Arquivo é obrigatório');
+      return;
+    }
+    if (formData.setores_ids.length === 0) {
+      toast.error('Selecione pelo menos um Setor Destino');
       return;
     }
 
