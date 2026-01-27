@@ -10,7 +10,7 @@ import { PrioridadesStatusTooltip } from '@/components/dashboard/PrioridadesStat
 
 type StatusColor = 'verde' | 'amarelo' | 'vermelho';
 
-type SortField = 'codigo' | 'nome' | 'geral' | 'scrum' | 'prioridades' | 'produtividade' | 'riscos';
+type SortField = 'codigo' | 'nome' | 'geral' | 'metodologia' | 'prioridades' | 'produtividade' | 'riscos';
 type SortDirection = 'asc' | 'desc' | null;
 
 interface ClienteStatus {
@@ -18,7 +18,7 @@ interface ClienteStatus {
   codigo: number;
   nome: string;
   geral: StatusColor;
-  scrum: StatusColor;
+  metodologia: StatusColor;
   prioridades: StatusColor;
   produtividade: StatusColor;
   riscos: StatusColor;
@@ -73,7 +73,7 @@ const DashboardClientes = () => {
   // Filtros
   const [filterCliente, setFilterCliente] = useState<string>('all');
   const [filterGeral, setFilterGeral] = useState<string>('all');
-  const [filterScrum, setFilterScrum] = useState<string>('all');
+  const [filterMetodologia, setFilterMetodologia] = useState<string>('all');
   const [filterPrioridades, setFilterPrioridades] = useState<string>('all');
   const [filterProdutividade, setFilterProdutividade] = useState<string>('all');
   const [filterRiscos, setFilterRiscos] = useState<string>('all');
@@ -124,7 +124,7 @@ const DashboardClientes = () => {
         nome: record.cliente,
         // Por enquanto, os outros faróis ficam verdes (regras serão definidas posteriormente)
         geral: 'verde' as StatusColor,
-        scrum: 'verde' as StatusColor,
+        metodologia: 'verde' as StatusColor,
         prioridades: prioridadesStatus,
         produtividade: 'verde' as StatusColor,
         riscos: 'verde' as StatusColor,
@@ -137,7 +137,7 @@ const DashboardClientes = () => {
     let result = clientesStatus.filter(cliente => {
       if (filterCliente !== 'all' && cliente.id !== filterCliente) return false;
       if (filterGeral !== 'all' && cliente.geral !== filterGeral) return false;
-      if (filterScrum !== 'all' && cliente.scrum !== filterScrum) return false;
+      if (filterMetodologia !== 'all' && cliente.metodologia !== filterMetodologia) return false;
       if (filterPrioridades !== 'all' && cliente.prioridades !== filterPrioridades) return false;
       if (filterProdutividade !== 'all' && cliente.produtividade !== filterProdutividade) return false;
       if (filterRiscos !== 'all' && cliente.riscos !== filterRiscos) return false;
@@ -165,7 +165,7 @@ const DashboardClientes = () => {
     }
 
     return result;
-  }, [clientesStatus, filterCliente, filterGeral, filterScrum, filterPrioridades, filterProdutividade, filterRiscos, sortField, sortDirection]);
+  }, [clientesStatus, filterCliente, filterGeral, filterMetodologia, filterPrioridades, filterProdutividade, filterRiscos, sortField, sortDirection]);
 
   const StatusFilterSelect = ({ value, onChange, label }: { value: string; onChange: (v: string) => void; label: string }) => (
     <div>
@@ -246,7 +246,7 @@ const DashboardClientes = () => {
                 </Select>
               </div>
               <StatusFilterSelect value={filterGeral} onChange={setFilterGeral} label="Geral" />
-              <StatusFilterSelect value={filterScrum} onChange={setFilterScrum} label="Scrum" />
+              <StatusFilterSelect value={filterMetodologia} onChange={setFilterMetodologia} label="Metodologia" />
               <StatusFilterSelect value={filterPrioridades} onChange={setFilterPrioridades} label="Prioridades" />
               <StatusFilterSelect value={filterProdutividade} onChange={setFilterProdutividade} label="Produtividade" />
               <StatusFilterSelect value={filterRiscos} onChange={setFilterRiscos} label="Riscos e BO's" />
@@ -271,7 +271,7 @@ const DashboardClientes = () => {
                     <SortableHeader field="codigo" className="w-16">Código</SortableHeader>
                     <SortableHeader field="nome" className="text-left">Cliente</SortableHeader>
                     <SortableHeader field="geral" className="w-24">Geral</SortableHeader>
-                    <SortableHeader field="scrum" className="w-24">Scrum</SortableHeader>
+                    <SortableHeader field="metodologia" className="w-24">Metodologia</SortableHeader>
                     <SortableHeader field="prioridades" className="w-24">Prioridades</SortableHeader>
                     <SortableHeader field="produtividade" className="w-24">Produtividade</SortableHeader>
                     <SortableHeader field="riscos" className="w-24">Riscos e BO's</SortableHeader>
@@ -283,7 +283,7 @@ const DashboardClientes = () => {
                       <TableCell className="font-medium text-center">{cliente.codigo}</TableCell>
                       <TableCell>{cliente.nome}</TableCell>
                       <TableCell><StatusIndicator status={cliente.geral} /></TableCell>
-                      <TableCell><StatusIndicator status={cliente.scrum} /></TableCell>
+                      <TableCell><StatusIndicator status={cliente.metodologia} /></TableCell>
                       <TableCell>
                         <PrioridadesStatusTooltip 
                           status={cliente.prioridades} 
