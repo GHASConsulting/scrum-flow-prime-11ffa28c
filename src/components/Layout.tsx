@@ -68,7 +68,6 @@ const menuStructure: MenuGroup[] = [
     icon: LayoutDashboard,
     items: [
       { name: 'Scrum', href: '/', icon: LayoutDashboard },
-      { name: 'Projetos', href: '/dashboard-projetos', icon: LayoutDashboard },
       { name: 'Clientes', href: '/dashboard-clientes', icon: LayoutDashboard },
     ],
   },
@@ -93,7 +92,7 @@ const menuStructure: MenuGroup[] = [
 
 // Função para detectar o grupo ativo com base na rota
 const getActiveGroup = (pathname: string): string => {
-  if (pathname === '/' || pathname.startsWith('/dashboard-projetos') || pathname.startsWith('/dashboard-clientes')) return "Dashboard's";
+  if (pathname === '/' || pathname.startsWith('/dashboard-clientes')) return "Dashboard's";
   if (pathname.startsWith('/sprint-planning') || pathname.startsWith('/backlog') || pathname.startsWith('/daily') || pathname.startsWith('/retrospectiva') || pathname.startsWith('/roadmap')) return 'Scrum';
   if (pathname.startsWith('/prioridades')) return 'Prioridades';
   if (pathname.startsWith('/produtividade')) return 'Produtividade';
