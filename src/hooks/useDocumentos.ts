@@ -8,6 +8,7 @@ export interface Documento {
   nome: string;
   tipo_documento_id: string | null;
   area_documento_id: string | null;
+  setores_ids: string[];
   versao: string | null;
   descricao: string | null;
   arquivo_path: string;
@@ -25,6 +26,7 @@ export interface DocumentoInsert {
   nome: string;
   tipo_documento_id?: string | null;
   area_documento_id?: string | null;
+  setores_ids?: string[];
   versao?: string | null;
   descricao?: string | null;
   arquivo_path: string;
@@ -39,6 +41,7 @@ export interface DocumentoUpdate {
   nome?: string;
   tipo_documento_id?: string | null;
   area_documento_id?: string | null;
+  setores_ids?: string[];
   versao?: string | null;
   descricao?: string | null;
   arquivo_path?: string;

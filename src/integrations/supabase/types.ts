@@ -422,6 +422,7 @@ export type Database = {
           descricao: string | null
           id: string
           nome: string
+          setores_ids: string[] | null
           status: string
           tipo_documento_id: string | null
           updated_at: string
@@ -438,6 +439,7 @@ export type Database = {
           descricao?: string | null
           id?: string
           nome: string
+          setores_ids?: string[] | null
           status?: string
           tipo_documento_id?: string | null
           updated_at?: string
@@ -454,6 +456,7 @@ export type Database = {
           descricao?: string | null
           id?: string
           nome?: string
+          setores_ids?: string[] | null
           status?: string
           tipo_documento_id?: string | null
           updated_at?: string
