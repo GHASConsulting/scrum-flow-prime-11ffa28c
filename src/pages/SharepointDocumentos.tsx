@@ -305,7 +305,7 @@ const SharepointDocumentos = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold text-foreground">Documentos</h2>
+            <h2 className="text-3xl font-bold text-foreground">Documentos GHAS</h2>
             <p className="text-muted-foreground mt-1">Documentos institucionais da GHAS</p>
           </div>
           {isAdmin && (
@@ -406,6 +406,7 @@ const SharepointDocumentos = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-16 text-center">ID</TableHead>
                     <TableHead className="text-center w-32">Ações</TableHead>
                     <TableHead className="cursor-pointer select-none" onClick={() => handleColumnSort('nome')}>
                       <div className="flex items-center">
@@ -448,6 +449,9 @@ const SharepointDocumentos = () => {
                 <TableBody>
                   {filteredDocumentos.map(doc => (
                     <TableRow key={doc.id}>
+                      <TableCell className="text-center font-medium text-muted-foreground">
+                        {doc.codigo}
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center gap-1">
                           <Button variant="ghost" size="icon" onClick={() => handleViewFile(doc)} title="Visualizar">
@@ -471,7 +475,6 @@ const SharepointDocumentos = () => {
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground font-normal">{doc.codigo} -</span>
                           {doc.nome}
                         </div>
                       </TableCell>
