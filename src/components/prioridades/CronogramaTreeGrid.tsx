@@ -367,8 +367,10 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
       <>
         <TableRow key={task.id}>
           <TableCell className="w-16 text-center font-medium text-muted-foreground">
+            {task.order_index + 1}
+          </TableCell>
+          <TableCell className="w-20">
             <div className="flex items-center justify-center gap-1">
-              {task.order_index + 1}
               <Button 
                 variant="ghost" 
                 size="icon" 
@@ -377,6 +379,9 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
                 title="Ver histórico e andamento"
               >
                 <Eye className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => deleteTask(task.id)} className="h-6 w-6 p-0 text-destructive">
+                <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
           </TableCell>
@@ -443,11 +448,6 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
               className="h-8 w-20" 
               placeholder="ID pai" 
             />
-          </TableCell>
-          <TableCell>
-            <Button variant="ghost" size="icon" onClick={() => deleteTask(task.id)} className="h-8 w-8 p-0 text-destructive">
-              <Trash2 className="h-4 w-4" />
-            </Button>
           </TableCell>
         </TableRow>
         {isExpanded && hasChildren && task.children.map(child => renderTaskRow(child, level + 1))}
@@ -598,6 +598,7 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
             <TableHeader>
               <TableRow>
                 <TableHead className="w-16">ID</TableHead>
+                <TableHead className="w-20">Ações</TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Duração (dias)</TableHead>
@@ -605,7 +606,6 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
                 <TableHead>Fim</TableHead>
                 <TableHead>Responsável</TableHead>
                 <TableHead className="w-24">Tarefa Pai</TableHead>
-                <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
