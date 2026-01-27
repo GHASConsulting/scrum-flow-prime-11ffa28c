@@ -71,10 +71,8 @@ const DailyPage = () => {
     new Date(b.data).getTime() - new Date(a.data).getTime()
   );
 
-  // Lista única de clientes para o filtro (apenas administradores)
-  const clientesComDailies = userRole === 'administrador' 
-    ? clientes.filter(c => dailies.some(d => d.cliente_id === c.id))
-    : [];
+  // Lista de clientes para o filtro (apenas administradores)
+  const clientesParaFiltro = userRole === 'administrador' ? clientes : [];
 
   const getClienteNome = (clienteId: string | null) => {
     if (!clienteId) return 'Sem cliente';
@@ -302,7 +300,7 @@ const DailyPage = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos</SelectItem>
-                      {clientesComDailies.map(cliente => (
+                      {clientesParaFiltro.map(cliente => (
                         <SelectItem key={cliente.id} value={cliente.id}>
                           {cliente.cliente}
                         </SelectItem>
