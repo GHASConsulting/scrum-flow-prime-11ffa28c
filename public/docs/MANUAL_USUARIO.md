@@ -4,27 +4,27 @@
 
 1. [Visão Geral](#visão-geral)
 2. [Acesso ao Sistema](#acesso-ao-sistema)
-3. [Menu Scrum](#menu-scrum)
+3. [Menu PMO/CET](#menu-pmocet)
+   - [Dashboard](#dashboard-pmocet)
    - [Sprint Planning](#sprint-planning)
    - [Sprint](#sprint)
    - [Daily](#daily)
    - [Retrospectiva](#retrospectiva)
    - [Roadmap](#roadmap)
-4. [Prioridades](#prioridades)
-5. [Produtividade](#produtividade)
-6. [Riscos e BO's](#riscos-e-bos)
-7. [Dashboard's](#dashboards)
-   - [Dashboard Scrum](#dashboard-scrum)
-   - [Dashboard Projetos](#dashboard-projetos)
+4. [Menu CLIENTE](#menu-cliente)
    - [Dashboard Clientes](#dashboard-clientes)
-8. [GHAS - Documentos e Treinamentos](#ghas---documentos-e-treinamentos)
-   - [Documentos GHAS](#documentos-ghas)
+   - [Prioridades](#prioridades)
+   - [Prod Global](#prod-global)
+   - [Prod Individual](#prod-individual)
+   - [Riscos e BO's](#riscos-e-bos)
+   - [Documentos Cliente](#documentos-cliente)
+5. [Menu GHAS](#menu-ghas)
+   - [Documentos](#documentos-ghas)
    - [Treinamentos](#treinamentos)
-9. [Administração](#administração)
-   - [Usuários](#aba-usuários)
+6. [Menu Administração](#menu-administração)
+   - [Administração](#administração)
    - [Cadastros do Sistema](#cadastros-do-sistema)
-   - [Integração](#aba-integração)
-10. [Perfis de Usuário](#perfis-de-usuário)
+7. [Perfis de Usuário](#perfis-de-usuário)
 
 ---
 
@@ -38,7 +38,7 @@ O Sistema AVAnça GHAS é uma ferramenta completa para gerenciamento de projetos
 - Controle de produtividade
 - Gestão de riscos e ocorrências (BO's)
 - Dashboards com indicadores de desempenho
-- Cronograma de projetos
+- Cronograma de projetos (Prioridades)
 - Gestão de documentos institucionais
 - Gestão de treinamentos e capacitações
 
@@ -66,11 +66,44 @@ O Sistema AVAnça GHAS é uma ferramenta completa para gerenciamento de projetos
 
 ---
 
-## Menu Scrum
+## Menu PMO/CET
+
+O menu PMO/CET concentra as funcionalidades de gestão ágil e acompanhamento de sprints.
+
+### Dashboard PMO/CET
+
+**Caminho:** PMO/CET → Dashboard
+
+Visão geral do andamento das sprints selecionadas.
+
+#### Métricas Exibidas:
+- **A Fazer:** Quantidade de tarefas pendentes
+- **Fazendo:** Quantidade em progresso
+- **Feito:** Quantidade concluídas
+- **Validado:** Quantidade validadas
+- **Story Points:** Total de SP da sprint
+
+#### Percentual de Conclusão:
+- Calculado como: (Feito + Validado) / Total
+
+#### Gráfico:
+- Tarefas por responsável
+- Ordenação configurável
+
+#### Filtros:
+- Situação do Sprint
+- Intervalo de Datas
+- Sprint(s) - seleção múltipla
+- Área (Tipo de Produto)
+
+#### Exportar:
+- Clique em "Exportar Excel" para gerar relatório
+
+---
 
 ### Sprint Planning
 
-**Caminho:** Menu → Scrum → Sprint Planning
+**Caminho:** PMO/CET → Sprint Planning
 
 A página de Sprint Planning é o coração do planejamento ágil, permitindo gerenciar sprints e distribuir tarefas.
 
@@ -128,7 +161,7 @@ A página de Sprint Planning é o coração do planejamento ágil, permitindo ge
 
 ### Sprint
 
-**Caminho:** Menu → Scrum → Sprint
+**Caminho:** PMO/CET → Sprint
 
 Visualização Kanban das tarefas da sprint selecionada.
 
@@ -150,7 +183,7 @@ Visualização Kanban das tarefas da sprint selecionada.
 
 ### Daily
 
-**Caminho:** Menu → Scrum → Daily
+**Caminho:** PMO/CET → Daily
 
 Registro do acompanhamento diário das atividades do time.
 
@@ -176,7 +209,7 @@ Registro do acompanhamento diário das atividades do time.
 
 ### Retrospectiva
 
-**Caminho:** Menu → Scrum → Retrospectiva
+**Caminho:** PMO/CET → Retrospectiva
 
 Registro da análise pós-sprint para melhoria contínua.
 
@@ -200,7 +233,7 @@ Registro da análise pós-sprint para melhoria contínua.
 
 ### Roadmap
 
-**Caminho:** Menu → Scrum → Roadmap
+**Caminho:** PMO/CET → Roadmap
 
 Visão completa de todas as tarefas com status calculado automaticamente.
 
@@ -228,20 +261,46 @@ Visão completa de todas as tarefas com status calculado automaticamente.
 
 ---
 
-## Prioridades
+## Menu CLIENTE
 
-**Caminho:** Menu → Prioridades
+O menu CLIENTE concentra as funcionalidades de gestão por cliente, produtividade e riscos.
+
+### Dashboard Clientes
+
+**Caminho:** CLIENTE → Dashboard
+
+Grid de indicadores (faróis) por cliente.
+
+#### Indicadores por Cliente:
+- **Geral:** Status consolidado
+- **Metodologia:** Indicador de metodologia ágil
+- **Prioridades:** Indicador de cronograma
+- **Produtividade:** Indicador de produtividade
+- **Riscos e BO's:** Indicador de riscos
+
+#### Legenda de Cores:
+- 🟢 **Verde:** Situação OK
+- 🟡 **Amarelo:** Atenção necessária
+- 🔴 **Vermelho:** Situação crítica
+
+#### Filtros:
+- Cliente específico
+- Filtro por cor em cada indicador
+
+---
+
+### Prioridades
+
+**Caminho:** CLIENTE → Prioridades
 
 Gestão de cronogramas de projetos com visualização em grade hierárquica.
 
 #### Funcionalidades:
 
-**1. Criar Projeto**
-- Clique em "Novo Projeto"
-- Informe: Nome, Descrição, Status
+**1. Selecionar Cliente**
+- Selecione o cliente no combo para visualizar o cronograma
 
 **2. Gerenciar Cronograma**
-- Selecione o projeto no combo
 - O cronograma é exibido em formato de grade (TreeGrid)
 
 **3. Tarefas do Cronograma**
@@ -253,17 +312,41 @@ Gestão de cronogramas de projetos com visualização em grade hierárquica.
   - Duração (dias)
   - Responsável
   - Predecessoras
-  - Status
+  - Status (Fazendo, Concluído, etc.)
 
-**4. Gráfico de Gantt**
+**4. Histórico de Notas**
+- Clique no ícone de olho para visualizar e adicionar notas
+- As notas são salvas no histórico da tarefa
+
+**5. Gráfico de Gantt**
 - Visualização gráfica do cronograma
 - Barras coloridas por status
 
 ---
 
-## Produtividade
+### Prod Global
 
-**Caminho:** Menu → Produtividade
+**Caminho:** CLIENTE → Prod Global
+
+Visão consolidada da produtividade por cliente.
+
+#### Métricas:
+- Chamados abertos
+- Chamados encerrados
+- Backlog
+- Percentual de incidentes
+- Percentual de solicitações
+
+#### Funcionalidades:
+- Filtrar por cliente
+- Filtrar por período
+- Importar dados via planilha
+
+---
+
+### Prod Individual
+
+**Caminho:** CLIENTE → Prod Individual
 
 Registro e acompanhamento da produtividade dos prestadores de serviço.
 
@@ -298,17 +381,11 @@ Registro e acompanhamento da produtividade dos prestadores de serviço.
 - Período (Mês/Ano)
 - Tipo (Manual/Importado)
 
-**5. Ordenação**
-- Clique no cabeçalho das colunas para ordenar
-
-**6. Excluir Registro**
-- Clique no ícone de lixeira
-
 ---
 
-## Riscos e BO's
+### Riscos e BO's
 
-**Caminho:** Menu → Riscos e BO's
+**Caminho:** CLIENTE → Riscos e BO's
 
 Gestão de riscos e Boletins de Ocorrência do projeto.
 
@@ -346,92 +423,30 @@ Gestão de riscos e Boletins de Ocorrência do projeto.
 - Impacto real ocorrido
 - Lição aprendida
 
-#### Ações:
-- **Editar:** Ícone de lápis
-- **Visualizar:** Ícone de olho
-- **Excluir:** Ícone de lixeira
-
 ---
 
-## Dashboard's
+### Documentos Cliente
 
-### Dashboard Scrum
+**Caminho:** CLIENTE → Documentos
 
-**Caminho:** Menu → Dashboard's → Scrum
-
-Visão geral do andamento das sprints selecionadas.
-
-#### Métricas Exibidas:
-- **A Fazer:** Quantidade de tarefas pendentes
-- **Fazendo:** Quantidade em progresso
-- **Feito:** Quantidade concluídas
-- **Validado:** Quantidade validadas
-- **Story Points:** Total de SP da sprint
-
-#### Percentual de Conclusão:
-- Calculado como: (Feito + Validado) / Total
-
-#### Gráfico:
-- Tarefas por responsável
-- Ordenação configurável
-
-#### Filtros:
-- Situação do Sprint
-- Intervalo de Datas
-- Sprint(s) - seleção múltipla
-- Área (Tipo de Produto)
-
-#### Exportar:
-- Clique em "Exportar Excel" para gerar relatório
-
----
-
-### Dashboard Projetos
-
-**Caminho:** Menu → Dashboard's → Projetos
-
-Similar ao Dashboard Scrum, com foco em visão de projetos.
+Gestão de documentos específicos por cliente.
 
 #### Funcionalidades:
-- Mesmas métricas e filtros do Dashboard Scrum
-- Gráfico de tarefas por responsável
-- Exportação para Excel
+- Upload de arquivos (PDF, DOCX, PPTX, XLSX)
+- Classificação por tipo de documento
+- Filtros por tipo e período
+- Contador de documentos por cliente
+- Download e exclusão de arquivos
 
 ---
 
-### Dashboard Clientes
+## Menu GHAS
 
-**Caminho:** Menu → Dashboard's → Clientes
-
-Grid de indicadores (faróis) por cliente.
-
-#### Indicadores por Cliente:
-- **Geral:** Status consolidado
-- **Scrum:** Indicador de Scrum
-- **Prioridades:** Indicador de cronograma
-- **Produtividade:** Indicador de produtividade
-- **Riscos e BO's:** Indicador de riscos
-
-#### Legenda de Cores:
-- 🟢 **Verde:** Situação OK
-- 🟡 **Amarelo:** Atenção necessária
-- 🔴 **Vermelho:** Situação crítica
-
-#### Filtros:
-- Cliente específico
-- Filtro por cor em cada indicador
-
----
-
-## GHAS - Documentos e Treinamentos
-
-**Caminho:** Menu → GHAS
-
-Módulo para gestão de documentos institucionais e treinamentos da equipe.
+O menu GHAS concentra a documentação institucional e gestão de treinamentos.
 
 ### Documentos GHAS
 
-**Caminho:** Menu → GHAS → Documentos
+**Caminho:** GHAS → Documentos
 
 Centraliza a documentação institucional da GHAS.
 
@@ -475,14 +490,11 @@ Todos os campos são **obrigatórios**:
 - Filtrar por Status
 - Filtrar por intervalo de Data de Publicação (Início/Fim)
 
-#### Ordenação:
-- Clique no cabeçalho das colunas para ordenar
-
 ---
 
 ### Treinamentos
 
-**Caminho:** Menu → GHAS → Treinamentos
+**Caminho:** GHAS → Treinamentos
 
 Gestão de sessões de capacitação e treinamentos.
 
@@ -505,13 +517,15 @@ Gestão de sessões de capacitação e treinamentos.
 
 ---
 
-## Administração
+## Menu Administração
 
-**Caminho:** Menu → Administração
+O menu Administração é restrito para administradores do sistema.
 
-Área restrita para administradores do sistema.
+### Administração
 
-### Aba Usuários
+**Caminho:** Administração → Administração
+
+#### Aba Usuários
 
 **1. Cadastrar Novo Usuário**
 - Nome da Pessoa
@@ -525,17 +539,23 @@ Gestão de sessões de capacitação e treinamentos.
 - Redefinir senha
 - Excluir usuário
 
+#### Aba Integração
+
+**Configuração de Webhook AVA**
+- Token de autenticação
+- URL do webhook para copiar
+
 ---
 
 ### Cadastros do Sistema
 
-**Caminho:** Menu → Administração → Cadastros
+**Caminho:** Administração → Cadastros do Sistema
 
 Gerenciamento de cadastros auxiliares do sistema.
 
 #### Setores
 
-Antigo "Área de Documento". Gerencia os setores da organização.
+Gerencia os setores da organização.
 
 | Coluna | Descrição |
 |--------|-----------|
@@ -588,14 +608,6 @@ Cadastro de clientes do sistema.
 
 ---
 
-### Aba Integração
-
-**Configuração de Webhook AVA**
-- Token de autenticação
-- URL do webhook para copiar
-
----
-
 ## Perfis de Usuário
 
 ### Administrador
@@ -634,12 +646,11 @@ Em caso de dúvidas ou problemas, entre em contato com o administrador do sistem
 
 ---
 
-*Versão do Manual: 1.1*
+*Versão do Manual: 1.2*
 *Última Atualização: Janeiro/2025*
-*Alterações da versão 1.1:*
-- Renomeação de "Área de Documento" para "Setor"
-- Adição de ID numérico (código) para Setores
-- Suporte a múltiplos "Setores Destino" em documentos
-- Todos os campos do formulário de Novo Documento são obrigatórios
-- Campos obrigatórios no cadastro de Prestador de Serviço (Nome, Email, Nível, Setor)
-- Inclusão do módulo GHAS (Documentos e Treinamentos)
+*Alterações da versão 1.2:*
+- Reorganização do manual conforme nova estrutura de menus (PMO/CET, CLIENTE, GHAS, Administração)
+- Renomeação de "Scrum" para "Metodologia" no Dashboard Clientes
+- Atualização dos caminhos de navegação
+- Remoção de referências a menus e funcionalidades obsoletas
+- Status "Fazendo" padronizado na página de Prioridades
