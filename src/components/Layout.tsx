@@ -47,8 +47,8 @@ const menuStructure: MenuGroup[] = [
     name: 'Cliente',
     icon: Building2,
     items: [
-      { name: 'Prioridades', href: '/prioridades', icon: Target },
       { name: 'Dashboard', href: '/dashboard-clientes', icon: LayoutDashboard },
+      { name: 'Prioridades', href: '/prioridades', icon: Target },
       { name: 'Prod Global', href: '/produtividade-global', icon: ClipboardList },
       { name: 'Prod Individual', href: '/produtividade', icon: ClipboardList },
       { name: "Riscos e BO's", href: '/riscos', icon: AlertTriangle },
