@@ -373,12 +373,12 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[100px]">Código</TableHead>
+                <TableHead className="w-[80px]">Código</TableHead>
+                <TableHead className="w-[100px] text-center">Ações</TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead className="w-[100px]">Nível</TableHead>
                 <TableHead>Setor</TableHead>
-                <TableHead className="w-[100px] text-center">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -387,10 +387,6 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
                 return (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.codigo}</TableCell>
-                    <TableCell className="font-medium">{item.nome}</TableCell>
-                    <TableCell className="text-muted-foreground">{item.email || '-'}</TableCell>
-                    <TableCell className="font-medium">{item.nivel || 'N1'}</TableCell>
-                    <TableCell className="text-muted-foreground">{setor?.nome || '-'}</TableCell>
                     <TableCell>
                       <div className="flex items-center justify-center gap-2">
                         <Button variant="ghost" size="icon" onClick={() => props.handleEditPrestador(item)}>
@@ -401,6 +397,10 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
                         </Button>
                       </div>
                     </TableCell>
+                    <TableCell className="font-medium">{item.nome}</TableCell>
+                    <TableCell className="text-muted-foreground">{item.email || '-'}</TableCell>
+                    <TableCell className="font-medium">{item.nivel || 'N1'}</TableCell>
+                    <TableCell className="text-muted-foreground">{setor?.nome || '-'}</TableCell>
                   </TableRow>
                 );
               })}
@@ -437,15 +437,14 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[80px]">Código</TableHead>
-                <TableHead>Nome</TableHead>
                 <TableHead className="w-[100px] text-center">Ações</TableHead>
+                <TableHead>Nome</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {props.clientes.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.codigo}</TableCell>
-                  <TableCell className="font-medium">{item.cliente}</TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center gap-2">
                       <Button variant="ghost" size="icon" onClick={() => props.handleEditCliente(item)}>
@@ -456,6 +455,7 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
                       </Button>
                     </div>
                   </TableCell>
+                  <TableCell className="font-medium">{item.cliente}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -491,22 +491,15 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[80px]">Código</TableHead>
+                <TableHead className="w-[100px] text-center">Ações</TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead className="w-[100px] text-center">Ativo</TableHead>
-                <TableHead className="w-[100px] text-center">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {props.areasDocumento.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.codigo}</TableCell>
-                  <TableCell className="font-medium">{item.nome}</TableCell>
-                  <TableCell className="text-center">
-                    <Switch
-                      checked={item.ativo}
-                      onCheckedChange={() => props.handleToggleAreaDocAtivo(item.id, item.ativo)}
-                    />
-                  </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center gap-2">
                       <Button variant="ghost" size="icon" onClick={() => props.handleEditAreaDoc(item)}>
@@ -516,6 +509,13 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
+                  </TableCell>
+                  <TableCell className="font-medium">{item.nome}</TableCell>
+                  <TableCell className="text-center">
+                    <Switch
+                      checked={item.ativo}
+                      onCheckedChange={() => props.handleToggleAreaDocAtivo(item.id, item.ativo)}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
