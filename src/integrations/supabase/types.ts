@@ -17,6 +17,7 @@ export type Database = {
       area_documento: {
         Row: {
           ativo: boolean
+          codigo: number
           created_at: string
           id: string
           nome: string
@@ -24,6 +25,7 @@ export type Database = {
         }
         Insert: {
           ativo?: boolean
+          codigo?: number
           created_at?: string
           id?: string
           nome: string
@@ -31,6 +33,7 @@ export type Database = {
         }
         Update: {
           ativo?: boolean
+          codigo?: number
           created_at?: string
           id?: string
           nome?: string
