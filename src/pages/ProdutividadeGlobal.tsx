@@ -36,6 +36,7 @@ const ProdutividadeGlobal = () => {
     abertos: '',
     encerrados: '',
     backlog: '',
+    abertos_15_dias: '',
     percentual_incidentes: '',
     percentual_solicitacoes: '',
   });
@@ -49,7 +50,7 @@ const ProdutividadeGlobal = () => {
   const [filterImportado, setFilterImportado] = useState<string>('all');
 
   // Sorting states
-  type SortColumn = 'codigo' | 'cliente' | 'data_inicio' | 'data_fim' | 'abertos' | 'encerrados' | 'backlog' | 'percentual_incidentes' | 'percentual_solicitacoes' | 'importado';
+  type SortColumn = 'codigo' | 'cliente' | 'data_inicio' | 'data_fim' | 'abertos' | 'encerrados' | 'backlog' | 'abertos_15_dias' | 'percentual_incidentes' | 'percentual_solicitacoes' | 'importado';
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
@@ -124,6 +125,7 @@ const ProdutividadeGlobal = () => {
       abertos: '',
       encerrados: '',
       backlog: '',
+      abertos_15_dias: '',
       percentual_incidentes: '',
       percentual_solicitacoes: '',
     });
@@ -224,6 +226,7 @@ const ProdutividadeGlobal = () => {
         abertos: parseInt(formData.abertos) || 0,
         encerrados: parseInt(formData.encerrados) || 0,
         backlog: parseInt(formData.backlog) || 0,
+        abertos_15_dias: parseInt(formData.abertos_15_dias) || 0,
         percentual_incidentes: percIncidentes,
         percentual_solicitacoes: percSolicitacoes,
         importado: false,
@@ -308,6 +311,7 @@ const ProdutividadeGlobal = () => {
         abertos: number;
         encerrados: number;
         backlog: number;
+        abertos_15_dias: number;
         percentual_incidentes: number;
         percentual_solicitacoes: number;
         importado: boolean;
@@ -373,14 +377,20 @@ const ProdutividadeGlobal = () => {
           rowErrors.push('Backlog não pode ser negativo');
         }
 
-        // Column 6: % Incidentes
-        const percIncidentes = Number(row[6]) || 0;
+        // Column 6: Abertos 15 dias
+        const abertos15Dias = Number(row[6]) || 0;
+        if (abertos15Dias < 0) {
+          rowErrors.push('Chamados abertos há 15 dias não pode ser negativo');
+        }
+
+        // Column 7: % Incidentes
+        const percIncidentes = Number(row[7]) || 0;
         if (percIncidentes < 0 || percIncidentes > 100) {
           rowErrors.push('% Incidentes deve estar entre 0 e 100');
         }
 
-        // Column 7: % Solicitações
-        const percSolicitacoes = Number(row[7]) || 0;
+        // Column 8: % Solicitações
+        const percSolicitacoes = Number(row[8]) || 0;
         if (percSolicitacoes < 0 || percSolicitacoes > 100) {
           rowErrors.push('% Solicitações deve estar entre 0 e 100');
         }
@@ -424,6 +434,7 @@ const ProdutividadeGlobal = () => {
             abertos,
             encerrados,
             backlog: backlogVal,
+            abertos_15_dias: abertos15Dias,
             percentual_incidentes: percIncidentes,
             percentual_solicitacoes: percSolicitacoes,
             importado: true,
@@ -530,6 +541,10 @@ const ProdutividadeGlobal = () => {
           case 'backlog':
             aValue = Number(a.backlog);
             bValue = Number(b.backlog);
+            break;
+          case 'abertos_15_dias':
+            aValue = Number(a.abertos_15_dias);
+            bValue = Number(b.abertos_15_dias);
             break;
           case 'percentual_incidentes':
             aValue = Number(a.percentual_incidentes);
@@ -820,6 +835,9 @@ const ProdutividadeGlobal = () => {
                     <TableHead className="text-right cursor-pointer hover:bg-muted/50" onClick={() => handleSort('backlog')}>
                       Backlog <SortIcon column="backlog" />
                     </TableHead>
+                    <TableHead className="text-right cursor-pointer hover:bg-muted/50" onClick={() => handleSort('abertos_15_dias')}>
+                      Abertos 15 dias <SortIcon column="abertos_15_dias" />
+                    </TableHead>
                     <TableHead className="text-right cursor-pointer hover:bg-muted/50" onClick={() => handleSort('percentual_incidentes')}>
                       % Incidentes <SortIcon column="percentual_incidentes" />
                     </TableHead>
@@ -849,6 +867,9 @@ const ProdutividadeGlobal = () => {
                       </TableCell>
                       <TableCell className="text-right font-medium">
                         {Number(prod.backlog)}
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {Number(prod.abertos_15_dias)}
                       </TableCell>
                       <TableCell className="text-right font-medium">
                         {Number(prod.percentual_incidentes).toFixed(2)}%
@@ -957,6 +978,18 @@ const ProdutividadeGlobal = () => {
                     onChange={(e) => setFormData({ ...formData, backlog: e.target.value })}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="abertos_15_dias">Chamados abertos há 15 dias</Label>
+                <Input
+                  id="abertos_15_dias"
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  value={formData.abertos_15_dias}
+                  onChange={(e) => setFormData({ ...formData, abertos_15_dias: e.target.value })}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
