@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Trash2, FileText, Download, Building2 } from 'lucide-react';
+import { Plus, Trash2, FileText, Download, Building2, ArrowUp, ArrowDown, Filter } from 'lucide-react';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { useDocumentoCliente } from '@/hooks/useDocumentoCliente';
 import { useTipoDocumentoCliente } from '@/hooks/useTipoDocumentoCliente';
@@ -43,7 +43,88 @@ const DocumentosCliente = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Filter states
+  const [filterTipoDocumento, setFilterTipoDocumento] = useState<string>('all');
+  const [filterDataInicio, setFilterDataInicio] = useState<string>('');
+  const [filterDataFim, setFilterDataFim] = useState<string>('');
+
+  // Sorting states
+  type SortColumn = 'codigo' | 'nome' | 'tipo' | 'arquivo' | 'data_publicacao';
+  const [sortColumn, setSortColumn] = useState<SortColumn>('codigo');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const renderSortIcon = (column: SortColumn) => {
+    if (sortColumn !== column) return null;
+    return sortDirection === 'asc' ? 
+      <ArrowUp className="h-3 w-3 ml-1 inline" /> : 
+      <ArrowDown className="h-3 w-3 ml-1 inline" />;
+  };
+
   const selectedCliente = clientes.find(c => c.id === selectedClienteId);
+
+  // Filter and sort documents
+  const filteredAndSortedDocumentos = useMemo(() => {
+    let filtered = [...documentos];
+
+    // Apply filters
+    if (filterTipoDocumento !== 'all') {
+      filtered = filtered.filter(doc => doc.tipo_documento_cliente_id === filterTipoDocumento);
+    }
+
+    if (filterDataInicio) {
+      filtered = filtered.filter(doc => doc.data_publicacao >= filterDataInicio);
+    }
+
+    if (filterDataFim) {
+      filtered = filtered.filter(doc => doc.data_publicacao <= filterDataFim);
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let aValue: string | number;
+      let bValue: string | number;
+
+      switch (sortColumn) {
+        case 'codigo':
+          aValue = a.codigo;
+          bValue = b.codigo;
+          break;
+        case 'nome':
+          aValue = a.nome.toLowerCase();
+          bValue = b.nome.toLowerCase();
+          break;
+        case 'tipo':
+          aValue = a.tipo_documento_cliente?.nome?.toLowerCase() || '';
+          bValue = b.tipo_documento_cliente?.nome?.toLowerCase() || '';
+          break;
+        case 'arquivo':
+          aValue = a.arquivo_nome.toLowerCase();
+          bValue = b.arquivo_nome.toLowerCase();
+          break;
+        case 'data_publicacao':
+          aValue = a.data_publicacao;
+          bValue = b.data_publicacao;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return filtered;
+  }, [documentos, filterTipoDocumento, filterDataInicio, filterDataFim, sortColumn, sortDirection]);
 
   const resetForm = () => {
     setFormData({
@@ -55,6 +136,12 @@ const DocumentosCliente = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  const clearFilters = () => {
+    setFilterTipoDocumento('all');
+    setFilterDataInicio('');
+    setFilterDataFim('');
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -148,6 +235,8 @@ const DocumentosCliente = () => {
     return format(new Date(dateStr + 'T00:00:00'), 'dd/MM/yyyy', { locale: ptBR });
   };
 
+  const hasActiveFilters = filterTipoDocumento !== 'all' || filterDataInicio || filterDataFim;
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -168,7 +257,10 @@ const DocumentosCliente = () => {
           </CardHeader>
           <CardContent>
             <div className="max-w-md">
-              <Select value={selectedClienteId} onValueChange={setSelectedClienteId}>
+              <Select value={selectedClienteId} onValueChange={(value) => {
+                setSelectedClienteId(value);
+                clearFilters();
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um cliente..." />
                 </SelectTrigger>
@@ -186,76 +278,169 @@ const DocumentosCliente = () => {
 
         {/* Documents Section - Only show if client is selected */}
         {selectedClienteId && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Documentos de {selectedCliente?.cliente}
-              </CardTitle>
-              <Button onClick={() => {
-                resetForm();
-                setIsAddDialogOpen(true);
-              }}>
-                <Plus className="h-4 w-4 mr-2" />
-                Novo Documento do Cliente
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {isLoadingDocs || isLoadingClientes || isLoadingTipos ? (
-                <p className="text-muted-foreground">Carregando...</p>
-              ) : documentos.length === 0 ? (
-                <p className="text-muted-foreground">Nenhum documento encontrado para este cliente</p>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[80px]">ID</TableHead>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Arquivo</TableHead>
-                      <TableHead>Data Publicação</TableHead>
-                      <TableHead className="w-[120px] text-center">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {documentos.map((doc) => (
-                      <TableRow key={doc.id}>
-                        <TableCell className="font-medium">{doc.codigo}</TableCell>
-                        <TableCell className="font-medium">{doc.nome}</TableCell>
-                        <TableCell>{doc.tipo_documento_cliente?.nome || '-'}</TableCell>
-                        <TableCell>
-                          <span className="text-sm text-muted-foreground">
-                            {doc.arquivo_nome} ({doc.arquivo_tipo})
-                          </span>
-                        </TableCell>
-                        <TableCell>{formatDate(doc.data_publicacao)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center justify-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDownload(doc.arquivo_path, doc.arquivo_nome)}
-                              title="Baixar arquivo"
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(doc.id, doc.arquivo_path)}
-                              title="Remover documento"
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </TableCell>
+          <>
+            {/* Filters Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Filter className="h-5 w-5" />
+                  Filtros
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label>Tipo de Documento</Label>
+                    <Select value={filterTipoDocumento} onValueChange={setFilterTipoDocumento}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Todos" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        {activeTipos.map((tipo) => (
+                          <SelectItem key={tipo.id} value={tipo.id}>
+                            {tipo.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Data Publicação - Início</Label>
+                    <Input
+                      type="date"
+                      value={filterDataInicio}
+                      onChange={(e) => setFilterDataInicio(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Data Publicação - Fim</Label>
+                    <Input
+                      type="date"
+                      value={filterDataFim}
+                      onChange={(e) => setFilterDataFim(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="flex items-end">
+                    {hasActiveFilters && (
+                      <Button variant="outline" onClick={clearFilters}>
+                        Limpar Filtros
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Documents Table */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Documentos de {selectedCliente?.cliente}
+                  {filteredAndSortedDocumentos.length !== documentos.length && (
+                    <span className="text-sm font-normal text-muted-foreground ml-2">
+                      ({filteredAndSortedDocumentos.length} de {documentos.length})
+                    </span>
+                  )}
+                </CardTitle>
+                <Button onClick={() => {
+                  resetForm();
+                  setIsAddDialogOpen(true);
+                }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Novo Documento do Cliente
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {isLoadingDocs || isLoadingClientes || isLoadingTipos ? (
+                  <p className="text-muted-foreground">Carregando...</p>
+                ) : filteredAndSortedDocumentos.length === 0 ? (
+                  <p className="text-muted-foreground">
+                    {documentos.length === 0 
+                      ? 'Nenhum documento encontrado para este cliente'
+                      : 'Nenhum documento encontrado com os filtros aplicados'}
+                  </p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead 
+                          className="w-[80px] cursor-pointer hover:bg-muted/50"
+                          onClick={() => handleSort('codigo')}
+                        >
+                          ID {renderSortIcon('codigo')}
+                        </TableHead>
+                        <TableHead className="w-[120px] text-center">Ações</TableHead>
+                        <TableHead 
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => handleSort('nome')}
+                        >
+                          Nome {renderSortIcon('nome')}
+                        </TableHead>
+                        <TableHead 
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => handleSort('tipo')}
+                        >
+                          Tipo {renderSortIcon('tipo')}
+                        </TableHead>
+                        <TableHead 
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => handleSort('arquivo')}
+                        >
+                          Arquivo {renderSortIcon('arquivo')}
+                        </TableHead>
+                        <TableHead 
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => handleSort('data_publicacao')}
+                        >
+                          Data Publicação {renderSortIcon('data_publicacao')}
+                        </TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredAndSortedDocumentos.map((doc) => (
+                        <TableRow key={doc.id}>
+                          <TableCell className="font-medium">{doc.codigo}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center justify-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDownload(doc.arquivo_path, doc.arquivo_nome)}
+                                title="Baixar arquivo"
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDelete(doc.id, doc.arquivo_path)}
+                                title="Remover documento"
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-medium">{doc.nome}</TableCell>
+                          <TableCell>{doc.tipo_documento_cliente?.nome || '-'}</TableCell>
+                          <TableCell>
+                            <span className="text-sm text-muted-foreground">
+                              {doc.arquivo_nome} ({doc.arquivo_tipo})
+                            </span>
+                          </TableCell>
+                          <TableCell>{formatDate(doc.data_publicacao)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </>
         )}
 
         {/* Add Document Dialog */}
