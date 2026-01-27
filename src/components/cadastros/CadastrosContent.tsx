@@ -190,21 +190,16 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[60px]">ID</TableHead>
+                <TableHead className="w-[100px] text-center">Ações</TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead className="w-[100px] text-center">Ativo</TableHead>
-                <TableHead className="w-[100px] text-center">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {props.tiposProduto.map((item) => (
+              {props.tiposProduto.map((item, index) => (
                 <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.nome}</TableCell>
-                  <TableCell className="text-center">
-                    <Switch
-                      checked={item.ativo}
-                      onCheckedChange={() => props.handleToggleAreaAtivo(item.id, item.ativo)}
-                    />
-                  </TableCell>
+                  <TableCell className="font-medium">{index + 1}</TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center gap-2">
                       <Button variant="ghost" size="icon" onClick={() => props.handleEditArea(item)}>
@@ -214,6 +209,13 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
+                  </TableCell>
+                  <TableCell className="font-medium">{item.nome}</TableCell>
+                  <TableCell className="text-center">
+                    <Switch
+                      checked={item.ativo}
+                      onCheckedChange={() => props.handleToggleAreaAtivo(item.id, item.ativo)}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
@@ -249,21 +251,16 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[60px]">ID</TableHead>
+                <TableHead className="w-[100px] text-center">Ações</TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead className="w-[100px] text-center">Ativo</TableHead>
-                <TableHead className="w-[100px] text-center">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {props.tiposTarefa.map((item) => (
+              {props.tiposTarefa.map((item, index) => (
                 <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.nome}</TableCell>
-                  <TableCell className="text-center">
-                    <Switch
-                      checked={item.ativo}
-                      onCheckedChange={() => props.handleToggleTipoAtivo(item.id, item.ativo)}
-                    />
-                  </TableCell>
+                  <TableCell className="font-medium">{index + 1}</TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center gap-2">
                       <Button variant="ghost" size="icon" onClick={() => props.handleEditTipo(item)}>
@@ -273,6 +270,13 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
+                  </TableCell>
+                  <TableCell className="font-medium">{item.nome}</TableCell>
+                  <TableCell className="text-center">
+                    <Switch
+                      checked={item.ativo}
+                      onCheckedChange={() => props.handleToggleTipoAtivo(item.id, item.ativo)}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
@@ -308,21 +312,16 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[60px]">ID</TableHead>
+                <TableHead className="w-[100px] text-center">Ações</TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead className="w-[100px] text-center">Ativo</TableHead>
-                <TableHead className="w-[100px] text-center">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {props.tiposDocumentoCliente.map((item) => (
+              {props.tiposDocumentoCliente.map((item, index) => (
                 <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.nome}</TableCell>
-                  <TableCell className="text-center">
-                    <Switch
-                      checked={item.ativo}
-                      onCheckedChange={() => props.handleToggleTipoDocClienteAtivo(item.id, item.ativo)}
-                    />
-                  </TableCell>
+                  <TableCell className="font-medium">{index + 1}</TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center gap-2">
                       <Button variant="ghost" size="icon" onClick={() => props.handleEditTipoDocCliente(item)}>
@@ -332,6 +331,13 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
+                  </TableCell>
+                  <TableCell className="font-medium">{item.nome}</TableCell>
+                  <TableCell className="text-center">
+                    <Switch
+                      checked={item.ativo}
+                      onCheckedChange={() => props.handleToggleTipoDocClienteAtivo(item.id, item.ativo)}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
@@ -545,21 +551,16 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[60px]">ID</TableHead>
+                <TableHead className="w-[100px] text-center">Ações</TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead className="w-[100px] text-center">Ativo</TableHead>
-                <TableHead className="w-[100px] text-center">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {props.tiposDocumento.map((item) => (
+              {props.tiposDocumento.map((item, index) => (
                 <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.nome}</TableCell>
-                  <TableCell className="text-center">
-                    <Switch
-                      checked={item.ativo}
-                      onCheckedChange={() => props.handleToggleTipoDocAtivo(item.id, item.ativo)}
-                    />
-                  </TableCell>
+                  <TableCell className="font-medium">{index + 1}</TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center gap-2">
                       <Button variant="ghost" size="icon" onClick={() => props.handleEditTipoDoc(item)}>
@@ -569,6 +570,13 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
+                  </TableCell>
+                  <TableCell className="font-medium">{item.nome}</TableCell>
+                  <TableCell className="text-center">
+                    <Switch
+                      checked={item.ativo}
+                      onCheckedChange={() => props.handleToggleTipoDocAtivo(item.id, item.ativo)}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
