@@ -182,50 +182,17 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
 
   const handleDownloadTemplate = () => {
     try {
-      // Create template workbook with client and priority list codes
-      const headers = [
-        'Código do Cliente', 
-        'Código da Lista de Prioridades', 
-        'ID', 
-        'Nome da Tarefa', 
-        'Pai', 
-        'Status', 
-        'Dias Duração', 
-        'Data Início', 
-        'Data Fim', 
-        'Responsável'
-      ];
-      const exampleData = [
-        [1, 1, 1, 'Tarefa Exemplo 1', '', 'Pendente', 5, '27/01/2026 08:00', '31/01/2026 18:00', 'João'],
-        [1, 1, 2, 'Subtarefa Exemplo', 1, 'Em Andamento', 2, '27/01/2026 08:00', '28/01/2026 18:00', 'Maria'],
-        [1, 1, 3, 'Tarefa Exemplo 2', '', 'Concluída', 3, '01/02/2026 08:00', '03/02/2026 18:00', 'Pedro'],
-        [2, 1, 1, 'Tarefa Cliente 2', '', 'Pendente', 4, '03/02/2026 08:00', '06/02/2026 18:00', 'Ana'],
-      ];
-      
-      const ws = XLSX.utils.aoa_to_sheet([headers, ...exampleData]);
-      
-      // Set column widths
-      ws['!cols'] = [
-        { wch: 18 },  // Código do Cliente
-        { wch: 25 },  // Código da Lista de Prioridades
-        { wch: 8 },   // ID
-        { wch: 35 },  // Nome da Tarefa
-        { wch: 8 },   // Pai
-        { wch: 15 },  // Status
-        { wch: 15 },  // Dias Duração
-        { wch: 20 },  // Data Início
-        { wch: 20 },  // Data Fim
-        { wch: 20 },  // Responsável
-      ];
-      
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Prioridades');
-      
-      XLSX.writeFile(wb, 'GHAS_-_Arquivo_Modelo_de_Importacao_Prioridades.xlsx');
+      // Download the template file from public folder
+      const link = document.createElement('a');
+      link.href = '/templates/GHAS_-_Arquivo_Modelo_de_Importacao_Prioridades.xlsx';
+      link.download = 'GHAS_-_Arquivo_Modelo_de_Importacao_Prioridades.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       toast.success('Download do modelo iniciado!');
     } catch (error) {
-      console.error('Erro ao gerar modelo:', error);
-      toast.error('Erro ao gerar modelo');
+      console.error('Erro ao baixar modelo:', error);
+      toast.error('Erro ao baixar modelo');
     }
   };
 
