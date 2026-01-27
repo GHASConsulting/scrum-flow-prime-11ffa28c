@@ -616,6 +616,62 @@ export type Database = {
           },
         ]
       }
+      produtividade_global: {
+        Row: {
+          abertos: number
+          backlog: number
+          cliente_id: string
+          codigo: number
+          created_at: string
+          data_fim: string
+          data_inicio: string
+          encerrados: number
+          id: string
+          importado: boolean
+          percentual_incidentes: number
+          percentual_solicitacoes: number
+          updated_at: string
+        }
+        Insert: {
+          abertos?: number
+          backlog?: number
+          cliente_id: string
+          codigo?: number
+          created_at?: string
+          data_fim: string
+          data_inicio: string
+          encerrados?: number
+          id?: string
+          importado?: boolean
+          percentual_incidentes?: number
+          percentual_solicitacoes?: number
+          updated_at?: string
+        }
+        Update: {
+          abertos?: number
+          backlog?: number
+          cliente_id?: string
+          codigo?: number
+          created_at?: string
+          data_fim?: string
+          data_inicio?: string
+          encerrados?: number
+          id?: string
+          importado?: boolean
+          percentual_incidentes?: number
+          percentual_solicitacoes?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produtividade_global_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "client_access_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string

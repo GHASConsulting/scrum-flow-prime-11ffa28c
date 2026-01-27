@@ -8,15 +8,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, CheckCircle, Users, Building2, Upload, ArrowUp, ArrowDown, Download, FileSpreadsheet } from 'lucide-react';
+import { Plus, Trash2, CheckCircle, Building2, Upload, ArrowUp, ArrowDown, Download, FileSpreadsheet, FolderOpen, AlertCircle, Percent } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useProdutividade } from '@/hooks/useProdutividade';
-import { usePrestadorServico } from '@/hooks/usePrestadorServico';
+import { useProdutividadeGlobal } from '@/hooks/useProdutividadeGlobal';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { useTemplateFiles } from '@/hooks/useTemplateFiles';
 import { toast } from 'sonner';
@@ -25,22 +24,23 @@ import { ptBR } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
 
 const ProdutividadeGlobal = () => {
-  const { produtividades, isLoading, addProdutividade, addMultipleProdutividade, deleteProdutividade } = useProdutividade();
-  const { prestadoresServico, isLoading: isLoadingPrestadores } = usePrestadorServico();
+  const { produtividades, isLoading, addProdutividade, addMultipleProdutividade, deleteProdutividade } = useProdutividadeGlobal();
   const { records: clientes, isLoading: isLoadingClientes } = useClientAccessRecords();
   const { downloadTemplate } = useTemplateFiles();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
-    prestador_id: '',
     cliente_id: '',
     data_inicio: '',
     data_fim: '',
-    horas_trabalhadas: '',
+    abertos: '',
+    encerrados: '',
+    backlog: '',
+    percentual_incidentes: '',
+    percentual_solicitacoes: '',
   });
 
   // Filter states
-  const [filterPrestador, setFilterPrestador] = useState<string>('all');
   const [filterCliente, setFilterCliente] = useState<string>('all');
   const [filterMesInicio, setFilterMesInicio] = useState<string>('');
   const [filterAnoInicio, setFilterAnoInicio] = useState<string>('');
@@ -49,7 +49,7 @@ const ProdutividadeGlobal = () => {
   const [filterImportado, setFilterImportado] = useState<string>('all');
 
   // Sorting states
-  type SortColumn = 'codigo' | 'prestador' | 'cliente' | 'data_inicio' | 'data_fim' | 'horas_trabalhadas' | 'importado';
+  type SortColumn = 'codigo' | 'cliente' | 'data_inicio' | 'data_fim' | 'abertos' | 'encerrados' | 'backlog' | 'percentual_incidentes' | 'percentual_solicitacoes' | 'importado';
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
@@ -118,20 +118,23 @@ const ProdutividadeGlobal = () => {
 
   const resetForm = () => {
     setFormData({
-      prestador_id: '',
       cliente_id: '',
       data_inicio: '',
       data_fim: '',
-      horas_trabalhadas: '',
+      abertos: '',
+      encerrados: '',
+      backlog: '',
+      percentual_incidentes: '',
+      percentual_solicitacoes: '',
     });
   };
 
-  const checkOverlappingPeriod = (prestadorId: string, clienteId: string, dataInicio: string, dataFim: string) => {
+  const checkOverlappingPeriod = (clienteId: string, dataInicio: string, dataFim: string) => {
     const newStart = new Date(dataInicio);
     const newEnd = new Date(dataFim);
     
     return produtividades.some((p) => {
-      if (p.prestador_id !== prestadorId || p.cliente_id !== clienteId) return false;
+      if (p.cliente_id !== clienteId) return false;
       
       const existingStart = new Date(p.data_inicio);
       const existingEnd = new Date(p.data_fim);
@@ -141,8 +144,8 @@ const ProdutividadeGlobal = () => {
   };
 
   const handleAdd = async () => {
-    if (!formData.prestador_id || !formData.cliente_id || !formData.data_inicio || !formData.data_fim || !formData.horas_trabalhadas) {
-      toast.error('Preencha todos os campos obrigatórios');
+    if (!formData.cliente_id || !formData.data_inicio || !formData.data_fim) {
+      toast.error('Preencha os campos obrigatórios: Cliente, Data Início e Data Fim');
       return;
     }
 
@@ -164,18 +167,35 @@ const ProdutividadeGlobal = () => {
       return;
     }
 
-    if (checkOverlappingPeriod(formData.prestador_id, formData.cliente_id, formData.data_inicio, formData.data_fim)) {
-      toast.error('Já existe um registro para este prestador e cliente com período que se sobrepõe');
+    if (checkOverlappingPeriod(formData.cliente_id, formData.data_inicio, formData.data_fim)) {
+      toast.error('Já existe um registro para este cliente com período que se sobrepõe');
+      return;
+    }
+
+    // Validate percentages
+    const percIncidentes = parseFloat(formData.percentual_incidentes) || 0;
+    const percSolicitacoes = parseFloat(formData.percentual_solicitacoes) || 0;
+    
+    if (percIncidentes < 0 || percIncidentes > 100) {
+      toast.error('% Incidentes deve estar entre 0 e 100');
+      return;
+    }
+    
+    if (percSolicitacoes < 0 || percSolicitacoes > 100) {
+      toast.error('% Solicitações deve estar entre 0 e 100');
       return;
     }
 
     try {
       await addProdutividade({
-        prestador_id: formData.prestador_id,
         cliente_id: formData.cliente_id,
         data_inicio: formData.data_inicio,
         data_fim: formData.data_fim,
-        horas_trabalhadas: parseFloat(formData.horas_trabalhadas),
+        abertos: parseInt(formData.abertos) || 0,
+        encerrados: parseInt(formData.encerrados) || 0,
+        backlog: parseInt(formData.backlog) || 0,
+        percentual_incidentes: percIncidentes,
+        percentual_solicitacoes: percSolicitacoes,
         importado: false,
       });
       toast.success('Produtividade registrada com sucesso!');
@@ -252,11 +272,14 @@ const ProdutividadeGlobal = () => {
 
       const errors: string[] = [];
       const validRecords: {
-        prestador_id: string;
         cliente_id: string;
         data_inicio: string;
         data_fim: string;
-        horas_trabalhadas: number;
+        abertos: number;
+        encerrados: number;
+        backlog: number;
+        percentual_incidentes: number;
+        percentual_solicitacoes: number;
         importado: boolean;
       }[] = [];
 
@@ -265,16 +288,8 @@ const ProdutividadeGlobal = () => {
         const rowNumber = i + 2;
         const rowErrors: string[] = [];
 
-        const codigoPrestador = row[0];
-        if (codigoPrestador === null || codigoPrestador === undefined || codigoPrestador === '') {
-          rowErrors.push('Código do Prestador está vazio');
-        }
-        const prestador = prestadoresServico.find(p => p.codigo === Number(codigoPrestador));
-        if (!prestador && codigoPrestador !== null && codigoPrestador !== undefined && codigoPrestador !== '') {
-          rowErrors.push(`Código do Prestador ${codigoPrestador} não encontrado`);
-        }
-
-        const codigoCliente = row[1];
+        // Column 0: Código do Cliente
+        const codigoCliente = row[0];
         if (codigoCliente === null || codigoCliente === undefined || codigoCliente === '') {
           rowErrors.push('Código do Cliente está vazio');
         }
@@ -283,12 +298,14 @@ const ProdutividadeGlobal = () => {
           rowErrors.push(`Código do Cliente ${codigoCliente} não encontrado`);
         }
 
-        const dataInicio = parseExcelDate(row[2]);
+        // Column 1: Data Início
+        const dataInicio = parseExcelDate(row[1]);
         if (!dataInicio) {
           rowErrors.push('Data de Início inválida ou vazia');
         }
 
-        const dataFim = parseExcelDate(row[3]);
+        // Column 2: Data Fim
+        const dataFim = parseExcelDate(row[2]);
         if (!dataFim) {
           rowErrors.push('Data Fim inválida ou vazia');
         }
@@ -308,15 +325,39 @@ const ProdutividadeGlobal = () => {
           rowErrors.push('Data Fim não pode ser maior que a data atual');
         }
 
-        const totalChamados = row[4];
-        const totalChamadosNum = Number(totalChamados);
-        if (totalChamados === null || totalChamados === undefined || totalChamados === '' || isNaN(totalChamadosNum) || totalChamadosNum < 0) {
-          rowErrors.push('Total de Chamados Encerrados inválido');
+        // Column 3: Abertos
+        const abertos = Number(row[3]) || 0;
+        if (abertos < 0) {
+          rowErrors.push('Abertos não pode ser negativo');
         }
 
-        if (prestador && cliente && dataInicio && dataFim) {
+        // Column 4: Encerrados
+        const encerrados = Number(row[4]) || 0;
+        if (encerrados < 0) {
+          rowErrors.push('Encerrados não pode ser negativo');
+        }
+
+        // Column 5: Backlog
+        const backlogVal = Number(row[5]) || 0;
+        if (backlogVal < 0) {
+          rowErrors.push('Backlog não pode ser negativo');
+        }
+
+        // Column 6: % Incidentes
+        const percIncidentes = Number(row[6]) || 0;
+        if (percIncidentes < 0 || percIncidentes > 100) {
+          rowErrors.push('% Incidentes deve estar entre 0 e 100');
+        }
+
+        // Column 7: % Solicitações
+        const percSolicitacoes = Number(row[7]) || 0;
+        if (percSolicitacoes < 0 || percSolicitacoes > 100) {
+          rowErrors.push('% Solicitações deve estar entre 0 e 100');
+        }
+
+        if (cliente && dataInicio && dataFim) {
           const hasOverlap = produtividades.some((p) => {
-            if (p.prestador_id !== prestador.id || p.cliente_id !== cliente.id) return false;
+            if (p.cliente_id !== cliente.id) return false;
             const existingStart = new Date(p.data_inicio);
             const existingEnd = new Date(p.data_fim);
             const newStart = new Date(dataInicio);
@@ -325,7 +366,7 @@ const ProdutividadeGlobal = () => {
           });
 
           const hasOverlapInImport = validRecords.some((vr) => {
-            if (vr.prestador_id !== prestador.id || vr.cliente_id !== cliente.id) return false;
+            if (vr.cliente_id !== cliente.id) return false;
             const existingStart = new Date(vr.data_inicio);
             const existingEnd = new Date(vr.data_fim);
             const newStart = new Date(dataInicio);
@@ -340,13 +381,16 @@ const ProdutividadeGlobal = () => {
 
         if (rowErrors.length > 0) {
           errors.push(`Linha ${rowNumber}: ${rowErrors.join('; ')}`);
-        } else if (prestador && cliente && dataInicio && dataFim) {
+        } else if (cliente && dataInicio && dataFim) {
           validRecords.push({
-            prestador_id: prestador.id,
             cliente_id: cliente.id,
             data_inicio: dataInicio,
             data_fim: dataFim,
-            horas_trabalhadas: totalChamadosNum,
+            abertos,
+            encerrados,
+            backlog: backlogVal,
+            percentual_incidentes: percIncidentes,
+            percentual_solicitacoes: percSolicitacoes,
             importado: true,
           });
         }
@@ -400,7 +444,6 @@ const ProdutividadeGlobal = () => {
 
   const filteredProdutividades = useMemo(() => {
     const filtered = produtividades.filter((p) => {
-      if (filterPrestador !== 'all' && p.prestador_id !== filterPrestador) return false;
       if (filterCliente !== 'all' && p.cliente_id !== filterCliente) return false;
       if (filterImportado !== 'all') {
         const isImportado = filterImportado === 'sim';
@@ -429,10 +472,6 @@ const ProdutividadeGlobal = () => {
             aValue = a.codigo;
             bValue = b.codigo;
             break;
-          case 'prestador':
-            aValue = a.prestador ? `${a.prestador.codigo} - ${a.prestador.nome}` : '';
-            bValue = b.prestador ? `${b.prestador.codigo} - ${b.prestador.nome}` : '';
-            break;
           case 'cliente':
             aValue = a.cliente ? `${a.cliente.codigo} - ${a.cliente.cliente}` : '';
             bValue = b.cliente ? `${b.cliente.codigo} - ${b.cliente.cliente}` : '';
@@ -445,9 +484,25 @@ const ProdutividadeGlobal = () => {
             aValue = a.data_fim;
             bValue = b.data_fim;
             break;
-          case 'horas_trabalhadas':
-            aValue = Number(a.horas_trabalhadas);
-            bValue = Number(b.horas_trabalhadas);
+          case 'abertos':
+            aValue = Number(a.abertos);
+            bValue = Number(b.abertos);
+            break;
+          case 'encerrados':
+            aValue = Number(a.encerrados);
+            bValue = Number(b.encerrados);
+            break;
+          case 'backlog':
+            aValue = Number(a.backlog);
+            bValue = Number(b.backlog);
+            break;
+          case 'percentual_incidentes':
+            aValue = Number(a.percentual_incidentes);
+            bValue = Number(b.percentual_incidentes);
+            break;
+          case 'percentual_solicitacoes':
+            aValue = Number(a.percentual_solicitacoes);
+            bValue = Number(b.percentual_solicitacoes);
             break;
           case 'importado':
             aValue = a.importado ? 1 : 0;
@@ -464,19 +519,20 @@ const ProdutividadeGlobal = () => {
     }
 
     return filtered;
-  }, [produtividades, filterPrestador, filterCliente, filterImportado, filterMesInicio, filterAnoInicio, filterMesFim, filterAnoFim, sortColumn, sortDirection]);
+  }, [produtividades, filterCliente, filterImportado, filterMesInicio, filterAnoInicio, filterMesFim, filterAnoFim, sortColumn, sortDirection]);
 
   const SortIcon = ({ column }: { column: SortColumn }) => {
     if (sortColumn !== column) return null;
     return sortDirection === 'asc' ? <ArrowUp className="h-4 w-4 ml-1 inline" /> : <ArrowDown className="h-4 w-4 ml-1 inline" />;
   };
 
-  const totalChamados = filteredProdutividades.reduce((sum, p) => sum + Number(p.horas_trabalhadas), 0);
-  const uniquePrestadores = new Set(filteredProdutividades.map(p => p.prestador_id)).size;
+  // KPIs
+  const totalAbertos = filteredProdutividades.reduce((sum, p) => sum + Number(p.abertos), 0);
+  const totalEncerrados = filteredProdutividades.reduce((sum, p) => sum + Number(p.encerrados), 0);
+  const totalBacklog = filteredProdutividades.reduce((sum, p) => sum + Number(p.backlog), 0);
   const uniqueClientes = new Set(filteredProdutividades.map(p => p.cliente_id)).size;
 
   const clearFilters = () => {
-    setFilterPrestador('all');
     setFilterCliente('all');
     setFilterImportado('all');
     setFilterMesInicio('');
@@ -492,7 +548,7 @@ const ProdutividadeGlobal = () => {
           <div>
             <h2 className="text-3xl font-bold text-foreground">Produtividade Global</h2>
             <p className="text-muted-foreground mt-1">
-              Visão consolidada da produtividade de todos os prestadores por cliente e período
+              Visão consolidada da produtividade por cliente e período
             </p>
           </div>
           <div className="flex gap-2">
@@ -538,23 +594,6 @@ const ProdutividadeGlobal = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div className="space-y-2">
-                <Label>Prestador</Label>
-                <Select value={filterPrestador} onValueChange={setFilterPrestador}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    {prestadoresServico.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.codigo} - {p.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
               <div className="space-y-2">
                 <Label>Cliente</Label>
                 <Select value={filterCliente} onValueChange={setFilterCliente}>
@@ -656,16 +695,16 @@ const ProdutividadeGlobal = () => {
         </Card>
 
         {/* KPIs */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-lg bg-primary/10">
-                  <CheckCircle className="h-6 w-6 text-primary" />
+                  <AlertCircle className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total de Chamados Encerrados</p>
-                  <p className="text-2xl font-bold">{totalChamados}</p>
+                  <p className="text-sm text-muted-foreground">Total Abertos</p>
+                  <p className="text-2xl font-bold">{totalAbertos}</p>
                 </div>
               </div>
             </CardContent>
@@ -674,11 +713,24 @@ const ProdutividadeGlobal = () => {
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-lg bg-primary/10">
-                  <Users className="h-6 w-6 text-primary" />
+                  <CheckCircle className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Prestadores</p>
-                  <p className="text-2xl font-bold">{uniquePrestadores}</p>
+                  <p className="text-sm text-muted-foreground">Total Encerrados</p>
+                  <p className="text-2xl font-bold">{totalEncerrados}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-lg bg-primary/10">
+                  <FolderOpen className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Backlog</p>
+                  <p className="text-2xl font-bold">{totalBacklog}</p>
                 </div>
               </div>
             </CardContent>
@@ -704,7 +756,7 @@ const ProdutividadeGlobal = () => {
             <CardTitle>Registros de Produtividade</CardTitle>
           </CardHeader>
           <CardContent>
-            {isLoading || isLoadingPrestadores || isLoadingClientes ? (
+            {isLoading || isLoadingClientes ? (
               <p className="text-muted-foreground">Carregando...</p>
             ) : filteredProdutividades.length === 0 ? (
               <p className="text-muted-foreground">Nenhum registro de produtividade encontrado</p>
@@ -715,9 +767,6 @@ const ProdutividadeGlobal = () => {
                     <TableHead className="cursor-pointer hover:bg-muted/50 w-[80px]" onClick={() => handleSort('codigo')}>
                       ID <SortIcon column="codigo" />
                     </TableHead>
-                    <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('prestador')}>
-                      Prestador <SortIcon column="prestador" />
-                    </TableHead>
                     <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('cliente')}>
                       Cliente <SortIcon column="cliente" />
                     </TableHead>
@@ -727,8 +776,20 @@ const ProdutividadeGlobal = () => {
                     <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('data_fim')}>
                       Data Fim <SortIcon column="data_fim" />
                     </TableHead>
-                    <TableHead className="text-right cursor-pointer hover:bg-muted/50" onClick={() => handleSort('horas_trabalhadas')}>
-                      Total de Chamados Encerrados <SortIcon column="horas_trabalhadas" />
+                    <TableHead className="text-right cursor-pointer hover:bg-muted/50" onClick={() => handleSort('abertos')}>
+                      Abertos <SortIcon column="abertos" />
+                    </TableHead>
+                    <TableHead className="text-right cursor-pointer hover:bg-muted/50" onClick={() => handleSort('encerrados')}>
+                      Encerrados <SortIcon column="encerrados" />
+                    </TableHead>
+                    <TableHead className="text-right cursor-pointer hover:bg-muted/50" onClick={() => handleSort('backlog')}>
+                      Backlog <SortIcon column="backlog" />
+                    </TableHead>
+                    <TableHead className="text-right cursor-pointer hover:bg-muted/50" onClick={() => handleSort('percentual_incidentes')}>
+                      % Incidentes <SortIcon column="percentual_incidentes" />
+                    </TableHead>
+                    <TableHead className="text-right cursor-pointer hover:bg-muted/50" onClick={() => handleSort('percentual_solicitacoes')}>
+                      % Solicitações <SortIcon column="percentual_solicitacoes" />
                     </TableHead>
                     <TableHead className="text-center cursor-pointer hover:bg-muted/50" onClick={() => handleSort('importado')}>
                       Importado <SortIcon column="importado" />
@@ -740,16 +801,25 @@ const ProdutividadeGlobal = () => {
                   {filteredProdutividades.map((prod) => (
                     <TableRow key={prod.id}>
                       <TableCell className="font-medium">{prod.codigo}</TableCell>
-                      <TableCell className="font-medium">
-                        {prod.prestador ? `${prod.prestador.codigo} - ${prod.prestador.nome}` : '-'}
-                      </TableCell>
                       <TableCell>
                         {prod.cliente ? `${prod.cliente.codigo} - ${prod.cliente.cliente}` : '-'}
                       </TableCell>
                       <TableCell>{formatDate(prod.data_inicio)}</TableCell>
                       <TableCell>{formatDate(prod.data_fim)}</TableCell>
                       <TableCell className="text-right font-medium">
-                        {Number(prod.horas_trabalhadas)}
+                        {Number(prod.abertos)}
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {Number(prod.encerrados)}
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {Number(prod.backlog)}
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {Number(prod.percentual_incidentes).toFixed(2)}%
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {Number(prod.percentual_solicitacoes).toFixed(2)}%
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge variant={prod.importado ? 'default' : 'secondary'}>
@@ -778,25 +848,6 @@ const ProdutividadeGlobal = () => {
               <DialogTitle>Novo Registro de Produtividade</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="prestador">Prestador de Serviço *</Label>
-                <Select
-                  value={formData.prestador_id}
-                  onValueChange={(value) => setFormData({ ...formData, prestador_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o prestador" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {prestadoresServico.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.codigo} - {p.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="cliente">Cliente *</Label>
                 <Select
@@ -837,17 +888,69 @@ const ProdutividadeGlobal = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="horas">Total de Chamados Encerrados *</Label>
-                <Input
-                  id="horas"
-                  type="number"
-                  step="1"
-                  min="0"
-                  placeholder="Ex: 10"
-                  value={formData.horas_trabalhadas}
-                  onChange={(e) => setFormData({ ...formData, horas_trabalhadas: e.target.value })}
-                />
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="abertos">Abertos</Label>
+                  <Input
+                    id="abertos"
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={formData.abertos}
+                    onChange={(e) => setFormData({ ...formData, abertos: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="encerrados">Encerrados</Label>
+                  <Input
+                    id="encerrados"
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={formData.encerrados}
+                    onChange={(e) => setFormData({ ...formData, encerrados: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="backlog">Backlog</Label>
+                  <Input
+                    id="backlog"
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={formData.backlog}
+                    onChange={(e) => setFormData({ ...formData, backlog: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="percentual_incidentes">% Incidentes</Label>
+                  <Input
+                    id="percentual_incidentes"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    placeholder="0.00"
+                    value={formData.percentual_incidentes}
+                    onChange={(e) => setFormData({ ...formData, percentual_incidentes: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="percentual_solicitacoes">% Solicitações</Label>
+                  <Input
+                    id="percentual_solicitacoes"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    placeholder="0.00"
+                    value={formData.percentual_solicitacoes}
+                    onChange={(e) => setFormData({ ...formData, percentual_solicitacoes: e.target.value })}
+                  />
+                </div>
               </div>
 
               <DialogFooter>
