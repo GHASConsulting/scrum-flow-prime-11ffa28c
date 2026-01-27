@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Edit, Trash2, Eye, Download, FileText, Search, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Download, FileText, Search, X, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useDocumentos, Documento, DocumentoInsert, DocumentoUpdate } from '@/hooks/useDocumentos';
 import { useTipoDocumento } from '@/hooks/useTipoDocumento';
 import { useAreaDocumento } from '@/hooks/useAreaDocumento';
@@ -36,7 +36,36 @@ const SharepointDocumentos = () => {
   const [filterTipo, setFilterTipo] = useState<string>('all');
   const [filterArea, setFilterArea] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'data' | 'versao'>('data');
+  const [filterDataInicio, setFilterDataInicio] = useState<string>('');
+  const [filterDataFim, setFilterDataFim] = useState<string>('');
+
+  // Sorting state
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
+
+  const handleColumnSort = (column: string) => {
+    if (sortColumn === column) {
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else if (sortDirection === 'desc') {
+        setSortColumn(null);
+        setSortDirection(null);
+      }
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (column: string) => {
+    if (sortColumn !== column) {
+      return <ArrowUpDown className="h-4 w-4 ml-1 opacity-50" />;
+    }
+    if (sortDirection === 'asc') {
+      return <ArrowUp className="h-4 w-4 ml-1" />;
+    }
+    return <ArrowDown className="h-4 w-4 ml-1" />;
+  };
 
   // Form state
   const [formData, setFormData] = useState<{
@@ -224,17 +253,49 @@ const SharepointDocumentos = () => {
       filtered = filtered.filter(doc => doc.status === filterStatus);
     }
 
-    // Sorting
-    filtered.sort((a, b) => {
-      if (sortBy === 'data') {
-        return new Date(b.data_publicacao).getTime() - new Date(a.data_publicacao).getTime();
-      } else {
-        return (a.versao || '').localeCompare(b.versao || '');
-      }
-    });
+    // Date range filter
+    if (filterDataInicio) {
+      filtered = filtered.filter(doc => doc.data_publicacao >= filterDataInicio);
+    }
+    if (filterDataFim) {
+      filtered = filtered.filter(doc => doc.data_publicacao <= filterDataFim);
+    }
+
+    // Column sorting
+    if (sortColumn && sortDirection) {
+      filtered.sort((a, b) => {
+        let comparison = 0;
+        switch (sortColumn) {
+          case 'nome':
+            comparison = a.nome.localeCompare(b.nome);
+            break;
+          case 'tipo':
+            comparison = (a.tipo_documento?.nome || '').localeCompare(b.tipo_documento?.nome || '');
+            break;
+          case 'setor':
+            comparison = (a.area_documento?.nome || '').localeCompare(b.area_documento?.nome || '');
+            break;
+          case 'versao':
+            comparison = (a.versao || '').localeCompare(b.versao || '');
+            break;
+          case 'data':
+            comparison = new Date(a.data_publicacao).getTime() - new Date(b.data_publicacao).getTime();
+            break;
+          case 'status':
+            comparison = a.status.localeCompare(b.status);
+            break;
+          default:
+            comparison = 0;
+        }
+        return sortDirection === 'asc' ? comparison : -comparison;
+      });
+    } else {
+      // Default sorting by date descending
+      filtered.sort((a, b) => new Date(b.data_publicacao).getTime() - new Date(a.data_publicacao).getTime());
+    }
 
     return filtered;
-  }, [documentos, searchTerm, filterTipo, filterArea, filterStatus, sortBy]);
+  }, [documentos, searchTerm, filterTipo, filterArea, filterStatus, filterDataInicio, filterDataFim, sortColumn, sortDirection]);
 
   const activeTipos = tiposDocumento.filter(t => t.ativo);
   const activeAreas = areasDocumento.filter(a => a.ativo);
@@ -258,7 +319,7 @@ const SharepointDocumentos = () => {
         {/* Filters */}
         <Card>
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -281,10 +342,10 @@ const SharepointDocumentos = () => {
               </Select>
               <Select value={filterArea} onValueChange={setFilterArea}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Filtrar por área" />
+                  <SelectValue placeholder="Filtrar por setor" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todas as áreas</SelectItem>
+                  <SelectItem value="all">Todos os setores</SelectItem>
                   {activeAreas.map(area => (
                     <SelectItem key={area.id} value={area.id}>{area.nome}</SelectItem>
                   ))}
@@ -300,15 +361,22 @@ const SharepointDocumentos = () => {
                   <SelectItem value="inativo">Inativo</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={sortBy} onValueChange={(v) => setSortBy(v as 'data' | 'versao')}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Ordenar por" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="data">Data de Publicação</SelectItem>
-                  <SelectItem value="versao">Versão</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="grid gap-1">
+                <Label className="text-xs text-muted-foreground">Data Publicação - Início</Label>
+                <Input
+                  type="date"
+                  value={filterDataInicio}
+                  onChange={(e) => setFilterDataInicio(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-xs text-muted-foreground">Data Publicação - Fim</Label>
+                <Input
+                  type="date"
+                  value={filterDataFim}
+                  onChange={(e) => setFilterDataFim(e.target.value)}
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -326,33 +394,48 @@ const SharepointDocumentos = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Área</TableHead>
-                    <TableHead>Versão</TableHead>
-                    <TableHead>Data de Publicação</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-center">Ações</TableHead>
+                    <TableHead className="text-center w-32">Ações</TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => handleColumnSort('nome')}>
+                      <div className="flex items-center">
+                        Nome
+                        {getSortIcon('nome')}
+                      </div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => handleColumnSort('tipo')}>
+                      <div className="flex items-center">
+                        Tipo
+                        {getSortIcon('tipo')}
+                      </div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => handleColumnSort('setor')}>
+                      <div className="flex items-center">
+                        Setor
+                        {getSortIcon('setor')}
+                      </div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => handleColumnSort('versao')}>
+                      <div className="flex items-center">
+                        Versão
+                        {getSortIcon('versao')}
+                      </div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => handleColumnSort('data')}>
+                      <div className="flex items-center">
+                        Data de Publicação
+                        {getSortIcon('data')}
+                      </div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => handleColumnSort('status')}>
+                      <div className="flex items-center">
+                        Status
+                        {getSortIcon('status')}
+                      </div>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredDocumentos.map(doc => (
                     <TableRow key={doc.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          {doc.nome}
-                        </div>
-                      </TableCell>
-                      <TableCell>{doc.tipo_documento?.nome || '-'}</TableCell>
-                      <TableCell>{doc.area_documento?.nome || '-'}</TableCell>
-                      <TableCell>{doc.versao || '-'}</TableCell>
-                      <TableCell>{formatDate(doc.data_publicacao)}</TableCell>
-                      <TableCell>
-                        <Badge variant={doc.status === 'ativo' ? 'default' : 'secondary'}>
-                          {doc.status === 'ativo' ? 'Ativo' : 'Inativo'}
-                        </Badge>
-                      </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center gap-1">
                           <Button variant="ghost" size="icon" onClick={() => handleViewFile(doc)} title="Visualizar">
@@ -372,6 +455,21 @@ const SharepointDocumentos = () => {
                             </>
                           )}
                         </div>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          {doc.nome}
+                        </div>
+                      </TableCell>
+                      <TableCell>{doc.tipo_documento?.nome || '-'}</TableCell>
+                      <TableCell>{doc.area_documento?.nome || '-'}</TableCell>
+                      <TableCell>{doc.versao || '-'}</TableCell>
+                      <TableCell>{formatDate(doc.data_publicacao)}</TableCell>
+                      <TableCell>
+                        <Badge variant={doc.status === 'ativo' ? 'default' : 'secondary'}>
+                          {doc.status === 'ativo' ? 'Ativo' : 'Inativo'}
+                        </Badge>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -416,13 +514,13 @@ const SharepointDocumentos = () => {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="area">Área / Categoria</Label>
+                <Label htmlFor="area">Setor</Label>
                 <Select 
                   value={formData.area_documento_id} 
                   onValueChange={(v) => setFormData(prev => ({ ...prev, area_documento_id: v }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione a área" />
+                    <SelectValue placeholder="Selecione o setor" />
                   </SelectTrigger>
                   <SelectContent>
                     {activeAreas.map(area => (
@@ -531,13 +629,13 @@ const SharepointDocumentos = () => {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-area">Área / Categoria</Label>
+                <Label htmlFor="edit-area">Setor</Label>
                 <Select 
                   value={formData.area_documento_id} 
                   onValueChange={(v) => setFormData(prev => ({ ...prev, area_documento_id: v }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione a área" />
+                    <SelectValue placeholder="Selecione o setor" />
                   </SelectTrigger>
                   <SelectContent>
                     {activeAreas.map(area => (
