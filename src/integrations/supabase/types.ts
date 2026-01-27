@@ -413,6 +413,7 @@ export type Database = {
           arquivo_nome: string
           arquivo_path: string
           arquivo_tipo: string
+          codigo: number
           created_at: string
           data_publicacao: string
           descricao: string | null
@@ -428,6 +429,7 @@ export type Database = {
           arquivo_nome: string
           arquivo_path: string
           arquivo_tipo: string
+          codigo?: number
           created_at?: string
           data_publicacao?: string
           descricao?: string | null
@@ -443,6 +445,7 @@ export type Database = {
           arquivo_nome?: string
           arquivo_path?: string
           arquivo_tipo?: string
+          codigo?: number
           created_at?: string
           data_publicacao?: string
           descricao?: string | null

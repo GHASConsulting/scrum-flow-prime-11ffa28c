@@ -319,58 +319,70 @@ const SharepointDocumentos = () => {
         {/* Filters */}
         <Card>
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por nome..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
-                />
+                <Label className="text-xs text-muted-foreground mb-1 block">Buscar</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por nome..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
               </div>
-              <Select value={filterTipo} onValueChange={setFilterTipo}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filtrar por tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os tipos</SelectItem>
-                  {activeTipos.map(tipo => (
-                    <SelectItem key={tipo.id} value={tipo.id}>{tipo.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={filterArea} onValueChange={setFilterArea}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filtrar por setor" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os setores</SelectItem>
-                  {activeAreas.map(area => (
-                    <SelectItem key={area.id} value={area.id}>{area.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filtrar por status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os status</SelectItem>
-                  <SelectItem value="ativo">Ativo</SelectItem>
-                  <SelectItem value="inativo">Inativo</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="grid gap-1">
-                <Label className="text-xs text-muted-foreground">Data Publicação - Início</Label>
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Tipo</Label>
+                <Select value={filterTipo} onValueChange={setFilterTipo}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filtrar por tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os tipos</SelectItem>
+                    {activeTipos.map(tipo => (
+                      <SelectItem key={tipo.id} value={tipo.id}>{tipo.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Setor</Label>
+                <Select value={filterArea} onValueChange={setFilterArea}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filtrar por setor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os setores</SelectItem>
+                    {activeAreas.map(area => (
+                      <SelectItem key={area.id} value={area.id}>{area.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Status</Label>
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filtrar por status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os status</SelectItem>
+                    <SelectItem value="ativo">Ativo</SelectItem>
+                    <SelectItem value="inativo">Inativo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Data Publicação - Início</Label>
                 <Input
                   type="date"
                   value={filterDataInicio}
                   onChange={(e) => setFilterDataInicio(e.target.value)}
                 />
               </div>
-              <div className="grid gap-1">
-                <Label className="text-xs text-muted-foreground">Data Publicação - Fim</Label>
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Data Publicação - Fim</Label>
                 <Input
                   type="date"
                   value={filterDataFim}
@@ -459,6 +471,7 @@ const SharepointDocumentos = () => {
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-muted-foreground font-normal">{doc.codigo} -</span>
                           {doc.nome}
                         </div>
                       </TableCell>
