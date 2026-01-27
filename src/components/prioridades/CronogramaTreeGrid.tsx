@@ -21,7 +21,7 @@ const BRAZIL_TIMEZONE = 'America/Sao_Paulo';
 
 const STATUS_OPTIONS = [
   { value: 'pendente', label: 'Pendente' },
-  { value: 'em_andamento', label: 'Em Andamento' },
+  { value: 'em_andamento', label: 'Fazendo' },
   { value: 'concluida', label: 'Concluída' },
   { value: 'cancelada', label: 'Cancelada' },
 ];
