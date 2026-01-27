@@ -1,4 +1,4 @@
-# Manual de Uso - Sistema de Gestão GHAS
+# Manual de Uso - Sistema AVAnça GHAS
 
 ## Índice
 
@@ -17,14 +17,20 @@
    - [Dashboard Scrum](#dashboard-scrum)
    - [Dashboard Projetos](#dashboard-projetos)
    - [Dashboard Clientes](#dashboard-clientes)
-8. [Administração](#administração)
-9. [Perfis de Usuário](#perfis-de-usuário)
+8. [GHAS - Documentos e Treinamentos](#ghas---documentos-e-treinamentos)
+   - [Documentos GHAS](#documentos-ghas)
+   - [Treinamentos](#treinamentos)
+9. [Administração](#administração)
+   - [Usuários](#aba-usuários)
+   - [Cadastros do Sistema](#cadastros-do-sistema)
+   - [Integração](#aba-integração)
+10. [Perfis de Usuário](#perfis-de-usuário)
 
 ---
 
 ## Visão Geral
 
-O Sistema de Gestão GHAS é uma ferramenta completa para gerenciamento de projetos ágeis, utilizando metodologias Scrum. O sistema permite:
+O Sistema AVAnça GHAS é uma ferramenta completa para gerenciamento de projetos ágeis, utilizando metodologias Scrum. O sistema permite:
 
 - Planejamento e acompanhamento de Sprints
 - Gestão de Backlog e tarefas
@@ -33,6 +39,8 @@ O Sistema de Gestão GHAS é uma ferramenta completa para gerenciamento de proje
 - Gestão de riscos e ocorrências (BO's)
 - Dashboards com indicadores de desempenho
 - Cronograma de projetos
+- Gestão de documentos institucionais
+- Gestão de treinamentos e capacitações
 
 ---
 
@@ -51,6 +59,10 @@ O Sistema de Gestão GHAS é uma ferramenta completa para gerenciamento de proje
 - Clique no seu nome no canto superior direito
 - Selecione **Alterar Senha**
 - Insira a nova senha e confirme
+
+### Menu do Usuário
+- **Manual de Uso Sistema AVAnça:** Realiza o download do manual em PDF
+- **Sair do Sistema:** Encerra a sessão do usuário
 
 ---
 
@@ -411,13 +423,95 @@ Grid de indicadores (faróis) por cliente.
 
 ---
 
+## GHAS - Documentos e Treinamentos
+
+**Caminho:** Menu → GHAS
+
+Módulo para gestão de documentos institucionais e treinamentos da equipe.
+
+### Documentos GHAS
+
+**Caminho:** Menu → GHAS → Documentos
+
+Centraliza a documentação institucional da GHAS.
+
+#### Cadastro de Novo Documento
+
+Todos os campos são **obrigatórios**:
+
+| Campo | Descrição |
+|-------|-----------|
+| **Nome** | Nome do documento |
+| **Tipo de Documento** | Classificação do documento (ex: Procedimento, Política) |
+| **Versão** | Versão do documento |
+| **Descrição** | Descrição detalhada do documento |
+| **Data de Publicação** | Data de publicação do documento |
+| **Status** | Ativo ou Inativo |
+| **Arquivo** | Upload do arquivo (PDF, DOCX, PPTX, XLSX) |
+| **Setores Destino** | Seleção múltipla de setores destinatários do documento |
+
+#### Funcionalidades:
+- **Visualizar:** PDFs abrem em nova aba; outros formatos são baixados
+- **Download:** Baixa o arquivo do documento
+- **Editar:** Edita os dados do documento (apenas administradores)
+- **Excluir:** Remove o documento (apenas administradores)
+
+#### Grid de Documentos:
+| Coluna | Descrição |
+|--------|-----------|
+| **ID** | Código sequencial do documento |
+| **Ações** | Botões de visualizar, download, editar e excluir |
+| **Nome** | Nome do documento |
+| **Setores Destino** | Exibe badges com os setores selecionados |
+| **Tipo** | Tipo do documento |
+| **Versão** | Versão do documento |
+| **Data de Publicação** | Data de publicação |
+| **Status** | Status do documento (Ativo/Inativo) |
+
+#### Filtros Disponíveis:
+- Buscar por nome
+- Filtrar por Tipo
+- Filtrar por Setor
+- Filtrar por Status
+- Filtrar por intervalo de Data de Publicação (Início/Fim)
+
+#### Ordenação:
+- Clique no cabeçalho das colunas para ordenar
+
+---
+
+### Treinamentos
+
+**Caminho:** Menu → GHAS → Treinamentos
+
+Gestão de sessões de capacitação e treinamentos.
+
+#### Cadastro de Treinamento:
+- **Nome:** Nome do treinamento
+- **Data:** Data de realização
+- **Ministrado por:** Prestador de serviço responsável
+- **Descrição:** Detalhes do treinamento
+- **Arquivo:** Material de apoio (opcional)
+- **Status:** Status do treinamento
+
+#### Participantes:
+- Seleção múltipla de prestadores de serviço
+- Definição do status de "Capacitado" (Sim/Não) para cada participante
+
+#### Funcionalidades:
+- Grid com ID sequencial
+- Ordenação por colunas
+- Filtros por período
+
+---
+
 ## Administração
 
 **Caminho:** Menu → Administração
 
 Área restrita para administradores do sistema.
 
-#### Aba Usuários:
+### Aba Usuários
 
 **1. Cadastrar Novo Usuário**
 - Nome da Pessoa
@@ -431,7 +525,70 @@ Grid de indicadores (faróis) por cliente.
 - Redefinir senha
 - Excluir usuário
 
-#### Aba Integração:
+---
+
+### Cadastros do Sistema
+
+**Caminho:** Menu → Administração → Cadastros
+
+Gerenciamento de cadastros auxiliares do sistema.
+
+#### Setores
+
+Antigo "Área de Documento". Gerencia os setores da organização.
+
+| Coluna | Descrição |
+|--------|-----------|
+| **ID** | Código sequencial do setor |
+| **Nome** | Nome do setor |
+| **Status** | Ativo ou Inativo |
+
+- Setores são utilizados como destino em documentos (seleção múltipla)
+- Setores são vinculados aos prestadores de serviço
+
+#### Tipos de Documento
+
+Classificações disponíveis para documentos GHAS.
+
+| Coluna | Descrição |
+|--------|-----------|
+| **Nome** | Nome do tipo |
+| **Status** | Ativo ou Inativo |
+
+#### Tipos de Documento Cliente
+
+Classificações disponíveis para documentos de clientes.
+
+#### Prestadores de Serviço
+
+Cadastro de prestadores de serviço.
+
+**Campos obrigatórios:**
+- **Nome** (obrigatório)
+- **Email** (obrigatório)
+- **Nível** (obrigatório): N1, N2 ou Especialidade
+- **Setor** (obrigatório): Vínculo com um setor
+
+| Coluna | Descrição |
+|--------|-----------|
+| **ID** | Código sequencial do prestador |
+| **Nome** | Nome do prestador |
+| **Email** | Email do prestador |
+| **Nível** | N1, N2 ou Especialidade |
+| **Setor** | Setor vinculado |
+
+#### Clientes
+
+Cadastro de clientes do sistema.
+
+| Coluna | Descrição |
+|--------|-----------|
+| **ID** | Código sequencial do cliente |
+| **Nome** | Nome do cliente |
+
+---
+
+### Aba Integração
 
 **Configuração de Webhook AVA**
 - Token de autenticação
@@ -446,6 +603,7 @@ Grid de indicadores (faróis) por cliente.
 - Pode cadastrar e gerenciar usuários
 - Visualiza dados de todos os responsáveis
 - Acesso à área de administração
+- Pode editar e excluir documentos
 
 ### Operador
 - Acesso às funcionalidades operacionais
@@ -454,6 +612,7 @@ Grid de indicadores (faróis) por cliente.
   - Daily
 - Não pode acessar área de administração
 - Campo de responsável bloqueado (preenchido automaticamente)
+- Apenas visualiza e baixa documentos (não pode editar/excluir)
 
 ---
 
@@ -464,6 +623,8 @@ Grid de indicadores (faróis) por cliente.
 3. **Datas:** O sistema considera o fuso horário de São Paulo
 4. **Exportações:** Utilize os botões de exportação para relatórios externos
 5. **Filtros:** Limpe os filtros clicando nos botões "Limpar"
+6. **Documentos:** Utilize a seleção múltipla de Setores Destino para distribuir documentos para vários setores
+7. **Campos Obrigatórios:** Todos os campos do formulário de Novo Documento são obrigatórios
 
 ---
 
@@ -473,5 +634,12 @@ Em caso de dúvidas ou problemas, entre em contato com o administrador do sistem
 
 ---
 
-*Versão do Manual: 1.0*
-*Data: Janeiro/2025*
+*Versão do Manual: 1.1*
+*Última Atualização: Janeiro/2025*
+*Alterações da versão 1.1:*
+- Renomeação de "Área de Documento" para "Setor"
+- Adição de ID numérico (código) para Setores
+- Suporte a múltiplos "Setores Destino" em documentos
+- Todos os campos do formulário de Novo Documento são obrigatórios
+- Campos obrigatórios no cadastro de Prestador de Serviço (Nome, Email, Nível, Setor)
+- Inclusão do módulo GHAS (Documentos e Treinamentos)
