@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, ListTodo, Calendar, MessageSquare, RotateCcw, Shield, LogOut, AlertTriangle, Settings, Map, ClipboardList, Target, FileDown, ChevronDown, BookOpen, FolderOpen, GraduationCap } from 'lucide-react';
+import { LayoutDashboard, ListTodo, Calendar, MessageSquare, RotateCcw, Shield, LogOut, AlertTriangle, Settings, Map, ClipboardList, Target, FileDown, ChevronDown, BookOpen, FolderOpen, GraduationCap, Building2 } from 'lucide-react';
 import { downloadManualPDF } from './ManualDownload';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from './ui/button';
@@ -44,31 +44,14 @@ const menuStructure: MenuGroup[] = [
     ],
   },
   {
-    name: 'Prioridades',
-    icon: Target,
+    name: 'Cliente',
+    icon: Building2,
     items: [
       { name: 'Prioridades', href: '/prioridades', icon: Target },
-    ],
-  },
-  {
-    name: 'Produtividade',
-    icon: ClipboardList,
-    items: [
-      { name: 'Produtividade', href: '/produtividade', icon: ClipboardList },
-    ],
-  },
-  {
-    name: "Riscos e BO's",
-    icon: AlertTriangle,
-    items: [
+      { name: 'Dashboard', href: '/dashboard-clientes', icon: LayoutDashboard },
+      { name: 'Prod Global', href: '/produtividade-global', icon: ClipboardList },
+      { name: 'Prod Individual', href: '/produtividade', icon: ClipboardList },
       { name: "Riscos e BO's", href: '/riscos', icon: AlertTriangle },
-    ],
-  },
-  {
-    name: "Clientes",
-    icon: LayoutDashboard,
-    items: [
-      { name: 'Clientes', href: '/dashboard-clientes', icon: LayoutDashboard },
     ],
   },
   {
@@ -93,10 +76,7 @@ const menuStructure: MenuGroup[] = [
 // Função para detectar o grupo ativo com base na rota
 const getActiveGroup = (pathname: string): string => {
   if (pathname === '/' || pathname.startsWith('/sprint-planning') || pathname.startsWith('/backlog') || pathname.startsWith('/daily') || pathname.startsWith('/retrospectiva') || pathname.startsWith('/roadmap')) return 'PMO/CET';
-  if (pathname.startsWith('/dashboard-clientes')) return 'Clientes';
-  if (pathname.startsWith('/prioridades')) return 'Prioridades';
-  if (pathname.startsWith('/produtividade')) return 'Produtividade';
-  if (pathname.startsWith('/riscos')) return "Riscos e BO's";
+  if (pathname.startsWith('/prioridades') || pathname.startsWith('/dashboard-clientes') || pathname.startsWith('/produtividade') || pathname.startsWith('/riscos')) return 'Cliente';
   if (pathname.startsWith('/sharepoint')) return 'SharePoint GHAS';
   if (pathname.startsWith('/cadastros') || pathname.startsWith('/administracao')) return 'Administração';
   return '';
