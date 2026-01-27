@@ -605,7 +605,7 @@ const ProdutividadeGlobal = () => {
             <input
               type="file"
               ref={fileInputRef}
-              accept=".xlsx,.xls"
+              accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
               onChange={handleImportFile}
               className="hidden"
             />
