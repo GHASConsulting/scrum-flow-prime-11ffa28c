@@ -182,18 +182,32 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
 
   const handleDownloadTemplate = () => {
     try {
-      // Create template workbook
-      const headers = ['ID', 'Nome da Tarefa', 'Pai', 'Status', 'Dias Duração', 'Data Início', 'Data Fim', 'Responsável'];
+      // Create template workbook with client and priority list codes
+      const headers = [
+        'Código do Cliente', 
+        'Código da Lista de Prioridades', 
+        'ID', 
+        'Nome da Tarefa', 
+        'Pai', 
+        'Status', 
+        'Dias Duração', 
+        'Data Início', 
+        'Data Fim', 
+        'Responsável'
+      ];
       const exampleData = [
-        [1, 'Tarefa Exemplo 1', '', 'Pendente', 5, '27/01/2026 08:00', '31/01/2026 18:00', 'João'],
-        [2, 'Subtarefa Exemplo', 1, 'Em Andamento', 2, '27/01/2026 08:00', '28/01/2026 18:00', 'Maria'],
-        [3, 'Tarefa Exemplo 2', '', 'Concluída', 3, '01/02/2026 08:00', '03/02/2026 18:00', 'Pedro'],
+        [1, 1, 1, 'Tarefa Exemplo 1', '', 'Pendente', 5, '27/01/2026 08:00', '31/01/2026 18:00', 'João'],
+        [1, 1, 2, 'Subtarefa Exemplo', 1, 'Em Andamento', 2, '27/01/2026 08:00', '28/01/2026 18:00', 'Maria'],
+        [1, 1, 3, 'Tarefa Exemplo 2', '', 'Concluída', 3, '01/02/2026 08:00', '03/02/2026 18:00', 'Pedro'],
+        [2, 1, 1, 'Tarefa Cliente 2', '', 'Pendente', 4, '03/02/2026 08:00', '06/02/2026 18:00', 'Ana'],
       ];
       
       const ws = XLSX.utils.aoa_to_sheet([headers, ...exampleData]);
       
       // Set column widths
       ws['!cols'] = [
+        { wch: 18 },  // Código do Cliente
+        { wch: 25 },  // Código da Lista de Prioridades
         { wch: 8 },   // ID
         { wch: 35 },  // Nome da Tarefa
         { wch: 8 },   // Pai
