@@ -55,7 +55,7 @@ const menuStructure: MenuGroup[] = [
     ],
   },
   {
-    name: 'SharePoint GHAS',
+    name: 'GHAS',
     icon: FolderOpen,
     items: [
       { name: 'Documentos', href: '/sharepoint/documentos', icon: FolderOpen },
