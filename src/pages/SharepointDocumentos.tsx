@@ -492,6 +492,13 @@ const SharepointDocumentos = () => {
                 </TableBody>
               </Table>
             )}
+            {filteredDocumentos.length > 0 && (
+              <div className="flex justify-end pt-4 border-t mt-4">
+                <span className="text-sm text-muted-foreground">
+                  Total de documentos: <strong>{filteredDocumentos.length}</strong>
+                </span>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
