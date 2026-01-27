@@ -480,7 +480,6 @@ export type Database = {
           created_at: string
           data_publicacao: string
           id: string
-          nome: string
           tipo_documento_cliente_id: string | null
           updated_at: string
         }
@@ -493,7 +492,6 @@ export type Database = {
           created_at?: string
           data_publicacao?: string
           id?: string
-          nome: string
           tipo_documento_cliente_id?: string | null
           updated_at?: string
         }
@@ -506,7 +504,6 @@ export type Database = {
           created_at?: string
           data_publicacao?: string
           id?: string
-          nome?: string
           tipo_documento_cliente_id?: string | null
           updated_at?: string
         }
