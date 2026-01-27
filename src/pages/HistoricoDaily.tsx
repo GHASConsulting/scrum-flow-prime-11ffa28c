@@ -8,24 +8,22 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CalendarIcon, History, X } from 'lucide-react';
-import { useSprints } from '@/hooks/useSprints';
 import { useDailies } from '@/hooks/useDailies';
-import { useProfiles } from '@/hooks/useProfiles';
+import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { cn } from '@/lib/utils';
 
 const HistoricoDailyPage = () => {
-  const { sprints } = useSprints();
   const { dailies } = useDailies();
-  const { profiles } = useProfiles();
+  const { records: clientes } = useClientAccessRecords();
   
-  const [selectedSprint, setSelectedSprint] = useState<string>('');
+  const [selectedCliente, setSelectedCliente] = useState<string>('');
   const [filtroResponsavel, setFiltroResponsavel] = useState<string>('all');
   const [filtroData, setFiltroData] = useState<Date | undefined>();
 
   // Filtrar dailies
-  const filteredDailies = selectedSprint 
+  const filteredDailies = selectedCliente 
     ? dailies.filter(d => {
-        if (d.sprint_id !== selectedSprint) return false;
+        if (d.cliente_id !== selectedCliente) return false;
         
         // Filtro por responsável
         if (filtroResponsavel !== 'all' && d.usuario !== filtroResponsavel) return false;
@@ -44,9 +42,9 @@ const HistoricoDailyPage = () => {
     : [];
 
   // Lista única de responsáveis para o filtro
-  const responsaveisUnicos = selectedSprint
+  const responsaveisUnicos = selectedCliente
     ? Array.from(new Set(
-        dailies.filter(d => d.sprint_id === selectedSprint).map(d => d.usuario)
+        dailies.filter(d => d.cliente_id === selectedCliente).map(d => d.usuario)
       ))
     : [];
 
@@ -55,12 +53,17 @@ const HistoricoDailyPage = () => {
     setFiltroData(undefined);
   };
 
+  const getClienteNome = (clienteId: string) => {
+    const cliente = clientes.find(c => c.id === clienteId);
+    return cliente?.cliente || 'Cliente não encontrado';
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
         <div>
           <h2 className="text-3xl font-bold text-foreground">Histórico de Dailies</h2>
-          <p className="text-muted-foreground mt-1">Consulte os registros de dailies de sprints anteriores</p>
+          <p className="text-muted-foreground mt-1">Consulte os registros de dailies por cliente</p>
         </div>
 
         <Card>
@@ -73,15 +76,15 @@ const HistoricoDailyPage = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="text-sm font-medium">Sprint *</label>
-                <Select value={selectedSprint} onValueChange={setSelectedSprint}>
+                <label className="text-sm font-medium">Cliente *</label>
+                <Select value={selectedCliente} onValueChange={setSelectedCliente}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma sprint" />
+                    <SelectValue placeholder="Selecione um cliente" />
                   </SelectTrigger>
                   <SelectContent>
-                    {sprints.map((sprint) => (
-                      <SelectItem key={sprint.id} value={sprint.id}>
-                        {sprint.nome} ({format(parseISO(sprint.data_inicio), 'dd/MM/yyyy', { locale: ptBR })} - {format(parseISO(sprint.data_fim), 'dd/MM/yyyy', { locale: ptBR })})
+                    {clientes.map((cliente) => (
+                      <SelectItem key={cliente.id} value={cliente.id}>
+                        {cliente.cliente}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -93,7 +96,7 @@ const HistoricoDailyPage = () => {
                 <Select 
                   value={filtroResponsavel} 
                   onValueChange={setFiltroResponsavel}
-                  disabled={!selectedSprint}
+                  disabled={!selectedCliente}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Todos" />
@@ -115,7 +118,7 @@ const HistoricoDailyPage = () => {
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      disabled={!selectedSprint}
+                      disabled={!selectedCliente}
                       className={cn(
                         "w-full justify-start text-left font-normal",
                         !filtroData && "text-muted-foreground"
@@ -139,7 +142,7 @@ const HistoricoDailyPage = () => {
               </div>
             </div>
 
-            {selectedSprint && (filtroResponsavel !== 'all' || filtroData) && (
+            {selectedCliente && (filtroResponsavel !== 'all' || filtroData) && (
               <div className="mt-4">
                 <Button
                   variant="outline"
@@ -159,11 +162,11 @@ const HistoricoDailyPage = () => {
             <CardTitle>Registros Encontrados ({filteredDailies.length})</CardTitle>
           </CardHeader>
           <CardContent>
-            {!selectedSprint ? (
+            {!selectedCliente ? (
               <div className="text-center py-12">
                 <History className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">
-                  Selecione uma sprint para visualizar o histórico
+                  Selecione um cliente para visualizar o histórico
                 </p>
               </div>
             ) : filteredDailies.length === 0 ? (

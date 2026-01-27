@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface Daily {
   id: string;
-  sprint_id: string;
+  sprint_id: string | null;
+  cliente_id: string | null;
   usuario: string;
   data: string;
   ontem: string;
