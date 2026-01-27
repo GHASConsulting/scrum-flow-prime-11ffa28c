@@ -1391,6 +1391,101 @@ export type Database = {
         }
         Relationships: []
       }
+      treinamento: {
+        Row: {
+          arquivo_nome: string | null
+          arquivo_path: string | null
+          arquivo_tipo: string | null
+          codigo: number
+          created_at: string
+          data_treinamento: string
+          descricao: string | null
+          id: string
+          ministrado_por_id: string | null
+          nome: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          arquivo_path?: string | null
+          arquivo_tipo?: string | null
+          codigo?: number
+          created_at?: string
+          data_treinamento?: string
+          descricao?: string | null
+          id?: string
+          ministrado_por_id?: string | null
+          nome: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          arquivo_nome?: string | null
+          arquivo_path?: string | null
+          arquivo_tipo?: string | null
+          codigo?: number
+          created_at?: string
+          data_treinamento?: string
+          descricao?: string | null
+          id?: string
+          ministrado_por_id?: string | null
+          nome?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treinamento_ministrado_por_id_fkey"
+            columns: ["ministrado_por_id"]
+            isOneToOne: false
+            referencedRelation: "prestador_servico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treinamento_participante: {
+        Row: {
+          capacitado: boolean
+          created_at: string
+          id: string
+          prestador_id: string
+          treinamento_id: string
+          updated_at: string
+        }
+        Insert: {
+          capacitado?: boolean
+          created_at?: string
+          id?: string
+          prestador_id: string
+          treinamento_id: string
+          updated_at?: string
+        }
+        Update: {
+          capacitado?: boolean
+          created_at?: string
+          id?: string
+          prestador_id?: string
+          treinamento_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treinamento_participante_prestador_id_fkey"
+            columns: ["prestador_id"]
+            isOneToOne: false
+            referencedRelation: "prestador_servico"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treinamento_participante_treinamento_id_fkey"
+            columns: ["treinamento_id"]
+            isOneToOne: false
+            referencedRelation: "treinamento"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
