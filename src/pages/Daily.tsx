@@ -7,13 +7,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MessageSquare, CalendarIcon, Filter, Trash2, History } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { useSprints } from '@/hooks/useSprints';
 import { useDailies } from '@/hooks/useDailies';
 import { useProfiles } from '@/hooks/useProfiles';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
@@ -23,12 +21,10 @@ import { useNavigate } from 'react-router-dom';
 const DailyPage = () => {
   const navigate = useNavigate();
   const { user, userRole } = useAuth();
-  const { sprints } = useSprints();
   const { dailies, addDaily: addDailyDB, deleteDaily } = useDailies();
   const { profiles } = useProfiles();
   const { records: clientes } = useClientAccessRecords();
   
-  const [selectedSprint, setSelectedSprint] = useState<string>('');
   const [selectedCliente, setSelectedCliente] = useState<string>('');
   const [dataRegistro, setDataRegistro] = useState<Date>(new Date());
   const [formData, setFormData] = useState({
@@ -39,16 +35,8 @@ const DailyPage = () => {
   });
 
   // Filtros do histórico
-  const [filtroResponsavel, setFiltroResponsavel] = useState<string>('all');
+  const [filtroCliente, setFiltroCliente] = useState<string>('all');
   const [filtroData, setFiltroData] = useState<Date | undefined>();
-
-  // Preencher automaticamente a sprint ativa
-  useEffect(() => {
-    const activeSprint = sprints.find(s => s.status === 'ativo');
-    if (activeSprint) {
-      setSelectedSprint(activeSprint.id);
-    }
-  }, [sprints]);
 
   // Preencher automaticamente o usuário logado
   useEffect(() => {
@@ -60,39 +48,39 @@ const DailyPage = () => {
     }
   }, [user, profiles]);
 
-  // Filtrar dailies pela sprint selecionada e pelos filtros
-  const filteredDailies = selectedSprint 
-    ? dailies.filter(d => {
-        if (d.sprint_id !== selectedSprint) return false;
-        
-        // Para operadores, mostrar apenas seus próprios registros
-        if (userRole === 'operador' && user && profiles.length > 0) {
-          const userProfile = profiles.find(p => p.user_id === user.id);
-          if (userProfile && d.usuario !== userProfile.nome) return false;
-        }
-        
-        // Filtro por responsável (apenas para administradores)
-        if (userRole === 'administrador' && filtroResponsavel !== 'all' && d.usuario !== filtroResponsavel) return false;
-        
-        // Filtro por data
-        if (filtroData) {
-          const dailyDate = format(parseISO(d.data), 'yyyy-MM-dd');
-          const filterDate = format(filtroData, 'yyyy-MM-dd');
-          if (dailyDate !== filterDate) return false;
-        }
-        
-        return true;
-      }).sort((a, b) => 
-        new Date(b.data).getTime() - new Date(a.data).getTime()
-      )
+  // Filtrar dailies pelos filtros
+  const filteredDailies = dailies.filter(d => {
+    // Para operadores, mostrar apenas seus próprios registros
+    if (userRole === 'operador' && user && profiles.length > 0) {
+      const userProfile = profiles.find(p => p.user_id === user.id);
+      if (userProfile && d.usuario !== userProfile.nome) return false;
+    }
+    
+    // Filtro por cliente (apenas para administradores)
+    if (userRole === 'administrador' && filtroCliente !== 'all' && d.cliente_id !== filtroCliente) return false;
+    
+    // Filtro por data
+    if (filtroData) {
+      const dailyDate = format(parseISO(d.data), 'yyyy-MM-dd');
+      const filterDate = format(filtroData, 'yyyy-MM-dd');
+      if (dailyDate !== filterDate) return false;
+    }
+    
+    return true;
+  }).sort((a, b) => 
+    new Date(b.data).getTime() - new Date(a.data).getTime()
+  );
+
+  // Lista única de clientes para o filtro (apenas administradores)
+  const clientesComDailies = userRole === 'administrador' 
+    ? clientes.filter(c => dailies.some(d => d.cliente_id === c.id))
     : [];
 
-  // Lista única de responsáveis para o filtro (apenas administradores)
-  const responsaveisUnicos = userRole === 'administrador' 
-    ? Array.from(new Set(
-        dailies.filter(d => d.sprint_id === selectedSprint).map(d => d.usuario)
-      ))
-    : [];
+  const getClienteNome = (clienteId: string | null) => {
+    if (!clienteId) return 'Sem cliente';
+    const cliente = clientes.find(c => c.id === clienteId);
+    return cliente?.cliente || 'Cliente não encontrado';
+  };
 
   const handleDeleteDaily = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir este registro de daily?')) {
@@ -131,7 +119,7 @@ const DailyPage = () => {
     const dataRegistroISO = new Date(dataRegistro.setHours(new Date().getHours(), new Date().getMinutes())).toISOString();
 
     const { error } = await addDailyDB({
-      sprint_id: selectedSprint || null,
+      sprint_id: null,
       cliente_id: selectedCliente,
       usuario: formData.usuario,
       data: dataRegistroISO,
@@ -192,22 +180,6 @@ const DailyPage = () => {
                       {clientes.map((cliente) => (
                         <SelectItem key={cliente.id} value={cliente.id}>
                           {cliente.cliente}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium">Sprint</label>
-                  <Select value={selectedSprint} onValueChange={setSelectedSprint}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma sprint (opcional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sprints.filter(s => s.status === 'ativo').map((sprint) => (
-                        <SelectItem key={sprint.id} value={sprint.id}>
-                          {sprint.nome}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -323,16 +295,16 @@ const DailyPage = () => {
               {userRole === 'administrador' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <div>
-                  <label className="text-sm font-medium">Responsável</label>
-                  <Select value={filtroResponsavel} onValueChange={setFiltroResponsavel}>
+                  <label className="text-sm font-medium">Cliente</label>
+                  <Select value={filtroCliente} onValueChange={setFiltroCliente}>
                     <SelectTrigger>
                       <SelectValue placeholder="Todos" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos</SelectItem>
-                      {responsaveisUnicos.map(resp => (
-                        <SelectItem key={resp} value={resp}>
-                          {resp}
+                      {clientesComDailies.map(cliente => (
+                        <SelectItem key={cliente.id} value={cliente.id}>
+                          {cliente.cliente}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -380,13 +352,9 @@ const DailyPage = () => {
               )}
             </CardHeader>
             <CardContent>
-              {!selectedSprint ? (
+              {filteredDailies.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-8">
-                  Aguardando sprint ativa
-                </p>
-              ) : filteredDailies.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  Nenhuma daily registrada nesta sprint
+                  Nenhuma daily registrada
                 </p>
               ) : (
                 <div className="space-y-4 max-h-[600px] overflow-y-auto">
@@ -395,9 +363,14 @@ const DailyPage = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <h4 className="font-semibold">{daily.usuario}</h4>
-                          <span className="text-xs text-muted-foreground">
-                            {format(parseISO(daily.data), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                          </span>
+                          <div className="flex flex-col">
+                            <span className="text-xs text-muted-foreground">
+                              {format(parseISO(daily.data), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                            </span>
+                            <span className="text-xs text-primary font-medium">
+                              {getClienteNome(daily.cliente_id)}
+                            </span>
+                          </div>
                         </div>
                         <Button
                           variant="ghost"
