@@ -186,6 +186,11 @@ const ProdutividadeGlobal = () => {
       return;
     }
 
+    if (percIncidentes + percSolicitacoes > 100) {
+      toast.error('A soma de % Incidentes e % Solicitações não pode ultrapassar 100%');
+      return;
+    }
+
     try {
       await addProdutividade({
         cliente_id: formData.cliente_id,
@@ -353,6 +358,11 @@ const ProdutividadeGlobal = () => {
         const percSolicitacoes = Number(row[7]) || 0;
         if (percSolicitacoes < 0 || percSolicitacoes > 100) {
           rowErrors.push('% Solicitações deve estar entre 0 e 100');
+        }
+
+        // Validate sum of percentages
+        if (percIncidentes + percSolicitacoes > 100) {
+          rowErrors.push('A soma de % Incidentes e % Solicitações não pode ultrapassar 100%');
         }
 
         if (cliente && dataInicio && dataFim) {
