@@ -8,13 +8,14 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Plus, Edit, Trash2, Package, Tag, Users, User, FileText, FolderOpen } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, Tag, Users, User, FileText, FolderOpen, Building2 } from 'lucide-react';
 import { useTipoProduto } from '@/hooks/useTipoProduto';
 import { useTipoTarefa } from '@/hooks/useTipoTarefa';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { usePrestadorServico, NIVEL_OPTIONS } from '@/hooks/usePrestadorServico';
 import { useTipoDocumento } from '@/hooks/useTipoDocumento';
 import { useAreaDocumento } from '@/hooks/useAreaDocumento';
+import { useTipoDocumentoCliente } from '@/hooks/useTipoDocumentoCliente';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
@@ -61,6 +62,13 @@ const CadastrosSistema = () => {
     updateAreaDocumento,
     deleteAreaDocumento
   } = useAreaDocumento();
+  const {
+    tiposDocumentoCliente,
+    isLoading: isLoadingTipoDocCliente,
+    addTipoDocumentoCliente,
+    updateTipoDocumentoCliente,
+    deleteTipoDocumentoCliente
+  } = useTipoDocumentoCliente();
 
   // Estado para Área
   const [isAddAreaDialogOpen, setIsAddAreaDialogOpen] = useState(false);
@@ -121,6 +129,16 @@ const CadastrosSistema = () => {
   const [isEditAreaDocDialogOpen, setIsEditAreaDocDialogOpen] = useState(false);
   const [newAreaDocNome, setNewAreaDocNome] = useState('');
   const [editingAreaDoc, setEditingAreaDoc] = useState<{
+    id: string;
+    nome: string;
+    ativo: boolean;
+  } | null>(null);
+
+  // Estado para Tipo de Documento Cliente
+  const [isAddTipoDocClienteDialogOpen, setIsAddTipoDocClienteDialogOpen] = useState(false);
+  const [isEditTipoDocClienteDialogOpen, setIsEditTipoDocClienteDialogOpen] = useState(false);
+  const [newTipoDocClienteNome, setNewTipoDocClienteNome] = useState('');
+  const [editingTipoDocCliente, setEditingTipoDocCliente] = useState<{
     id: string;
     nome: string;
     ativo: boolean;
@@ -473,6 +491,58 @@ const CadastrosSistema = () => {
       // Error handled in hook
     }
   };
+
+  // Handlers para Tipo de Documento Cliente
+  const handleAddTipoDocCliente = async () => {
+    if (!newTipoDocClienteNome.trim()) {
+      toast.error('Nome é obrigatório');
+      return;
+    }
+    try {
+      await addTipoDocumentoCliente(newTipoDocClienteNome.trim());
+      setNewTipoDocClienteNome('');
+      setIsAddTipoDocClienteDialogOpen(false);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+  const handleEditTipoDocCliente = (item: { id: string; nome: string; ativo: boolean }) => {
+    setEditingTipoDocCliente({ ...item });
+    setIsEditTipoDocClienteDialogOpen(true);
+  };
+  const handleUpdateTipoDocCliente = async () => {
+    if (!editingTipoDocCliente) return;
+    if (!editingTipoDocCliente.nome.trim()) {
+      toast.error('Nome é obrigatório');
+      return;
+    }
+    try {
+      await updateTipoDocumentoCliente({
+        id: editingTipoDocCliente.id,
+        nome: editingTipoDocCliente.nome.trim(),
+        ativo: editingTipoDocCliente.ativo
+      });
+      setIsEditTipoDocClienteDialogOpen(false);
+      setEditingTipoDocCliente(null);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+  const handleDeleteTipoDocCliente = async (id: string) => {
+    if (!confirm('Tem certeza que deseja remover este item?')) return;
+    try {
+      await deleteTipoDocumentoCliente(id);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+  const handleToggleTipoDocClienteAtivo = async (id: string, ativo: boolean) => {
+    try {
+      await updateTipoDocumentoCliente({ id, ativo: !ativo });
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
   return <Layout>
       <div className="space-y-6">
         <div>
@@ -799,6 +869,61 @@ const CadastrosSistema = () => {
                                   <Edit className="h-4 w-4" />
                                 </Button>
                                 <Button variant="ghost" size="icon" onClick={() => handleDeleteAreaDoc(item.id)}>
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>)}
+                      </TableBody>
+                    </Table>}
+                </CardContent>
+              </Card>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Tipo de Documento Cliente */}
+          <AccordionItem value="tipo-documento-cliente" className="border rounded-lg bg-card">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline">
+              <div className="flex items-center gap-3">
+                <Building2 className="h-5 w-5 text-primary" />
+                <span className="text-lg font-semibold">Tipo de Documento Cliente</span>
+                <Badge variant="secondary" className="ml-2">
+                  {tiposDocumentoCliente.length} itens
+                </Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-4">
+              <Card className="border-0 shadow-none">
+                <CardHeader className="px-0 pt-0">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">Lista de Tipos de Documento Cliente</CardTitle>
+                    <Button onClick={() => setIsAddTipoDocClienteDialogOpen(true)} size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="px-0 pb-0">
+                  {isLoadingTipoDocCliente ? <p className="text-muted-foreground">Carregando...</p> : tiposDocumentoCliente.length === 0 ? <p className="text-muted-foreground">Nenhum tipo de documento cliente cadastrado</p> : <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nome</TableHead>
+                          <TableHead className="w-[100px] text-center">Ativo</TableHead>
+                          <TableHead className="w-[100px] text-center">Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {tiposDocumentoCliente.map(item => <TableRow key={item.id}>
+                            <TableCell className="font-medium">{item.nome}</TableCell>
+                            <TableCell className="text-center">
+                              <Switch checked={item.ativo} onCheckedChange={() => handleToggleTipoDocClienteAtivo(item.id, item.ativo)} />
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center justify-center gap-2">
+                                <Button variant="ghost" size="icon" onClick={() => handleEditTipoDocCliente(item)}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" onClick={() => handleDeleteTipoDocCliente(item.id)}>
                                   <Trash2 className="h-4 w-4 text-destructive" />
                                 </Button>
                               </div>
@@ -1150,6 +1275,58 @@ const CadastrosSistema = () => {
                 Cancelar
               </Button>
               <Button onClick={handleUpdateAreaDoc}>Salvar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Adicionar Tipo de Documento Cliente */}
+        <Dialog open={isAddTipoDocClienteDialogOpen} onOpenChange={setIsAddTipoDocClienteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Adicionar Tipo de Documento Cliente</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nome</label>
+                <Input value={newTipoDocClienteNome} onChange={e => setNewTipoDocClienteNome(e.target.value)} placeholder="Digite o nome do tipo" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddTipoDocClienteDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAddTipoDocCliente}>Adicionar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Editar Tipo de Documento Cliente */}
+        <Dialog open={isEditTipoDocClienteDialogOpen} onOpenChange={setIsEditTipoDocClienteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar Tipo de Documento Cliente</DialogTitle>
+            </DialogHeader>
+            {editingTipoDocCliente && <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Nome</label>
+                  <Input value={editingTipoDocCliente.nome} onChange={e => setEditingTipoDocCliente({
+                ...editingTipoDocCliente,
+                nome: e.target.value
+              })} placeholder="Digite o nome do tipo" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Ativo</label>
+                  <Switch checked={editingTipoDocCliente.ativo} onCheckedChange={checked => setEditingTipoDocCliente({
+                ...editingTipoDocCliente,
+                ativo: checked
+              })} />
+                </div>
+              </div>}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditTipoDocClienteDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleUpdateTipoDocCliente}>Salvar</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

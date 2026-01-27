@@ -470,6 +470,63 @@ export type Database = {
           },
         ]
       }
+      documento_cliente: {
+        Row: {
+          arquivo_nome: string
+          arquivo_path: string
+          arquivo_tipo: string
+          cliente_id: string
+          codigo: number
+          created_at: string
+          data_publicacao: string
+          id: string
+          nome: string
+          tipo_documento_cliente_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          arquivo_nome: string
+          arquivo_path: string
+          arquivo_tipo: string
+          cliente_id: string
+          codigo?: number
+          created_at?: string
+          data_publicacao?: string
+          id?: string
+          nome: string
+          tipo_documento_cliente_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          arquivo_nome?: string
+          arquivo_path?: string
+          arquivo_tipo?: string
+          cliente_id?: string
+          codigo?: number
+          created_at?: string
+          data_publicacao?: string
+          id?: string
+          nome?: string
+          tipo_documento_cliente_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documento_cliente_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "client_access_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documento_cliente_tipo_documento_cliente_id_fkey"
+            columns: ["tipo_documento_cliente_id"]
+            isOneToOne: false
+            referencedRelation: "tipo_documento_cliente"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       integracao_config: {
         Row: {
           created_at: string
@@ -1239,6 +1296,30 @@ export type Database = {
         Relationships: []
       }
       tipo_documento: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tipo_documento_cliente: {
         Row: {
           ativo: boolean
           created_at: string
