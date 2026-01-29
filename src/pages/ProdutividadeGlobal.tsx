@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, CheckCircle, Building2, Upload, ArrowUp, ArrowDown, Download, FileSpreadsheet, FolderOpen, AlertCircle, Percent } from 'lucide-react';
+import { Plus, Trash2, CheckCircle, Building2, Upload, ArrowUp, ArrowDown, Download, FileSpreadsheet, FolderOpen, AlertCircle } from 'lucide-react';
+import { ProdutividadeTrafficLight } from '@/components/produtividade/ProdutividadeTrafficLight';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -606,6 +607,20 @@ const ProdutividadeGlobal = () => {
     return sum;
   }, [filteredProdutividades]);
   
+  // Obter o valor de abertos_15_dias do registro mais recente quando um cliente está selecionado
+  const latestAbertos15Dias = useMemo(() => {
+    if (filterCliente === 'all' || filteredProdutividades.length === 0) {
+      return null;
+    }
+    
+    // Pegar o registro mais recente do cliente selecionado
+    const sortedByDate = [...filteredProdutividades].sort((a, b) => 
+      new Date(b.data_fim).getTime() - new Date(a.data_fim).getTime()
+    );
+    
+    return sortedByDate[0]?.abertos_15_dias ?? null;
+  }, [filteredProdutividades, filterCliente]);
+  
   const uniqueClientes = new Set(filteredProdutividades.map(p => p.cliente_id)).size;
 
   const clearFilters = () => {
@@ -829,7 +844,12 @@ const ProdutividadeGlobal = () => {
         {/* Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Registros de Produtividade</CardTitle>
+            <CardTitle className="flex items-center">
+              Registros de Produtividade
+              {latestAbertos15Dias !== null && (
+                <ProdutividadeTrafficLight abertos15Dias={latestAbertos15Dias} />
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading || isLoadingClientes ? (
