@@ -1420,6 +1420,7 @@ export type Database = {
           created_at: string
           data_treinamento: string
           descricao: string | null
+          documento_id: string | null
           id: string
           ministrado_por_id: string | null
           nome: string
@@ -1434,6 +1435,7 @@ export type Database = {
           created_at?: string
           data_treinamento?: string
           descricao?: string | null
+          documento_id?: string | null
           id?: string
           ministrado_por_id?: string | null
           nome: string
@@ -1448,6 +1450,7 @@ export type Database = {
           created_at?: string
           data_treinamento?: string
           descricao?: string | null
+          documento_id?: string | null
           id?: string
           ministrado_por_id?: string | null
           nome?: string
@@ -1455,6 +1458,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "treinamento_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "documento"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "treinamento_ministrado_por_id_fkey"
             columns: ["ministrado_por_id"]
