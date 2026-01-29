@@ -50,7 +50,7 @@ const SprintPlanning = () => {
   const { subtarefas, addSubtarefa } = useSubtarefas();
   const { profiles } = useProfiles();
   const { tiposProdutoAtivos } = useTipoProduto();
-  const { tiposTarefaAtivos } = useTipoTarefa();
+  const { tiposTarefa, tiposTarefaAtivos } = useTipoTarefa();
   const { records: clientes } = useClientAccessRecords();
   
   const [selectedSprint, setSelectedSprint] = useState<string>('');
@@ -342,7 +342,14 @@ const SprintPlanning = () => {
       return;
     }
 
-    // Cliente é opcional
+    // Verificar se o tipo de tarefa selecionado exige cliente obrigatório
+    if (newTask.tipo_tarefa) {
+      const tipoTarefaSelecionado = tiposTarefa.find(t => t.nome === newTask.tipo_tarefa);
+      if (tipoTarefaSelecionado?.cliente_obrigatorio && !newTask.cliente_id) {
+        toast.error('O cliente é obrigatório para este tipo de tarefa');
+        return;
+      }
+    }
 
     try {
       const createdBacklogItem = await addBacklogItem({
@@ -449,7 +456,14 @@ const SprintPlanning = () => {
       return;
     }
 
-    // Cliente é opcional
+    // Verificar se o tipo de tarefa selecionado exige cliente obrigatório
+    if (editingTask.tipo_tarefa) {
+      const tipoTarefaSelecionado = tiposTarefa.find(t => t.nome === editingTask.tipo_tarefa);
+      if (tipoTarefaSelecionado?.cliente_obrigatorio && !editingTask.cliente_id) {
+        toast.error('O cliente é obrigatório para este tipo de tarefa');
+        return;
+      }
+    }
 
     try {
       const updates: any = {

@@ -1390,6 +1390,7 @@ export type Database = {
       tipo_tarefa: {
         Row: {
           ativo: boolean
+          cliente_obrigatorio: boolean
           created_at: string
           id: string
           nome: string
@@ -1397,6 +1398,7 @@ export type Database = {
         }
         Insert: {
           ativo?: boolean
+          cliente_obrigatorio?: boolean
           created_at?: string
           id?: string
           nome: string
@@ -1404,6 +1406,7 @@ export type Database = {
         }
         Update: {
           ativo?: boolean
+          cliente_obrigatorio?: boolean
           created_at?: string
           id?: string
           nome?: string

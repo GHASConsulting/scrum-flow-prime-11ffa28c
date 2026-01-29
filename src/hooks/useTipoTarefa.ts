@@ -6,6 +6,7 @@ export interface TipoTarefa {
   id: string;
   nome: string;
   ativo: boolean;
+  cliente_obrigatorio: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -31,11 +32,11 @@ export const useTipoTarefa = () => {
     }
   };
 
-  const addTipoTarefa = async (nome: string) => {
+  const addTipoTarefa = async (nome: string, cliente_obrigatorio: boolean = false) => {
     try {
       const { data, error } = await supabase
         .from('tipo_tarefa')
-        .insert([{ nome, ativo: true }])
+        .insert([{ nome, ativo: true, cliente_obrigatorio }])
         .select()
         .single();
 
@@ -51,13 +52,14 @@ export const useTipoTarefa = () => {
     }
   };
 
-  const updateTipoTarefa = async (updates: { id: string; nome?: string; ativo?: boolean }) => {
+  const updateTipoTarefa = async (updates: { id: string; nome?: string; ativo?: boolean; cliente_obrigatorio?: boolean }) => {
     try {
       const { data, error } = await supabase
         .from('tipo_tarefa')
         .update({ 
           ...(updates.nome !== undefined && { nome: updates.nome }),
           ...(updates.ativo !== undefined && { ativo: updates.ativo }),
+          ...(updates.cliente_obrigatorio !== undefined && { cliente_obrigatorio: updates.cliente_obrigatorio }),
           updated_at: new Date().toISOString()
         })
         .eq('id', updates.id)

@@ -79,10 +79,12 @@ const CadastrosSistema = () => {
   const [isAddTipoDialogOpen, setIsAddTipoDialogOpen] = useState(false);
   const [isEditTipoDialogOpen, setIsEditTipoDialogOpen] = useState(false);
   const [newTipoNome, setNewTipoNome] = useState('');
+  const [newTipoClienteObrigatorio, setNewTipoClienteObrigatorio] = useState(false);
   const [editingTipo, setEditingTipo] = useState<{
     id: string;
     nome: string;
     ativo: boolean;
+    cliente_obrigatorio: boolean;
   } | null>(null);
 
   // Estado para Cliente
@@ -200,14 +202,15 @@ const CadastrosSistema = () => {
       return;
     }
     try {
-      await addTipoTarefa(newTipoNome.trim());
+      await addTipoTarefa(newTipoNome.trim(), newTipoClienteObrigatorio);
       setNewTipoNome('');
+      setNewTipoClienteObrigatorio(false);
       setIsAddTipoDialogOpen(false);
     } catch (error) {
       // Error handled in hook
     }
   };
-  const handleEditTipo = (item: { id: string; nome: string; ativo: boolean }) => {
+  const handleEditTipo = (item: { id: string; nome: string; ativo: boolean; cliente_obrigatorio: boolean }) => {
     setEditingTipo({ ...item });
     setIsEditTipoDialogOpen(true);
   };
@@ -221,7 +224,8 @@ const CadastrosSistema = () => {
       await updateTipoTarefa({
         id: editingTipo.id,
         nome: editingTipo.nome.trim(),
-        ativo: editingTipo.ativo
+        ativo: editingTipo.ativo,
+        cliente_obrigatorio: editingTipo.cliente_obrigatorio
       });
       setIsEditTipoDialogOpen(false);
       setEditingTipo(null);
@@ -697,6 +701,8 @@ const CadastrosSistema = () => {
           setIsEditTipoDialogOpen={setIsEditTipoDialogOpen}
           newTipoNome={newTipoNome}
           setNewTipoNome={setNewTipoNome}
+          newTipoClienteObrigatorio={newTipoClienteObrigatorio}
+          setNewTipoClienteObrigatorio={setNewTipoClienteObrigatorio}
           editingTipo={editingTipo}
           setEditingTipo={setEditingTipo}
           handleAddTipo={handleAddTipo}
