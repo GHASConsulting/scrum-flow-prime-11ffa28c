@@ -579,7 +579,33 @@ const ProdutividadeGlobal = () => {
   // KPIs
   const totalAbertos = filteredProdutividades.reduce((sum, p) => sum + Number(p.abertos), 0);
   const totalEncerrados = filteredProdutividades.reduce((sum, p) => sum + Number(p.encerrados), 0);
-  const totalBacklog = filteredProdutividades.reduce((sum, p) => sum + Number(p.backlog), 0);
+  
+  // Backlog: pegar apenas o registro mais recente de cada cliente
+  const totalBacklog = useMemo(() => {
+    // Agrupar por cliente e pegar o registro mais recente de cada
+    const latestByClient = new Map<string, number>();
+    
+    // Ordenar por data_fim descendente para garantir que o mais recente venha primeiro
+    const sortedByDate = [...filteredProdutividades].sort((a, b) => 
+      new Date(b.data_fim).getTime() - new Date(a.data_fim).getTime()
+    );
+    
+    sortedByDate.forEach((p) => {
+      // Se ainda não temos um registro para este cliente, adicionar
+      if (!latestByClient.has(p.cliente_id)) {
+        latestByClient.set(p.cliente_id, Number(p.backlog));
+      }
+    });
+    
+    // Somar os backlogs mais recentes de cada cliente
+    let sum = 0;
+    latestByClient.forEach((backlog) => {
+      sum += backlog;
+    });
+    
+    return sum;
+  }, [filteredProdutividades]);
+  
   const uniqueClientes = new Set(filteredProdutividades.map(p => p.cliente_id)).size;
 
   const clearFilters = () => {
