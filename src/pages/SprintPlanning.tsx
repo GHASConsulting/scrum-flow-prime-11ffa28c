@@ -342,10 +342,7 @@ const SprintPlanning = () => {
       return;
     }
 
-    if (!newTask.cliente_id) {
-      toast.error('O cliente é obrigatório');
-      return;
-    }
+    // Cliente é opcional
 
     try {
       const createdBacklogItem = await addBacklogItem({
@@ -452,10 +449,7 @@ const SprintPlanning = () => {
       return;
     }
 
-    if (!editingTask.cliente_id) {
-      toast.error('O cliente é obrigatório');
-      return;
-    }
+    // Cliente é opcional
 
     try {
       const updates: any = {

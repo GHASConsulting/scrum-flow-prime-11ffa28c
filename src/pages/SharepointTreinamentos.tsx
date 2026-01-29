@@ -11,8 +11,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Edit, Trash2, Eye, Download, GraduationCap, Search, ArrowUpDown, ArrowUp, ArrowDown, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, GraduationCap, Search, ArrowUpDown, ArrowUp, ArrowDown, Users } from 'lucide-react';
 import { useTreinamentos, Treinamento, TreinamentoInsert, TreinamentoUpdate, ParticipanteInput, TreinamentoParticipante } from '@/hooks/useTreinamentos';
+import { useDocumentos } from '@/hooks/useDocumentos';
 import { usePrestadorServico } from '@/hooks/usePrestadorServico';
 import { useAuth } from '@/hooks/useAuth';
 import { formatDate } from '@/lib/formatters';
@@ -22,7 +23,8 @@ const SharepointTreinamentos = () => {
   const { userRole } = useAuth();
   const isAdmin = userRole === 'administrador';
   
-  const { treinamentos, isLoading, fetchParticipantes, uploadFile, getFileUrl, addTreinamento, updateTreinamento, deleteTreinamento, isAdding, isUpdating } = useTreinamentos();
+  const { treinamentos, isLoading, fetchParticipantes, addTreinamento, updateTreinamento, deleteTreinamento, isAdding, isUpdating } = useTreinamentos();
+  const { documentos } = useDocumentos();
   const { prestadoresServico } = usePrestadorServico();
 
   // Dialogs state
@@ -73,15 +75,15 @@ const SharepointTreinamentos = () => {
     ministrado_por_id: string;
     descricao: string;
     status: string;
-    file: File | null;
+    documento_id: string;
     participantes: ParticipanteInput[];
   }>({
     nome: '',
     data_treinamento: new Date().toISOString().split('T')[0],
     ministrado_por_id: '',
     descricao: '',
-    status: 'ativo',
-    file: null,
+    status: 'nao_concluido',
+    documento_id: '',
     participantes: [],
   });
 
@@ -91,8 +93,8 @@ const SharepointTreinamentos = () => {
       data_treinamento: new Date().toISOString().split('T')[0],
       ministrado_por_id: '',
       descricao: '',
-      status: 'ativo',
-      file: null,
+      status: 'nao_concluido',
+      documento_id: '',
       participantes: [],
     });
   };
@@ -114,7 +116,7 @@ const SharepointTreinamentos = () => {
         ministrado_por_id: treinamento.ministrado_por_id || '',
         descricao: treinamento.descricao || '',
         status: treinamento.status,
-        file: null,
+        documento_id: treinamento.documento_id || '',
         participantes: participantes.map(p => ({
           prestador_id: p.prestador_id,
           capacitado: p.capacitado,
@@ -128,7 +130,7 @@ const SharepointTreinamentos = () => {
         ministrado_por_id: treinamento.ministrado_por_id || '',
         descricao: treinamento.descricao || '',
         status: treinamento.status,
-        file: null,
+        documento_id: treinamento.documento_id || '',
         participantes: [],
       });
     }
@@ -155,20 +157,13 @@ const SharepointTreinamentos = () => {
     }
 
     try {
-      let fileInfo = null;
-      if (formData.file) {
-        fileInfo = await uploadFile(formData.file);
-      }
-      
       const treinamento: TreinamentoInsert = {
         nome: formData.nome.trim(),
         data_treinamento: formData.data_treinamento,
         ministrado_por_id: formData.ministrado_por_id || null,
         descricao: formData.descricao.trim() || null,
         status: formData.status,
-        arquivo_path: fileInfo?.path || null,
-        arquivo_nome: fileInfo?.name || null,
-        arquivo_tipo: fileInfo?.type || null,
+        documento_id: formData.documento_id || null,
       };
 
       await addTreinamento({ treinamento, participantes: formData.participantes });
@@ -194,15 +189,8 @@ const SharepointTreinamentos = () => {
         ministrado_por_id: formData.ministrado_por_id || null,
         descricao: formData.descricao.trim() || null,
         status: formData.status,
+        documento_id: formData.documento_id || null,
       };
-
-      // If new file uploaded, replace the old one
-      if (formData.file) {
-        const fileInfo = await uploadFile(formData.file);
-        updateData.arquivo_path = fileInfo.path;
-        updateData.arquivo_nome = fileInfo.name;
-        updateData.arquivo_tipo = fileInfo.type;
-      }
 
       await updateTreinamento({ treinamento: updateData, participantes: formData.participantes });
       setIsEditDialogOpen(false);
@@ -223,27 +211,7 @@ const SharepointTreinamentos = () => {
     }
   };
 
-  const handleDownload = (treinamento: Treinamento) => {
-    if (!treinamento.arquivo_path) return;
-    const url = getFileUrl(treinamento.arquivo_path);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = treinamento.arquivo_nome || 'arquivo';
-    link.click();
-  };
-
-  const handleViewFile = (treinamento: Treinamento) => {
-    if (!treinamento.arquivo_path) return;
-    const url = getFileUrl(treinamento.arquivo_path);
-    
-    // PDFs open in a new tab for viewing
-    if (treinamento.arquivo_tipo === 'application/pdf') {
-      window.open(url, '_blank');
-    } else {
-      // Other formats trigger download
-      handleDownload(treinamento);
-    }
-  };
+  // Função removida - agora usa documento vinculado ao invés de arquivo direto
 
   // Toggle participant in the list
   const toggleParticipante = (prestadorId: string) => {
@@ -428,8 +396,8 @@ const SharepointTreinamentos = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos os status</SelectItem>
-                    <SelectItem value="ativo">Ativo</SelectItem>
-                    <SelectItem value="inativo">Inativo</SelectItem>
+                    <SelectItem value="concluido">Concluído</SelectItem>
+                    <SelectItem value="nao_concluido">Não Concluído</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -505,16 +473,6 @@ const SharepointTreinamentos = () => {
                           <Button variant="ghost" size="icon" onClick={() => handleOpenView(treinamento)} title="Visualizar Detalhes">
                             <Eye className="h-4 w-4" />
                           </Button>
-                          {treinamento.arquivo_path && (
-                            <>
-                              <Button variant="ghost" size="icon" onClick={() => handleViewFile(treinamento)} title="Ver Arquivo">
-                                <GraduationCap className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" onClick={() => handleDownload(treinamento)} title="Download">
-                                <Download className="h-4 w-4" />
-                              </Button>
-                            </>
-                          )}
                           {isAdmin && (
                             <>
                               <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(treinamento)} title="Editar">
@@ -536,8 +494,8 @@ const SharepointTreinamentos = () => {
                       <TableCell>{formatDate(treinamento.data_treinamento)}</TableCell>
                       <TableCell>{treinamento.ministrado_por?.nome || '-'}</TableCell>
                       <TableCell>
-                        <Badge variant={treinamento.status === 'ativo' ? 'default' : 'secondary'}>
-                          {treinamento.status === 'ativo' ? 'Ativo' : 'Inativo'}
+                        <Badge variant={treinamento.status === 'concluido' ? 'default' : 'secondary'}>
+                          {treinamento.status === 'concluido' ? 'Concluído' : 'Não Concluído'}
                         </Badge>
                       </TableCell>
                     </TableRow>
@@ -621,19 +579,28 @@ const SharepointTreinamentos = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ativo">Ativo</SelectItem>
-                    <SelectItem value="inativo">Inativo</SelectItem>
+                    <SelectItem value="concluido">Concluído</SelectItem>
+                    <SelectItem value="nao_concluido">Não Concluído</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="arquivo">Arquivo (opcional)</Label>
-                <Input
-                  id="arquivo"
-                  type="file"
-                  accept=".pdf,.docx,.pptx,.xlsx"
-                  onChange={(e) => setFormData(prev => ({ ...prev, file: e.target.files?.[0] || null }))}
-                />
+                <Label htmlFor="documento">Documento Vinculado</Label>
+                <Select 
+                  value={formData.documento_id} 
+                  onValueChange={(v) => setFormData(prev => ({ ...prev, documento_id: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um documento (opcional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {documentos.filter(d => d.status === 'ativo').map(doc => (
+                      <SelectItem key={doc.id} value={doc.id}>
+                        {doc.codigo} - {doc.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -711,22 +678,31 @@ const SharepointTreinamentos = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ativo">Ativo</SelectItem>
-                    <SelectItem value="inativo">Inativo</SelectItem>
+                    <SelectItem value="concluido">Concluído</SelectItem>
+                    <SelectItem value="nao_concluido">Não Concluído</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-arquivo">Arquivo (deixe vazio para manter o atual)</Label>
-                <Input
-                  id="edit-arquivo"
-                  type="file"
-                  accept=".pdf,.docx,.pptx,.xlsx"
-                  onChange={(e) => setFormData(prev => ({ ...prev, file: e.target.files?.[0] || null }))}
-                />
-                {selectedTreinamento?.arquivo_nome && (
+                <Label htmlFor="edit-documento">Documento Vinculado</Label>
+                <Select 
+                  value={formData.documento_id} 
+                  onValueChange={(v) => setFormData(prev => ({ ...prev, documento_id: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um documento (opcional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {documentos.filter(d => d.status === 'ativo').map(doc => (
+                      <SelectItem key={doc.id} value={doc.id}>
+                        {doc.codigo} - {doc.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedTreinamento?.documento && (
                   <p className="text-xs text-muted-foreground">
-                    Arquivo atual: {selectedTreinamento.arquivo_nome}
+                    Documento atual: {selectedTreinamento.documento.codigo} - {selectedTreinamento.documento.nome}
                   </p>
                 )}
               </div>
@@ -766,8 +742,8 @@ const SharepointTreinamentos = () => {
                 </div>
                 <div>
                   <Label className="text-muted-foreground text-xs">Status</Label>
-                  <Badge variant={selectedTreinamento.status === 'ativo' ? 'default' : 'secondary'}>
-                    {selectedTreinamento.status === 'ativo' ? 'Ativo' : 'Inativo'}
+                  <Badge variant={selectedTreinamento.status === 'concluido' ? 'default' : 'secondary'}>
+                    {selectedTreinamento.status === 'concluido' ? 'Concluído' : 'Não Concluído'}
                   </Badge>
                 </div>
               </div>
@@ -777,10 +753,10 @@ const SharepointTreinamentos = () => {
                   <p className="font-medium">{selectedTreinamento.descricao}</p>
                 </div>
               )}
-              {selectedTreinamento.arquivo_nome && (
+              {selectedTreinamento.documento && (
                 <div>
-                  <Label className="text-muted-foreground text-xs">Arquivo</Label>
-                  <p className="font-medium">{selectedTreinamento.arquivo_nome}</p>
+                  <Label className="text-muted-foreground text-xs">Documento Vinculado</Label>
+                  <p className="font-medium">{selectedTreinamento.documento.codigo} - {selectedTreinamento.documento.nome}</p>
                 </div>
               )}
               <div>

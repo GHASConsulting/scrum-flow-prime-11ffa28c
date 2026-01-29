@@ -22,10 +22,12 @@ export interface Treinamento {
   arquivo_path: string | null;
   arquivo_nome: string | null;
   arquivo_tipo: string | null;
+  documento_id: string | null;
   status: string;
   created_at: string;
   updated_at: string;
   ministrado_por?: { id: string; nome: string } | null;
+  documento?: { id: string; nome: string; codigo: number } | null;
   participantes?: TreinamentoParticipante[];
 }
 
@@ -37,6 +39,7 @@ export interface TreinamentoInsert {
   arquivo_path?: string | null;
   arquivo_nome?: string | null;
   arquivo_tipo?: string | null;
+  documento_id?: string | null;
   status?: string;
 }
 
@@ -49,6 +52,7 @@ export interface TreinamentoUpdate {
   arquivo_path?: string | null;
   arquivo_nome?: string | null;
   arquivo_tipo?: string | null;
+  documento_id?: string | null;
   status?: string;
 }
 
@@ -67,7 +71,8 @@ export const useTreinamentos = () => {
         .from('treinamento')
         .select(`
           *,
-          ministrado_por:ministrado_por_id(id, nome)
+          ministrado_por:ministrado_por_id(id, nome),
+          documento:documento_id(id, nome, codigo)
         `)
         .order('data_treinamento', { ascending: false });
       
