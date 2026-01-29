@@ -23,6 +23,8 @@ interface CadastrosDialogsProps {
   setIsEditTipoDialogOpen: (open: boolean) => void;
   newTipoNome: string;
   setNewTipoNome: (nome: string) => void;
+  newTipoClienteObrigatorio: boolean;
+  setNewTipoClienteObrigatorio: (obrigatorio: boolean) => void;
   editingTipo: any;
   setEditingTipo: (tipo: any) => void;
   handleAddTipo: () => void;
@@ -173,6 +175,13 @@ export const CadastrosDialogs = (props: CadastrosDialogsProps) => {
                 placeholder="Digite o nome do tipo sprint"
               />
             </div>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">Cliente Obrigatório no Sprint</label>
+              <Switch
+                checked={props.newTipoClienteObrigatorio}
+                onCheckedChange={props.setNewTipoClienteObrigatorio}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => props.setIsAddTipoDialogOpen(false)}>
@@ -199,6 +208,15 @@ export const CadastrosDialogs = (props: CadastrosDialogsProps) => {
                     props.setEditingTipo({ ...props.editingTipo, nome: e.target.value })
                   }
                   placeholder="Digite o nome do tipo sprint"
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Cliente Obrigatório no Sprint</label>
+                <Switch
+                  checked={props.editingTipo.cliente_obrigatorio}
+                  onCheckedChange={(checked) =>
+                    props.setEditingTipo({ ...props.editingTipo, cliente_obrigatorio: checked })
+                  }
                 />
               </div>
               <div className="flex items-center justify-between">

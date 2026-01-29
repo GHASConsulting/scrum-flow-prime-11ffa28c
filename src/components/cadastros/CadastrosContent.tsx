@@ -254,6 +254,7 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
                 <TableHead className="w-[60px]">ID</TableHead>
                 <TableHead className="w-[100px] text-center">Ações</TableHead>
                 <TableHead>Nome</TableHead>
+                <TableHead className="w-[140px] text-center">Cliente Obrigatório</TableHead>
                 <TableHead className="w-[100px] text-center">Ativo</TableHead>
               </TableRow>
             </TableHeader>
@@ -272,6 +273,11 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
                     </div>
                   </TableCell>
                   <TableCell className="font-medium">{item.nome}</TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant={item.cliente_obrigatorio ? 'default' : 'secondary'}>
+                      {item.cliente_obrigatorio ? 'Sim' : 'Não'}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="text-center">
                     <Switch
                       checked={item.ativo}
