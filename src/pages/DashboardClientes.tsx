@@ -3,7 +3,7 @@ import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Filter, Circle, ArrowUp, ArrowDown, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
+import { Filter, ArrowUp, ArrowDown, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { useClientPrioridadesStatus } from '@/hooks/useClientPrioridadesStatus';
 import { useClientProdutividadeStatus } from '@/hooks/useClientProdutividadeStatus';
@@ -16,8 +16,7 @@ import { MetodologiaStatusTooltip } from '@/components/dashboard/MetodologiaStat
 import { SummaryStatusDialog } from '@/components/dashboard/SummaryStatusDialog';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-
-type StatusColor = 'verde' | 'amarelo' | 'vermelho' | 'cinza';
+import { getTrafficLightEmoji, getTrafficLightPriority, TrafficLightColor } from '@/components/ui/traffic-light';
 
 type SortField = 'codigo' | 'nome' | 'responsavel' | 'geral' | 'metodologia' | 'prioridades' | 'produtividade' | 'riscos';
 type SortDirection = 'asc' | 'desc' | null;
@@ -27,75 +26,34 @@ interface ClienteStatus {
   codigo: number;
   nome: string;
   responsavel: string;
-  geral: StatusColor;
-  metodologia: StatusColor;
-  prioridades: StatusColor;
-  produtividade: StatusColor;
-  riscos: StatusColor;
+  geral: TrafficLightColor;
+  metodologia: TrafficLightColor;
+  prioridades: TrafficLightColor;
+  produtividade: TrafficLightColor;
+  riscos: TrafficLightColor;
 }
-
-const getStatusColor = (status: StatusColor): string => {
-  switch (status) {
-    case 'verde':
-      return 'text-green-500';
-    case 'amarelo':
-      return 'text-yellow-500';
-    case 'vermelho':
-      return 'text-red-500';
-    case 'cinza':
-      return 'text-gray-400';
-    default:
-      return 'text-muted-foreground';
-  }
-};
-
-const getStatusBgColor = (status: StatusColor): string => {
-  switch (status) {
-    case 'verde':
-      return 'bg-green-500';
-    case 'amarelo':
-      return 'bg-yellow-500';
-    case 'vermelho':
-      return 'bg-red-500';
-    case 'cinza':
-      return 'bg-gray-400';
-    default:
-      return 'bg-muted';
-  }
-};
-
-// Status priority for sorting (cinza=0, verde=1, amarelo=2, vermelho=3)
-const getStatusPriority = (status: StatusColor): number => {
-  switch (status) {
-    case 'cinza': return 0;
-    case 'verde': return 1;
-    case 'amarelo': return 2;
-    case 'vermelho': return 3;
-    default: return 0;
-  }
-};
 
 const ClickableStatusIndicator = ({ 
   status, 
   onClick 
 }: { 
-  status: StatusColor; 
+  status: TrafficLightColor; 
   onClick: () => void;
 }) => (
   <div className="flex justify-center">
     <button
       onClick={onClick}
-      className="p-1 rounded hover:bg-muted/50 transition-colors cursor-pointer"
+      className="p-1 rounded hover:bg-muted/50 transition-colors cursor-pointer hover:opacity-80"
       title="Clique para ver detalhes"
     >
-      <Circle className={`h-4 w-4 fill-current ${getStatusColor(status)}`} />
+      {getTrafficLightEmoji(status)}
     </button>
   </div>
 );
 
-const StatusIndicator = ({ status }: { status: StatusColor }) => (
+const StatusIndicator = ({ status }: { status: TrafficLightColor }) => (
   <div className="flex justify-center">
-    <Circle className={`h-4 w-4 fill-current ${getStatusColor(status)}`} />
+    {getTrafficLightEmoji(status)}
   </div>
 );
 
@@ -307,11 +265,11 @@ const DashboardClientes = () => {
         nome: record.cliente,
         responsavel: responsavelNome,
         // Indicadores sem regras definidas ficam cinza (sem dados para calcular)
-        geral: 'cinza' as StatusColor,
+        geral: 'cinza' as TrafficLightColor,
         metodologia: metodologiaStatus,
         prioridades: prioridadesStatus,
         produtividade: produtividadeStatus,
-        riscos: 'cinza' as StatusColor,
+        riscos: 'cinza' as TrafficLightColor,
       };
     });
   }, [records, prioridadesStatusMap, produtividadeStatusMap, metodologiaStatusMap, profilesMap]);
@@ -337,8 +295,8 @@ const DashboardClientes = () => {
           comparison = a.responsavel.localeCompare(b.responsavel, 'pt-BR');
         } else {
           // Status fields - sort by priority
-          const aPriority = getStatusPriority(a[sortField]);
-          const bPriority = getStatusPriority(b[sortField]);
+          const aPriority = getTrafficLightPriority(a[sortField]);
+          const bPriority = getTrafficLightPriority(b[sortField]);
           comparison = aPriority - bPriority;
         }
 
@@ -350,7 +308,7 @@ const DashboardClientes = () => {
   }, [clientesStatus, filterCliente, filterResponsavel, sortField, sortDirection]);
 
   // Calculate summary traffic light for each column
-  const calculateSummaryStatus = (field: 'geral' | 'metodologia' | 'prioridades' | 'produtividade' | 'riscos'): StatusColor => {
+  const calculateSummaryStatus = (field: 'geral' | 'metodologia' | 'prioridades' | 'produtividade' | 'riscos'): TrafficLightColor => {
     const statuses = filteredAndSortedClientes.map(c => c[field]);
     
     // Filter out 'cinza' (no data) for percentage calculations

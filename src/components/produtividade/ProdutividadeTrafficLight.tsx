@@ -1,11 +1,9 @@
-import { Circle } from 'lucide-react';
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
-
-type StatusColor = 'verde' | 'amarelo' | 'vermelho' | 'cinza';
+import { TrafficLightColor, getTrafficLightEmoji, getWorstTrafficLightStatus } from '@/components/ui/traffic-light';
 
 interface ProdutividadeTrafficLightProps {
   abertos15Dias: number;
@@ -13,28 +11,13 @@ interface ProdutividadeTrafficLightProps {
   abertos: number;
 }
 
-const getStatusColor = (color: StatusColor): string => {
-  switch (color) {
-    case 'verde':
-      return 'text-green-500';
-    case 'amarelo':
-      return 'text-yellow-500';
-    case 'vermelho':
-      return 'text-red-500';
-    case 'cinza':
-      return 'text-gray-400';
-    default:
-      return 'text-muted-foreground';
-  }
-};
-
-const getStatusFromAbertos15Dias = (value: number): StatusColor => {
+const getStatusFromAbertos15Dias = (value: number): TrafficLightColor => {
   if (value === 0) return 'verde';
   if (value === 1) return 'amarelo';
   return 'vermelho';
 };
 
-const getStatusFromBacklog = (backlog: number, abertos: number): StatusColor => {
+const getStatusFromBacklog = (backlog: number, abertos: number): TrafficLightColor => {
   // Se não há chamados abertos, não há como calcular percentual - considera verde
   if (abertos === 0) return 'verde';
   
@@ -45,17 +28,12 @@ const getStatusFromBacklog = (backlog: number, abertos: number): StatusColor => 
   return 'verde';
 };
 
-const getWorstStatus = (status1: StatusColor, status2: StatusColor): StatusColor => {
-  const priority: Record<StatusColor, number> = { cinza: -1, verde: 0, amarelo: 1, vermelho: 2 };
-  return priority[status1] >= priority[status2] ? status1 : status2;
-};
-
 const getStatusMessage = (
   abertos15Dias: number, 
   backlog: number,
   abertos: number,
-  statusAbertos: StatusColor,
-  statusBacklog: StatusColor
+  statusAbertos: TrafficLightColor,
+  statusBacklog: TrafficLightColor
 ): string => {
   const messages: string[] = [];
   
@@ -106,8 +84,8 @@ export function ProdutividadeTrafficLight({ abertos15Dias, backlog, abertos }: P
     return (
       <HoverCard>
         <HoverCardTrigger asChild>
-          <button className="cursor-pointer ml-2">
-            <Circle className={`h-4 w-4 fill-current ${getStatusColor('cinza')}`} />
+          <button className="cursor-pointer ml-2 text-base hover:opacity-80 transition-opacity">
+            {getTrafficLightEmoji('cinza')}
           </button>
         </HoverCardTrigger>
         <HoverCardContent className="w-80">
@@ -128,13 +106,13 @@ export function ProdutividadeTrafficLight({ abertos15Dias, backlog, abertos }: P
 
   const statusAbertos = getStatusFromAbertos15Dias(abertos15Dias);
   const statusBacklog = getStatusFromBacklog(backlog, abertos);
-  const finalStatus = getWorstStatus(statusAbertos, statusBacklog);
+  const finalStatus = getWorstTrafficLightStatus(statusAbertos, statusBacklog);
 
   return (
     <HoverCard>
       <HoverCardTrigger asChild>
-        <button className="cursor-pointer ml-2">
-          <Circle className={`h-4 w-4 fill-current ${getStatusColor(finalStatus)}`} />
+        <button className="cursor-pointer ml-2 text-base hover:opacity-80 transition-opacity">
+          {getTrafficLightEmoji(finalStatus)}
         </button>
       </HoverCardTrigger>
       <HoverCardContent className="w-80">
