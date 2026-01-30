@@ -6,6 +6,7 @@ export interface ClientAccessRecord {
   id: string;
   codigo: number;
   cliente: string;
+  ativo: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -63,16 +64,23 @@ export interface ClientAccessRecordWithDetails extends ClientAccessRecord {
   app_access: AppAccess[];
 }
 
-export const useClientAccessRecords = () => {
+export const useClientAccessRecords = (includeInactive = false) => {
   const queryClient = useQueryClient();
 
   const { data: records = [], isLoading } = useQuery({
-    queryKey: ["client-access-records"],
+    queryKey: ["client-access-records", includeInactive],
     queryFn: async () => {
-      const { data: mainRecords, error: mainError } = await supabase
+      let query = supabase
         .from("client_access_records")
         .select("*")
         .order("created_at", { ascending: false });
+
+      // Por padrão, só retorna ativos. No cadastro, passa includeInactive=true
+      if (!includeInactive) {
+        query = query.eq("ativo", true);
+      }
+
+      const { data: mainRecords, error: mainError } = await query;
 
       if (mainError) throw mainError;
 
@@ -219,6 +227,24 @@ export const useClientAccessRecords = () => {
     },
   });
 
+  const toggleAtivo = useMutation({
+    mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
+      const { error } = await supabase
+        .from("client_access_records")
+        .update({ ativo })
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["client-access-records"] });
+      toast.success("Status atualizado com sucesso");
+    },
+    onError: (error) => {
+      toast.error("Erro ao atualizar status: " + error.message);
+    },
+  });
+
   const uploadVpnExecutable = async (file: File) => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random()}.${fileExt}`;
@@ -258,6 +284,7 @@ export const useClientAccessRecords = () => {
     createRecord,
     updateRecord,
     deleteRecord,
+    toggleAtivo,
     uploadVpnExecutable,
     downloadVpnExecutable,
     deleteVpnExecutable,

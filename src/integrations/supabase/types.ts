@@ -129,6 +129,7 @@ export type Database = {
       }
       client_access_records: {
         Row: {
+          ativo: boolean
           cliente: string
           codigo: number
           created_at: string
@@ -136,6 +137,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ativo?: boolean
           cliente: string
           codigo?: number
           created_at?: string
@@ -143,6 +145,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ativo?: boolean
           cliente?: string
           codigo?: number
           created_at?: string

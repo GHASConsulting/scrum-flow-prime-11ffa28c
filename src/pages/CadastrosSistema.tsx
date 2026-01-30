@@ -34,8 +34,9 @@ const CadastrosSistema = () => {
     isLoading: isLoadingClientes,
     createRecord,
     updateRecord,
-    deleteRecord
-  } = useClientAccessRecords();
+    deleteRecord,
+    toggleAtivo: toggleClienteAtivo
+  } = useClientAccessRecords(true); // includeInactive=true para mostrar todos no cadastro
   const {
     prestadoresServico,
     isLoading: isLoadingPrestador,
@@ -95,6 +96,7 @@ const CadastrosSistema = () => {
     id: string;
     codigo: number;
     cliente: string;
+    ativo: boolean;
   } | null>(null);
 
   // Estado para Prestador de Serviço
@@ -270,7 +272,7 @@ const CadastrosSistema = () => {
       // Error handled in hook
     }
   };
-  const handleEditCliente = (item: { id: string; codigo: number; cliente: string }) => {
+  const handleEditCliente = (item: { id: string; codigo: number; cliente: string; ativo: boolean }) => {
     setEditingCliente({ ...item });
     setIsEditClienteDialogOpen(true);
   };
@@ -300,6 +302,13 @@ const CadastrosSistema = () => {
     if (!confirm('Tem certeza que deseja remover este cliente?')) return;
     try {
       await deleteRecord.mutateAsync(id);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+  const handleToggleClienteAtivo = async (id: string, ativo: boolean) => {
+    try {
+      await toggleClienteAtivo.mutateAsync({ id, ativo: !ativo });
     } catch (error) {
       // Error handled in hook
     }
@@ -648,6 +657,7 @@ const CadastrosSistema = () => {
             handleEditCliente={handleEditCliente}
             handleUpdateCliente={handleUpdateCliente}
             handleDeleteCliente={handleDeleteCliente}
+            handleToggleClienteAtivo={handleToggleClienteAtivo}
             // Setor
             isLoadingAreaDoc={isLoadingAreaDoc}
             isAddAreaDocDialogOpen={isAddAreaDocDialogOpen}
