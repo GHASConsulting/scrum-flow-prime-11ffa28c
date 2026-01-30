@@ -651,26 +651,26 @@ const DashboardClientes = () => {
                       <TableCell className="font-medium text-center">{cliente.codigo}</TableCell>
                       <TableCell className="font-semibold">{cliente.nome}</TableCell>
                       <TableCell className="font-semibold">{cliente.responsavel}</TableCell>
-                      <TableCell><StatusIndicator status={cliente.geral} /></TableCell>
-                      <TableCell>
+                      <TableCell className="text-center"><StatusIndicator status={cliente.geral} /></TableCell>
+                      <TableCell className="text-center">
                         <MetodologiaStatusTooltip 
                           status={cliente.metodologia} 
                           metodologiaData={metodologiaStatusMap?.[cliente.id]}
                         />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-center">
                         <PrioridadesStatusTooltip 
                           status={cliente.prioridades} 
                           prioridadesData={prioridadesStatusMap?.[cliente.id]}
                         />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-center">
                         <ProdutividadeStatusTooltip 
                           status={cliente.produtividade} 
                           produtividadeData={produtividadeStatusMap?.[cliente.id]}
                         />
                       </TableCell>
-                      <TableCell><StatusIndicator status={cliente.riscos} /></TableCell>
+                      <TableCell className="text-center"><StatusIndicator status={cliente.riscos} /></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
