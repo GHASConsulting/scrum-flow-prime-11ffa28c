@@ -3,7 +3,7 @@ import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Filter, ArrowUp, ArrowDown, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
+import { Filter, ArrowUp, ArrowDown, ArrowUpDown, ChevronDown, ChevronUp, FileText } from 'lucide-react';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { useClientPrioridadesStatus } from '@/hooks/useClientPrioridadesStatus';
 import { useClientProdutividadeStatus } from '@/hooks/useClientProdutividadeStatus';
@@ -16,6 +16,7 @@ import { ProdutividadeStatusTooltip } from '@/components/dashboard/Produtividade
 import { MetodologiaStatusTooltip } from '@/components/dashboard/MetodologiaStatusTooltip';
 import { RiscosStatusTooltip } from '@/components/dashboard/RiscosStatusTooltip';
 import { SummaryStatusDialog } from '@/components/dashboard/SummaryStatusDialog';
+import { ClientAnalysisDialog } from '@/components/dashboard/ClientAnalysisDialog';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { getTrafficLightEmoji, getTrafficLightPriority, TrafficLightColor } from '@/components/ui/traffic-light';
@@ -94,6 +95,9 @@ const DashboardClientes = () => {
   // Dialog state for summary status
   const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
   const [selectedSummaryField, setSelectedSummaryField] = useState<'geral' | 'metodologia' | 'prioridades' | 'produtividade' | 'riscos'>('geral');
+
+  // Dialog state for AI analysis
+  const [analysisDialogOpen, setAnalysisDialogOpen] = useState(false);
 
   const handleSummaryClick = (field: 'geral' | 'metodologia' | 'prioridades' | 'produtividade' | 'riscos') => {
     setSelectedSummaryField(field);
@@ -444,13 +448,38 @@ const DashboardClientes = () => {
     );
   };
 
+  // Build period info for analysis
+  const analysisPeriodo = useMemo(() => {
+    if (filterDataInicio && filterDataFim) {
+      const formatDate = (dateStr: string) => {
+        const [year, month, day] = dateStr.split('-');
+        return `${day}/${month}/${year}`;
+      };
+      return {
+        inicio: formatDate(filterDataInicio),
+        fim: formatDate(filterDataFim),
+      };
+    }
+    return undefined;
+  }, [filterDataInicio, filterDataFim]);
+
   return (
     <Layout>
       <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
         {/* Header - Fixed */}
-        <div className="flex-shrink-0">
-          <h2 className="text-3xl font-bold text-foreground">Clientes</h2>
-          <p className="text-muted-foreground mt-1">Visão geral dos indicadores por cliente</p>
+        <div className="flex-shrink-0 flex items-start justify-between">
+          <div>
+            <h2 className="text-3xl font-bold text-foreground">Clientes</h2>
+            <p className="text-muted-foreground mt-1">Visão geral dos indicadores por cliente</p>
+          </div>
+          <Button 
+            onClick={() => setAnalysisDialogOpen(true)}
+            className="flex items-center gap-2"
+            disabled={filteredAndSortedClientes.length === 0}
+          >
+            <FileText className="h-4 w-4" />
+            Resumo
+          </Button>
         </div>
 
         {/* Filtros - Collapsible */}
@@ -719,6 +748,14 @@ const DashboardClientes = () => {
           fieldLabel={fieldLabels[selectedSummaryField]}
           clientes={filteredAndSortedClientes}
           summaryStatus={summaryStatuses[selectedSummaryField]}
+        />
+
+        {/* AI Analysis Dialog */}
+        <ClientAnalysisDialog
+          open={analysisDialogOpen}
+          onOpenChange={setAnalysisDialogOpen}
+          clientes={filteredAndSortedClientes}
+          periodo={analysisPeriodo}
         />
       </div>
     </Layout>
