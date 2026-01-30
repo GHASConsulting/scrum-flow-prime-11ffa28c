@@ -3,10 +3,15 @@ import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Filter, Circle, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { Filter, Circle, ArrowUp, ArrowDown, ArrowUpDown, Calendar } from 'lucide-react';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { useClientPrioridadesStatus } from '@/hooks/useClientPrioridadesStatus';
+import { useClientProdutividadeStatus } from '@/hooks/useClientProdutividadeStatus';
 import { PrioridadesStatusTooltip } from '@/components/dashboard/PrioridadesStatusTooltip';
+import { ProdutividadeStatusTooltip } from '@/components/dashboard/ProdutividadeStatusTooltip';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 type StatusColor = 'verde' | 'amarelo' | 'vermelho' | 'cinza';
 
@@ -82,6 +87,14 @@ const DashboardClientes = () => {
   const [filterPrioridades, setFilterPrioridades] = useState<string>('all');
   const [filterProdutividade, setFilterProdutividade] = useState<string>('all');
   const [filterRiscos, setFilterRiscos] = useState<string>('all');
+  const [filterDataInicio, setFilterDataInicio] = useState<string>('');
+  const [filterDataFim, setFilterDataFim] = useState<string>('');
+
+  // Hook for produtividade status with date filters
+  const { data: produtividadeStatusMap, isLoading: isLoadingProdutividade } = useClientProdutividadeStatus(
+    filterDataInicio || undefined,
+    filterDataFim || undefined
+  );
 
   // Sorting - default to nome ascending
   const [sortField, setSortField] = useState<SortField | null>('nome');
@@ -123,6 +136,9 @@ const DashboardClientes = () => {
       // Get prioridades status from the calculated map
       const prioridadesStatus = prioridadesStatusMap?.[record.id]?.status || 'verde';
       
+      // Get produtividade status from the calculated map
+      const produtividadeStatus = produtividadeStatusMap?.[record.id]?.status || 'cinza';
+      
       return {
         id: record.id,
         codigo: record.codigo,
@@ -131,11 +147,11 @@ const DashboardClientes = () => {
         geral: 'verde' as StatusColor,
         metodologia: 'verde' as StatusColor,
         prioridades: prioridadesStatus,
-        produtividade: 'verde' as StatusColor,
+        produtividade: produtividadeStatus,
         riscos: 'verde' as StatusColor,
       };
     });
-  }, [records, prioridadesStatusMap]);
+  }, [records, prioridadesStatusMap, produtividadeStatusMap]);
 
   // Aplicar filtros e ordenação
   const filteredAndSortedClientes = useMemo(() => {
@@ -233,11 +249,29 @@ const DashboardClientes = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               <div>
-                <label className="text-sm font-medium">Cliente</label>
+                <Label className="text-sm font-medium">Data Início</Label>
+                <Input
+                  type="date"
+                  value={filterDataInicio}
+                  onChange={(e) => setFilterDataInicio(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Data Fim</Label>
+                <Input
+                  type="date"
+                  value={filterDataFim}
+                  onChange={(e) => setFilterDataFim(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Cliente</Label>
                 <Select value={filterCliente} onValueChange={setFilterCliente}>
-                  <SelectTrigger>
+                  <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent>
@@ -250,6 +284,26 @@ const DashboardClientes = () => {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="flex items-end">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setFilterDataInicio('');
+                    setFilterDataFim('');
+                    setFilterCliente('all');
+                    setFilterGeral('all');
+                    setFilterMetodologia('all');
+                    setFilterPrioridades('all');
+                    setFilterProdutividade('all');
+                    setFilterRiscos('all');
+                  }}
+                  className="w-full"
+                >
+                  Limpar Filtros
+                </Button>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
               <StatusFilterSelect value={filterGeral} onChange={setFilterGeral} label="Geral" />
               <StatusFilterSelect value={filterMetodologia} onChange={setFilterMetodologia} label="Metodologia" />
               <StatusFilterSelect value={filterPrioridades} onChange={setFilterPrioridades} label="Prioridades" />
@@ -265,7 +319,7 @@ const DashboardClientes = () => {
             <CardTitle>Indicadores por Cliente</CardTitle>
           </CardHeader>
           <CardContent>
-            {isLoading || isLoadingPrioridades ? (
+            {isLoading || isLoadingPrioridades || isLoadingProdutividade ? (
               <div className="text-center py-8 text-muted-foreground">Carregando...</div>
             ) : filteredAndSortedClientes.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</div>
@@ -295,7 +349,12 @@ const DashboardClientes = () => {
                           prioridadesData={prioridadesStatusMap?.[cliente.id]}
                         />
                       </TableCell>
-                      <TableCell><StatusIndicator status={cliente.produtividade} /></TableCell>
+                      <TableCell>
+                        <ProdutividadeStatusTooltip 
+                          status={cliente.produtividade} 
+                          produtividadeData={produtividadeStatusMap?.[cliente.id]}
+                        />
+                      </TableCell>
                       <TableCell><StatusIndicator status={cliente.riscos} /></TableCell>
                     </TableRow>
                   ))}
