@@ -891,6 +891,8 @@ export type Database = {
       risco: {
         Row: {
           area_impactada: string
+          cliente_id: string | null
+          codigo: number
           comentario_acompanhamento: string | null
           created_at: string
           data_identificacao: string
@@ -915,6 +917,8 @@ export type Database = {
         }
         Insert: {
           area_impactada: string
+          cliente_id?: string | null
+          codigo?: number
           comentario_acompanhamento?: string | null
           created_at?: string
           data_identificacao?: string
@@ -939,6 +943,8 @@ export type Database = {
         }
         Update: {
           area_impactada?: string
+          cliente_id?: string | null
+          codigo?: number
           comentario_acompanhamento?: string | null
           created_at?: string
           data_identificacao?: string
@@ -961,7 +967,15 @@ export type Database = {
           tipo_risco_ghas?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "risco_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "client_access_records"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       risco_history: {
         Row: {

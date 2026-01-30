@@ -4,6 +4,8 @@ import { toast } from 'sonner';
 
 export type Risco = {
   id: string;
+  codigo: number;
+  cliente_id: string | null;
   projeto: string;
   area_impactada: string;
   tipo_risco_ghas: string;
@@ -27,7 +29,7 @@ export type Risco = {
   created_at: string;
 };
 
-export type RiscoInsert = Omit<Risco, 'id' | 'created_at' | 'updated_at' | 'nivel_risco'>;
+export type RiscoInsert = Omit<Risco, 'id' | 'codigo' | 'created_at' | 'updated_at' | 'nivel_risco'>;
 
 export const useRiscos = () => {
   const [riscos, setRiscos] = useState<Risco[]>([]);
@@ -39,7 +41,7 @@ export const useRiscos = () => {
       const { data, error } = await supabase
         .from('risco')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('codigo', { ascending: false });
 
       if (error) throw error;
       setRiscos(data || []);
@@ -72,8 +74,8 @@ export const useRiscos = () => {
 
   const updateRisco = async (id: string, updates: Partial<Risco>) => {
     try {
-      // Remove nivel_risco from updates as it's a generated column
-      const { nivel_risco, ...safeUpdates } = updates as any;
+      // Remove nivel_risco and codigo from updates as they are generated columns
+      const { nivel_risco, codigo, ...safeUpdates } = updates as any;
       
       const { data, error } = await supabase
         .from('risco')
