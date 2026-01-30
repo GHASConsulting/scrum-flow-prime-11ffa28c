@@ -671,8 +671,11 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
       t.status !== 'cancelada'
     );
 
-    // Find overdue tasks based on date only (2+ end_at changes do NOT affect traffic light)
+    // Find overdue tasks (date-based OR 2+ end_at changes)
     const overdueTasks = nonCompletedTasks.filter(task => {
+      // Rule: 2+ end_at changes = considered overdue for traffic light
+      if (hasMultipleEndAtChanges(task.id)) return true;
+      
       if (!task.end_at) return false;
       const taskEndDate = toZonedTime(new Date(task.end_at), BRAZIL_TIMEZONE);
       return taskEndDate < brazilNow;
