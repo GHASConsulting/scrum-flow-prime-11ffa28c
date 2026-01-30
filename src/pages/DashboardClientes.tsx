@@ -448,20 +448,24 @@ const DashboardClientes = () => {
     );
   };
 
-  // Build period info for analysis
+  // Build period info for analysis - ALWAYS uses last 30-45 days regardless of filters
   const analysisPeriodo = useMemo(() => {
-    if (filterDataInicio && filterDataFim) {
-      const formatDate = (dateStr: string) => {
-        const [year, month, day] = dateStr.split('-');
-        return `${day}/${month}/${year}`;
-      };
-      return {
-        inicio: formatDate(filterDataInicio),
-        fim: formatDate(filterDataFim),
-      };
-    }
-    return undefined;
-  }, [filterDataInicio, filterDataFim]);
+    const hoje = new Date();
+    const inicio = new Date();
+    inicio.setDate(hoje.getDate() - 45); // Last 45 days
+    
+    const formatDate = (date: Date) => {
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    };
+    
+    return {
+      inicio: formatDate(inicio),
+      fim: formatDate(hoje),
+    };
+  }, []);
 
   return (
     <Layout>
