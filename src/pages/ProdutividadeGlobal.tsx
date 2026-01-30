@@ -633,15 +633,18 @@ const ProdutividadeGlobal = () => {
   }, [filteredProdutividades]);
   
   // Dados para o farol baseados nos totais agregados dos filtros
+  // Mostra cinza quando um cliente está selecionado mas não tem registros
   const trafficLightData = useMemo(() => {
-    if (filteredProdutividades.length === 0) return null;
+    // Se nenhum cliente específico selecionado, não mostra farol
+    if (filterCliente === 'all') return null;
     
+    // Cliente selecionado - sempre mostra farol (cinza se sem dados, colorido se com dados)
     return {
       abertos15Dias: totalAbertos15Dias,
       backlog: totalBacklog,
       abertos: totalAbertos
     };
-  }, [filteredProdutividades.length, totalAbertos15Dias, totalBacklog, totalAbertos]);
+  }, [filterCliente, totalAbertos15Dias, totalBacklog, totalAbertos]);
   
   const uniqueClientes = new Set(filteredProdutividades.map(p => p.cliente_id)).size;
 
