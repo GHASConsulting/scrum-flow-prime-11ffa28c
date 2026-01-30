@@ -8,15 +8,18 @@ import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { useClientPrioridadesStatus } from '@/hooks/useClientPrioridadesStatus';
 import { useClientProdutividadeStatus } from '@/hooks/useClientProdutividadeStatus';
 import { useClientMetodologiaStatus } from '@/hooks/useClientMetodologiaStatus';
+import { useClientRiscosStatus } from '@/hooks/useClientRiscosStatus';
 import { useProdutividadeGlobal } from '@/hooks/useProdutividadeGlobal';
 import { useProfiles } from '@/hooks/useProfiles';
 import { PrioridadesStatusTooltip } from '@/components/dashboard/PrioridadesStatusTooltip';
 import { ProdutividadeStatusTooltip } from '@/components/dashboard/ProdutividadeStatusTooltip';
 import { MetodologiaStatusTooltip } from '@/components/dashboard/MetodologiaStatusTooltip';
+import { RiscosStatusTooltip } from '@/components/dashboard/RiscosStatusTooltip';
 import { SummaryStatusDialog } from '@/components/dashboard/SummaryStatusDialog';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { getTrafficLightEmoji, getTrafficLightPriority, TrafficLightColor } from '@/components/ui/traffic-light';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 
 type SortField = 'codigo' | 'nome' | 'responsavel' | 'geral' | 'metodologia' | 'prioridades' | 'produtividade' | 'riscos';
 type SortDirection = 'asc' | 'desc' | null;
@@ -210,6 +213,12 @@ const DashboardClientes = () => {
     filterDataFim
   );
 
+  // Hook for riscos status with date filters
+  const { data: riscosStatusMap } = useClientRiscosStatus(
+    filterDataInicio,
+    filterDataFim
+  );
+
   // Sorting - default to nome ascending
   const [sortField, setSortField] = useState<SortField | null>('nome');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -256,6 +265,9 @@ const DashboardClientes = () => {
       // Get metodologia status from the calculated map (cinza if no data)
       const metodologiaStatus = metodologiaStatusMap?.[record.id]?.status || 'cinza';
 
+      // Get riscos status from the calculated map (cinza if no data)
+      const riscosStatus = riscosStatusMap?.[record.id]?.status || 'cinza';
+
       // Get responsável name from profiles map
       const responsavelNome = record.responsavel_id ? profilesMap[record.responsavel_id] || '' : '';
       
@@ -269,10 +281,10 @@ const DashboardClientes = () => {
         metodologia: metodologiaStatus,
         prioridades: prioridadesStatus,
         produtividade: produtividadeStatus,
-        riscos: 'cinza' as TrafficLightColor,
+        riscos: riscosStatus,
       };
     });
-  }, [records, prioridadesStatusMap, produtividadeStatusMap, metodologiaStatusMap, profilesMap]);
+  }, [records, prioridadesStatusMap, produtividadeStatusMap, metodologiaStatusMap, riscosStatusMap, profilesMap]);
 
   // Aplicar filtros e ordenação
   const filteredAndSortedClientes = useMemo(() => {
@@ -317,6 +329,17 @@ const DashboardClientes = () => {
     // If no measured data, return gray
     if (measuredStatuses.length === 0) {
       return 'cinza';
+    }
+
+    // Special logic for riscos: if any client has red → red; if any has yellow → yellow
+    if (field === 'riscos') {
+      const hasRed = measuredStatuses.some(s => s === 'vermelho');
+      if (hasRed) return 'vermelho';
+      
+      const hasYellow = measuredStatuses.some(s => s === 'amarelo');
+      if (hasYellow) return 'amarelo';
+      
+      return 'verde';
     }
     
     const total = measuredStatuses.length;
@@ -633,7 +656,12 @@ const DashboardClientes = () => {
                           produtividadeData={produtividadeStatusMap?.[cliente.id]}
                         />
                       </TableCell>
-                      <TableCell className="text-center"><StatusIndicator status={cliente.riscos} /></TableCell>
+                      <TableCell className="text-center">
+                        <RiscosStatusTooltip 
+                          status={cliente.riscos} 
+                          riscosData={riscosStatusMap?.[cliente.id]}
+                        />
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
