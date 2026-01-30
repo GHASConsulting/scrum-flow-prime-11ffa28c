@@ -48,18 +48,18 @@ const getNivelRiscoDisplay = (nivel: string) => {
   }
 };
 
-const getStatusBadgeClass = (status: string) => {
+const getStatusStyle = (status: string) => {
   switch (status) {
     case 'Aberto':
-      return 'bg-red-100 text-red-800';
+      return 'font-bold';
     case 'Em mitigação':
-      return 'bg-yellow-100 text-yellow-800';
+      return 'text-yellow-600 font-medium';
     case 'Mitigado':
-      return 'bg-green-100 text-green-800';
+      return 'text-green-600 font-medium';
     case 'Materializado':
-      return 'bg-purple-100 text-purple-800';
+      return 'text-purple-600 font-medium';
     default:
-      return 'bg-gray-100 text-gray-800';
+      return 'text-muted-foreground';
   }
 };
 
@@ -1320,7 +1320,7 @@ export default function Riscos() {
                             <span className={color}>{emoji} {risco.nivel_risco}</span>
                           </TableCell>
                           <TableCell>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(risco.status_risco)}`}>
+                            <span className={getStatusStyle(risco.status_risco)}>
                               {risco.status_risco}
                             </span>
                           </TableCell>
