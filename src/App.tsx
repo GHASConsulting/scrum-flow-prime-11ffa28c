@@ -36,7 +36,7 @@ function App() {
         <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route path="/alterar-senha" element={<ProtectedRoute><AlterarSenha /></ProtectedRoute>} />
-          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/" element={<ProtectedRoute><DashboardClientes /></ProtectedRoute>} />
           <Route path="/dashboard-projetos" element={<ProtectedRoute><DashboardProjetos /></ProtectedRoute>} />
           <Route path="/dashboard-clientes" element={<ProtectedRoute><DashboardClientes /></ProtectedRoute>} />
           <Route path="/backlog" element={<ProtectedRoute><Backlog /></ProtectedRoute>} />
