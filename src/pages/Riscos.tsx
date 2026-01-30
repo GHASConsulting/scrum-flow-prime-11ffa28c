@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -146,10 +146,129 @@ const RiscoHistorySection = ({ riscoId }: { riscoId: string }) => {
   );
 };
 
+// Editable fields section for risk details
+interface RiscoEditableFieldsProps {
+  risco: Risco;
+  onUpdate: (id: string, updates: Partial<Risco>) => Promise<any>;
+  userName: string | null;
+}
+
+const RiscoEditableFields = ({ risco, onUpdate, userName }: RiscoEditableFieldsProps) => {
+  const { addHistoryEntry } = useRiscoHistory(risco.id);
+  const [localStatus, setLocalStatus] = useState(risco.status_risco);
+  const [localProbabilidade, setLocalProbabilidade] = useState(risco.probabilidade);
+  const [localImpacto, setLocalImpacto] = useState(risco.impacto);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Sync local state when risco changes
+  useEffect(() => {
+    setLocalStatus(risco.status_risco);
+    setLocalProbabilidade(risco.probabilidade);
+    setLocalImpacto(risco.impacto);
+  }, [risco]);
+
+  const handleFieldChange = async (
+    field: 'status_risco' | 'probabilidade' | 'impacto',
+    newValue: string,
+    oldValue: string,
+    fieldLabel: string
+  ) => {
+    if (newValue === oldValue) return;
+    
+    setIsUpdating(true);
+    try {
+      // Update the risk
+      await onUpdate(risco.id, { [field]: newValue });
+      
+      // Create history entry
+      const historyDescription = `${fieldLabel} alterado de "${oldValue}" para "${newValue}"`;
+      await addHistoryEntry(historyDescription, userName || 'Usuário');
+      
+    } catch (error) {
+      console.error('Erro ao atualizar campo:', error);
+      // Revert local state on error
+      if (field === 'status_risco') setLocalStatus(oldValue);
+      if (field === 'probabilidade') setLocalProbabilidade(oldValue);
+      if (field === 'impacto') setLocalImpacto(oldValue);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-3 gap-4">
+      <div className="space-y-1">
+        <Label className="text-xs text-muted-foreground">Probabilidade</Label>
+        <Select
+          value={localProbabilidade}
+          onValueChange={(value) => {
+            const oldValue = localProbabilidade;
+            setLocalProbabilidade(value);
+            handleFieldChange('probabilidade', value, oldValue, 'Probabilidade');
+          }}
+          disabled={isUpdating}
+        >
+          <SelectTrigger className="h-9">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {PROBABILIDADES.map((prob) => (
+              <SelectItem key={prob} value={prob}>{prob}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs text-muted-foreground">Impacto</Label>
+        <Select
+          value={localImpacto}
+          onValueChange={(value) => {
+            const oldValue = localImpacto;
+            setLocalImpacto(value);
+            handleFieldChange('impacto', value, oldValue, 'Impacto');
+          }}
+          disabled={isUpdating}
+        >
+          <SelectTrigger className="h-9">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {IMPACTOS.map((imp) => (
+              <SelectItem key={imp} value={imp}>{imp}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs text-muted-foreground">Status</Label>
+        <Select
+          value={localStatus}
+          onValueChange={(value) => {
+            const oldValue = localStatus;
+            setLocalStatus(value);
+            handleFieldChange('status_risco', value, oldValue, 'Status');
+          }}
+          disabled={isUpdating}
+        >
+          <SelectTrigger className="h-9">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {STATUS_RISCO.map((status) => (
+              <SelectItem key={status} value={status}>{status}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+};
+
 export default function Riscos() {
   const { riscos, loading, addRisco, updateRisco, deleteRisco } = useRiscos();
   const { profiles } = useProfiles();
   const { records: clientes } = useClientAccessRecords();
+  const { userName } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRisco, setEditingRisco] = useState<Risco | null>(null);
   const [viewingRisco, setViewingRisco] = useState<Risco | null>(null);
@@ -1274,19 +1393,27 @@ export default function Riscos() {
                   </CardContent>
                 </Card>
 
-                {/* 2. Avaliação */}
+                {/* 2. Avaliação e Status (Editável) */}
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Avaliação</CardTitle>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      Avaliação e Status
+                      <span className="text-xs font-normal text-muted-foreground">(editável)</span>
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent className="grid grid-cols-3 gap-4 text-sm">
-                    <div><strong>Probabilidade:</strong> {viewingRisco.probabilidade}</div>
-                    <div><strong>Impacto:</strong> {viewingRisco.impacto}</div>
-                    <div>
-                      <strong>Nível:</strong>{' '}
-                      <span className={getNivelRiscoDisplay(viewingRisco.nivel_risco).color}>
-                        {getNivelRiscoDisplay(viewingRisco.nivel_risco).emoji} {viewingRisco.nivel_risco}
-                      </span>
+                  <CardContent className="space-y-4">
+                    <RiscoEditableFields 
+                      risco={viewingRisco} 
+                      onUpdate={updateRisco}
+                      userName={userName}
+                    />
+                    <div className="pt-2 border-t">
+                      <div className="flex items-center gap-2">
+                        <strong className="text-sm">Nível Calculado:</strong>
+                        <span className={getNivelRiscoDisplay(viewingRisco.nivel_risco).color}>
+                          {getNivelRiscoDisplay(viewingRisco.nivel_risco).emoji} {viewingRisco.nivel_risco}
+                        </span>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -1301,7 +1428,6 @@ export default function Riscos() {
                       <div><strong>Origem:</strong> {viewingRisco.origem_risco}</div>
                       <div><strong>Responsável:</strong> {viewingRisco.responsavel || '-'}</div>
                     </div>
-                    <div><strong>Status:</strong> <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(viewingRisco.status_risco)}`}>{viewingRisco.status_risco}</span></div>
                     <div><strong>Plano de Mitigação:</strong> {viewingRisco.plano_mitigacao || '-'}</div>
                   </CardContent>
                 </Card>
