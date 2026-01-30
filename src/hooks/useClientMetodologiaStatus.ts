@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 import { useBacklog } from './useBacklog';
+import { useSprints } from './useSprints';
+import { useSprintTarefas } from './useSprintTarefas';
 
 type StatusColor = 'verde' | 'amarelo' | 'vermelho' | 'cinza';
 
@@ -17,12 +19,14 @@ export function useClientMetodologiaStatus(
   filterDataFim?: string
 ) {
   const { backlog } = useBacklog();
+  const { sprints } = useSprints();
+  const { sprintTarefas } = useSprintTarefas();
 
   const data = useMemo(() => {
     const statusMap: Record<string, MetodologiaStatusData> = {};
 
     const hoje = new Date();
-    let percentualTempoTranscorrido = 100; // Default: considera 100% do tempo quando sem filtro
+    let percentualTempoTranscorrido = 100;
 
     // Se houver filtro de período, calcular % de tempo transcorrido
     if (filterDataInicio && filterDataFim) {
@@ -45,6 +49,21 @@ export function useClientMetodologiaStatus(
         : 0;
     }
 
+    // Filtrar sprints que estão dentro do período filtrado
+    const sprintsNoPeriodo = filterDataInicio && filterDataFim
+      ? sprints.filter(sprint => {
+          const sprintInicio = new Date(sprint.data_inicio);
+          const sprintFim = new Date(sprint.data_fim);
+          const periodoInicio = new Date(filterDataInicio);
+          const periodoFim = new Date(filterDataFim);
+          
+          // Sprint está no período se houver interseção
+          return sprintInicio <= periodoFim && sprintFim >= periodoInicio;
+        })
+      : [];
+
+    const sprintIdsNoPeriodo = new Set(sprintsNoPeriodo.map(s => s.id));
+
     // Filtrar apenas tarefas do backlog com tipo_tarefa = "Cliente" e cliente_id preenchido
     const tarefasCliente = backlog.filter(
       b => b.tipo_tarefa === 'Cliente' && b.cliente_id
@@ -56,11 +75,33 @@ export function useClientMetodologiaStatus(
     clienteIds.forEach(clienteId => {
       if (!clienteId) return;
 
-      // Buscar todas as tarefas deste cliente com tipo_tarefa = 'Cliente'
-      const tarefasDoCliente = tarefasCliente.filter(t => t.cliente_id === clienteId);
+      // Se não há período selecionado, retorna cinza (não mensurado)
+      if (!filterDataInicio || !filterDataFim) {
+        statusMap[clienteId] = {
+          status: 'cinza',
+          tarefasTotal: 0,
+          tarefasConcluidas: 0,
+          percentualConcluido: 0,
+          percentualTempoTranscorrido: 0,
+          desvio: 0,
+        };
+        return;
+      }
+
+      // Buscar backlog_ids que estão vinculados a sprints no período
+      const backlogIdsNoPeriodo = new Set(
+        sprintTarefas
+          .filter(st => sprintIdsNoPeriodo.has(st.sprint_id))
+          .map(st => st.backlog_id)
+      );
+
+      // Filtrar tarefas do cliente que estão vinculadas a sprints no período
+      const tarefasDoCliente = tarefasCliente.filter(
+        t => t.cliente_id === clienteId && backlogIdsNoPeriodo.has(t.id)
+      );
 
       if (tarefasDoCliente.length === 0) {
-        // Nenhuma tarefa = cinza
+        // Nenhuma tarefa vinculada a sprints no período = cinza
         statusMap[clienteId] = {
           status: 'cinza',
           tarefasTotal: 0,
@@ -80,11 +121,14 @@ export function useClientMetodologiaStatus(
       const percentualConcluido = (tarefasConcluidas / tarefasDoCliente.length) * 100;
       const desvio = percentualTempoTranscorrido - percentualConcluido;
 
-      // Determinar status
+      // Determinar status com novas regras:
+      // Desvio > 18%: Vermelho
+      // Desvio > 10% e <= 18%: Amarelo
+      // Desvio <= 10%: Verde
       let status: StatusColor;
-      if (desvio > 10) {
+      if (desvio > 18) {
         status = 'vermelho';
-      } else if (desvio > 0) {
+      } else if (desvio > 10) {
         status = 'amarelo';
       } else {
         status = 'verde';
@@ -101,7 +145,7 @@ export function useClientMetodologiaStatus(
     });
 
     return statusMap;
-  }, [backlog, filterDataInicio, filterDataFim]);
+  }, [backlog, sprints, sprintTarefas, filterDataInicio, filterDataFim]);
 
   return { data };
 }

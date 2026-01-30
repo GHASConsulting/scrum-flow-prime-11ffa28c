@@ -63,7 +63,7 @@ export const MetodologiaStatusTooltip = ({ status, metodologiaData }: Metodologi
               <span className="font-medium">{getStatusLabel(status)}</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Nenhuma tarefa do tipo "Cliente" encontrada no período selecionado ou nenhum período selecionado.
+              Nenhuma tarefa do tipo "Cliente" vinculada a sprints no período selecionado ou nenhum período selecionado.
             </p>
           </div>
         </HoverCardContent>
@@ -75,12 +75,12 @@ export const MetodologiaStatusTooltip = ({ status, metodologiaData }: Metodologi
     if (!metodologiaData) return '';
     
     if (status === 'vermelho') {
-      return `Desvio de ${metodologiaData.desvio.toFixed(1)}% (superior a 10%)`;
+      return `Desvio de ${metodologiaData.desvio.toFixed(1)}% (superior a 18%)`;
     }
     if (status === 'amarelo') {
-      return `Desvio de ${metodologiaData.desvio.toFixed(1)}% (% concluído abaixo do % de tempo)`;
+      return `Desvio de ${metodologiaData.desvio.toFixed(1)}% (entre 10% e 18%)`;
     }
-    return 'Progresso dentro do esperado';
+    return 'Progresso dentro do esperado (desvio ≤ 10%)';
   };
 
   return (
@@ -132,7 +132,7 @@ export const MetodologiaStatusTooltip = ({ status, metodologiaData }: Metodologi
               </div>
               
               <p className="text-xs text-muted-foreground pt-1">
-                Considerando apenas tarefas do tipo "Cliente"
+                Considerando tarefas do tipo "Cliente" vinculadas a sprints no período
               </p>
             </div>
           )}
