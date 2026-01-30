@@ -7,9 +7,11 @@ import { Filter, Circle, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { useClientPrioridadesStatus } from '@/hooks/useClientPrioridadesStatus';
 import { useClientProdutividadeStatus } from '@/hooks/useClientProdutividadeStatus';
+import { useClientMetodologiaStatus } from '@/hooks/useClientMetodologiaStatus';
 import { useProdutividadeGlobal } from '@/hooks/useProdutividadeGlobal';
 import { PrioridadesStatusTooltip } from '@/components/dashboard/PrioridadesStatusTooltip';
 import { ProdutividadeStatusTooltip } from '@/components/dashboard/ProdutividadeStatusTooltip';
+import { MetodologiaStatusTooltip } from '@/components/dashboard/MetodologiaStatusTooltip';
 import { SummaryStatusDialog } from '@/components/dashboard/SummaryStatusDialog';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -230,6 +232,12 @@ const DashboardClientes = () => {
     filterDataFim
   );
 
+  // Hook for metodologia status with date filters
+  const { data: metodologiaStatusMap } = useClientMetodologiaStatus(
+    filterDataInicio,
+    filterDataFim
+  );
+
   // Sorting - default to nome ascending
   const [sortField, setSortField] = useState<SortField | null>('nome');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -273,19 +281,22 @@ const DashboardClientes = () => {
       // Get produtividade status from the calculated map (cinza if no data)
       const produtividadeStatus = produtividadeStatusMap?.[record.id]?.status || 'cinza';
       
+      // Get metodologia status from the calculated map (cinza if no data)
+      const metodologiaStatus = metodologiaStatusMap?.[record.id]?.status || 'cinza';
+      
       return {
         id: record.id,
         codigo: record.codigo,
         nome: record.cliente,
         // Indicadores sem regras definidas ficam cinza (sem dados para calcular)
         geral: 'cinza' as StatusColor,
-        metodologia: 'cinza' as StatusColor,
+        metodologia: metodologiaStatus,
         prioridades: prioridadesStatus,
         produtividade: produtividadeStatus,
         riscos: 'cinza' as StatusColor,
       };
     });
-  }, [records, prioridadesStatusMap, produtividadeStatusMap]);
+  }, [records, prioridadesStatusMap, produtividadeStatusMap, metodologiaStatusMap]);
 
   // Aplicar filtros e ordenação
   const filteredAndSortedClientes = useMemo(() => {
@@ -591,7 +602,12 @@ const DashboardClientes = () => {
                       <TableCell className="font-medium text-center">{cliente.codigo}</TableCell>
                       <TableCell>{cliente.nome}</TableCell>
                       <TableCell><StatusIndicator status={cliente.geral} /></TableCell>
-                      <TableCell><StatusIndicator status={cliente.metodologia} /></TableCell>
+                      <TableCell>
+                        <MetodologiaStatusTooltip 
+                          status={cliente.metodologia} 
+                          metodologiaData={metodologiaStatusMap?.[cliente.id]}
+                        />
+                      </TableCell>
                       <TableCell>
                         <PrioridadesStatusTooltip 
                           status={cliente.prioridades} 
