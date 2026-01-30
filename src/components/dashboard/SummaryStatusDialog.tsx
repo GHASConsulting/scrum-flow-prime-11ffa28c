@@ -1,18 +1,16 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Circle } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-
-type StatusColor = 'verde' | 'amarelo' | 'vermelho' | 'cinza';
+import { getTrafficLightEmoji, TrafficLightColor } from '@/components/ui/traffic-light';
 
 interface ClienteStatus {
   id: string;
   codigo: number;
   nome: string;
-  geral: StatusColor;
-  metodologia: StatusColor;
-  prioridades: StatusColor;
-  produtividade: StatusColor;
-  riscos: StatusColor;
+  geral: TrafficLightColor;
+  metodologia: TrafficLightColor;
+  prioridades: TrafficLightColor;
+  produtividade: TrafficLightColor;
+  riscos: TrafficLightColor;
 }
 
 interface SummaryStatusDialogProps {
@@ -21,25 +19,10 @@ interface SummaryStatusDialogProps {
   field: 'geral' | 'metodologia' | 'prioridades' | 'produtividade' | 'riscos';
   fieldLabel: string;
   clientes: ClienteStatus[];
-  summaryStatus: StatusColor;
+  summaryStatus: TrafficLightColor;
 }
 
-const getStatusColor = (status: StatusColor): string => {
-  switch (status) {
-    case 'verde':
-      return 'text-green-500';
-    case 'amarelo':
-      return 'text-yellow-500';
-    case 'vermelho':
-      return 'text-red-500';
-    case 'cinza':
-      return 'text-gray-400';
-    default:
-      return 'text-muted-foreground';
-  }
-};
-
-const getStatusLabel = (status: StatusColor): string => {
+const getStatusLabel = (status: TrafficLightColor): string => {
   switch (status) {
     case 'verde':
       return 'Verde';
@@ -109,7 +92,7 @@ export const SummaryStatusDialog = ({
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Circle className={`h-5 w-5 fill-current ${getStatusColor(summaryStatus)}`} />
+            <span className="text-lg">{getTrafficLightEmoji(summaryStatus)}</span>
             Resumo do Indicador: {fieldLabel}
           </DialogTitle>
         </DialogHeader>
@@ -119,10 +102,10 @@ export const SummaryStatusDialog = ({
           <div className="bg-muted/50 p-4 rounded-lg space-y-2">
             <h4 className="font-semibold text-sm">Regras do Farol Consolidado</h4>
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• <span className="text-red-500 font-medium">Vermelho</span>: ≥10% exclusivamente vermelho OU ≥18% amarelo/vermelho</li>
-              <li>• <span className="text-yellow-500 font-medium">Amarelo</span>: ≥10% amarelo ou vermelho</li>
-              <li>• <span className="text-green-500 font-medium">Verde</span>: Menos de 10% amarelo/vermelho</li>
-              <li>• <span className="text-gray-400 font-medium">Cinza</span>: Nenhum dado mensurado</li>
+              <li>• <span className="text-red-500 font-medium">🔴 Vermelho</span>: ≥10% exclusivamente vermelho OU ≥18% amarelo/vermelho</li>
+              <li>• <span className="text-yellow-500 font-medium">🟡 Amarelo</span>: ≥10% amarelo ou vermelho</li>
+              <li>• <span className="text-green-500 font-medium">🟢 Verde</span>: Menos de 10% amarelo/vermelho</li>
+              <li>• <span className="text-gray-400 font-medium">⚪ Cinza</span>: Nenhum dado mensurado</li>
             </ul>
           </div>
 
@@ -136,7 +119,7 @@ export const SummaryStatusDialog = ({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="bg-green-500/10 p-3 rounded-lg text-center">
               <div className="flex items-center justify-center gap-1 mb-1">
-                <Circle className="h-3 w-3 fill-green-500 text-green-500" />
+                <span>🟢</span>
                 <span className="text-sm font-medium">Verde</span>
               </div>
               <span className="text-lg font-bold">{greenCount}</span>
@@ -146,7 +129,7 @@ export const SummaryStatusDialog = ({
             </div>
             <div className="bg-yellow-500/10 p-3 rounded-lg text-center">
               <div className="flex items-center justify-center gap-1 mb-1">
-                <Circle className="h-3 w-3 fill-yellow-500 text-yellow-500" />
+                <span>🟡</span>
                 <span className="text-sm font-medium">Amarelo</span>
               </div>
               <span className="text-lg font-bold">{yellowCount}</span>
@@ -156,7 +139,7 @@ export const SummaryStatusDialog = ({
             </div>
             <div className="bg-red-500/10 p-3 rounded-lg text-center">
               <div className="flex items-center justify-center gap-1 mb-1">
-                <Circle className="h-3 w-3 fill-red-500 text-red-500" />
+                <span>🔴</span>
                 <span className="text-sm font-medium">Vermelho</span>
               </div>
               <span className="text-lg font-bold">{redCount}</span>
@@ -166,7 +149,7 @@ export const SummaryStatusDialog = ({
             </div>
             <div className="bg-gray-500/10 p-3 rounded-lg text-center">
               <div className="flex items-center justify-center gap-1 mb-1">
-                <Circle className="h-3 w-3 fill-gray-400 text-gray-400" />
+                <span>⚪</span>
                 <span className="text-sm font-medium">Sem dados</span>
               </div>
               <span className="text-lg font-bold">{grayCount}</span>
@@ -202,7 +185,7 @@ export const SummaryStatusDialog = ({
                         <TableCell>{cliente.nome}</TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-2">
-                            <Circle className={`h-3 w-3 fill-current ${getStatusColor(cliente[field])}`} />
+                            <span>{getTrafficLightEmoji(cliente[field])}</span>
                             <span className="text-sm">{getStatusLabel(cliente[field])}</span>
                           </div>
                         </TableCell>

@@ -1,45 +1,28 @@
-import { Circle } from 'lucide-react';
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
-
-type StatusColor = 'verde' | 'amarelo' | 'vermelho' | 'cinza';
+import { getTrafficLightEmoji, TrafficLightColor } from '@/components/ui/traffic-light';
 
 interface PriorityListStatus {
   listId: string;
   listName: string;
-  status: StatusColor;
+  status: TrafficLightColor;
 }
 
 interface ClientPrioridadesStatus {
   clientId: string;
-  status: StatusColor;
+  status: TrafficLightColor;
   listsStatuses: PriorityListStatus[];
 }
 
 interface PrioridadesStatusTooltipProps {
-  status: StatusColor;
+  status: TrafficLightColor;
   prioridadesData?: ClientPrioridadesStatus;
 }
 
-const getStatusColor = (status: StatusColor): string => {
-  switch (status) {
-    case 'verde':
-      return 'text-green-500';
-    case 'amarelo':
-      return 'text-yellow-500';
-    case 'vermelho':
-      return 'text-red-500';
-    case 'cinza':
-      return 'text-gray-400';
-    default:
-      return 'text-muted-foreground';
-  }
-};
-
-const getStatusMessage = (status: StatusColor, listsStatuses?: PriorityListStatus[]): string => {
+const getStatusMessage = (status: TrafficLightColor, listsStatuses?: PriorityListStatus[]): string => {
   if (status === 'cinza' || !listsStatuses || listsStatuses.length === 0) {
     return 'Nenhuma lista de prioridades cadastrada.';
   }
@@ -65,8 +48,8 @@ export function PrioridadesStatusTooltip({ status, prioridadesData }: Prioridade
   return (
     <HoverCard>
       <HoverCardTrigger asChild>
-        <button className="cursor-pointer flex justify-center w-full">
-          <Circle className={`h-4 w-4 fill-current ${getStatusColor(status)}`} />
+        <button className="cursor-pointer flex justify-center w-full hover:opacity-80 transition-opacity">
+          {getTrafficLightEmoji(status)}
         </button>
       </HoverCardTrigger>
       <HoverCardContent className="w-72">
@@ -83,9 +66,7 @@ export function PrioridadesStatusTooltip({ status, prioridadesData }: Prioridade
               <ul className="text-xs space-y-1">
                 {listsNeedingAttention.map((list) => (
                   <li key={list.listId} className="flex items-center gap-2">
-                    <Circle 
-                      className={`h-2 w-2 fill-current ${getStatusColor(list.status)}`} 
-                    />
+                    <span>{getTrafficLightEmoji(list.status)}</span>
                     <span className={list.status === 'vermelho' ? 'text-destructive' : 'text-yellow-600'}>
                       {list.listName}
                     </span>

@@ -1,48 +1,31 @@
-import { Circle } from 'lucide-react';
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
-
-type StatusColor = 'verde' | 'amarelo' | 'vermelho' | 'cinza';
+import { getTrafficLightEmoji, TrafficLightColor } from '@/components/ui/traffic-light';
 
 interface ProdutividadeStatusData {
-  status: StatusColor;
+  status: TrafficLightColor;
   abertos15Dias: number;
   backlog: number;
   abertos: number;
   percentualBacklog: number;
-  statusAbertos: StatusColor;
-  statusBacklog: StatusColor;
+  statusAbertos: TrafficLightColor;
+  statusBacklog: TrafficLightColor;
 }
 
 interface ProdutividadeStatusTooltipProps {
-  status: StatusColor;
+  status: TrafficLightColor;
   produtividadeData?: ProdutividadeStatusData;
 }
-
-const getStatusColor = (status: StatusColor): string => {
-  switch (status) {
-    case 'verde':
-      return 'text-green-500';
-    case 'amarelo':
-      return 'text-yellow-500';
-    case 'vermelho':
-      return 'text-red-500';
-    case 'cinza':
-      return 'text-gray-400';
-    default:
-      return 'text-muted-foreground';
-  }
-};
 
 const getStatusMessage = (
   abertos15Dias: number, 
   backlog: number,
   abertos: number,
-  statusAbertos: StatusColor,
-  statusBacklog: StatusColor
+  statusAbertos: TrafficLightColor,
+  statusBacklog: TrafficLightColor
 ): string => {
   const messages: string[] = [];
   
@@ -91,8 +74,8 @@ export function ProdutividadeStatusTooltip({ status, produtividadeData }: Produt
     return (
       <HoverCard>
         <HoverCardTrigger asChild>
-          <button className="cursor-pointer flex justify-center w-full">
-            <Circle className={`h-4 w-4 fill-current ${getStatusColor('cinza')}`} />
+          <button className="cursor-pointer flex justify-center w-full hover:opacity-80 transition-opacity">
+            {getTrafficLightEmoji('cinza')}
           </button>
         </HoverCardTrigger>
         <HoverCardContent className="w-80">
@@ -119,8 +102,8 @@ export function ProdutividadeStatusTooltip({ status, produtividadeData }: Produt
   return (
     <HoverCard>
       <HoverCardTrigger asChild>
-        <button className="cursor-pointer flex justify-center w-full">
-          <Circle className={`h-4 w-4 fill-current ${getStatusColor(status)}`} />
+        <button className="cursor-pointer flex justify-center w-full hover:opacity-80 transition-opacity">
+          {getTrafficLightEmoji(status)}
         </button>
       </HoverCardTrigger>
       <HoverCardContent className="w-80">

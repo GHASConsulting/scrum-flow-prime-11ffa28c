@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, FileDown, ChevronDown, ChevronRight, Circle, Eye, Upload, Download, History } from 'lucide-react';
+import { Plus, Trash2, FileDown, ChevronDown, ChevronRight, Eye, Upload, Download, History } from 'lucide-react';
 import { useScheduleTasks } from '@/hooks/useScheduleTasks';
 import { useScheduleTaskHistory } from '@/hooks/useScheduleTaskHistory';
 import type { Tables } from '@/integrations/supabase/types';
@@ -20,6 +20,7 @@ import { TaskHistoryDialog } from './TaskHistoryDialog';
 import { TaskChangeHistoryPanel } from './TaskChangeHistoryPanel';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import * as XLSX from 'xlsx';
+import { getTrafficLightEmoji, TrafficLightColor } from '@/components/ui/traffic-light';
 
 const BRAZIL_TIMEZONE = 'America/Sao_Paulo';
 
@@ -723,21 +724,6 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
     };
   }, [tasks, totalTasks, endAtChangesCount]);
 
-  const getTrafficLightColor = (color: 'verde' | 'amarelo' | 'vermelho' | 'cinza'): string => {
-    switch (color) {
-      case 'verde':
-        return 'text-green-500';
-      case 'amarelo':
-        return 'text-yellow-500';
-      case 'vermelho':
-        return 'text-red-500';
-      case 'cinza':
-        return 'text-gray-400';
-      default:
-        return 'text-muted-foreground';
-    }
-  };
-
   if (loading) {
     return <Card className="p-8 text-center">Carregando cronograma...</Card>;
   }
@@ -752,8 +738,8 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
             Cronograma <span className="font-bold text-primary">{completionPercentage}%</span>
             <HoverCard>
               <HoverCardTrigger asChild>
-                <button className="cursor-pointer">
-                  <Circle className={`h-4 w-4 fill-current ${getTrafficLightColor(trafficLightData.color)}`} />
+                <button className="cursor-pointer hover:opacity-80 transition-opacity">
+                  {getTrafficLightEmoji(trafficLightData.color)}
                 </button>
               </HoverCardTrigger>
               <HoverCardContent className="w-80">

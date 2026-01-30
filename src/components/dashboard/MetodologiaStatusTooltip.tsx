@@ -1,10 +1,8 @@
-import { Circle } from 'lucide-react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-
-type StatusColor = 'verde' | 'amarelo' | 'vermelho' | 'cinza';
+import { getTrafficLightEmoji, TrafficLightColor } from '@/components/ui/traffic-light';
 
 interface MetodologiaStatusData {
-  status: StatusColor;
+  status: TrafficLightColor;
   tarefasTotal: number;
   tarefasConcluidas: number;
   percentualConcluido: number;
@@ -13,26 +11,11 @@ interface MetodologiaStatusData {
 }
 
 interface MetodologiaStatusTooltipProps {
-  status: StatusColor;
+  status: TrafficLightColor;
   metodologiaData?: MetodologiaStatusData;
 }
 
-const getStatusColor = (status: StatusColor): string => {
-  switch (status) {
-    case 'verde':
-      return 'text-green-500';
-    case 'amarelo':
-      return 'text-yellow-500';
-    case 'vermelho':
-      return 'text-red-500';
-    case 'cinza':
-      return 'text-gray-400';
-    default:
-      return 'text-muted-foreground';
-  }
-};
-
-const getStatusLabel = (status: StatusColor): string => {
+const getStatusLabel = (status: TrafficLightColor): string => {
   switch (status) {
     case 'verde':
       return 'Em Dia';
@@ -52,14 +35,14 @@ export const MetodologiaStatusTooltip = ({ status, metodologiaData }: Metodologi
     return (
       <HoverCard>
         <HoverCardTrigger asChild>
-          <div className="flex justify-center cursor-help">
-            <Circle className={`h-4 w-4 fill-current ${getStatusColor(status)}`} />
+          <div className="flex justify-center cursor-help hover:opacity-80 transition-opacity">
+            {getTrafficLightEmoji(status)}
           </div>
         </HoverCardTrigger>
         <HoverCardContent className="w-64">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Circle className={`h-3 w-3 fill-current ${getStatusColor(status)}`} />
+              <span>{getTrafficLightEmoji(status)}</span>
               <span className="font-medium">{getStatusLabel(status)}</span>
             </div>
             <p className="text-sm text-muted-foreground">
@@ -86,14 +69,14 @@ export const MetodologiaStatusTooltip = ({ status, metodologiaData }: Metodologi
   return (
     <HoverCard>
       <HoverCardTrigger asChild>
-        <div className="flex justify-center cursor-help">
-          <Circle className={`h-4 w-4 fill-current ${getStatusColor(status)}`} />
+        <div className="flex justify-center cursor-help hover:opacity-80 transition-opacity">
+          {getTrafficLightEmoji(status)}
         </div>
       </HoverCardTrigger>
       <HoverCardContent className="w-80">
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <Circle className={`h-3 w-3 fill-current ${getStatusColor(status)}`} />
+            <span>{getTrafficLightEmoji(status)}</span>
             <span className="font-medium">{getStatusLabel(status)}</span>
           </div>
           
