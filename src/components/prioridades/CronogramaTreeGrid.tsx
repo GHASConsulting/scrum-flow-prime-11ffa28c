@@ -495,9 +495,30 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
     return roots;
   };
 
+  // Count end_at changes per task from history
+  const endAtChangesCount = useMemo(() => {
+    const counts = new Map<string, number>();
+    changeHistory.forEach(entry => {
+      if (entry.campo_alterado === 'end_at') {
+        counts.set(entry.task_id, (counts.get(entry.task_id) || 0) + 1);
+      }
+    });
+    return counts;
+  }, [changeHistory]);
+
+  // Check if task has 2+ end_at changes (considered as overdue even if on time)
+  const hasMultipleEndAtChanges = (taskId: string): boolean => {
+    return (endAtChangesCount.get(taskId) || 0) >= 2;
+  };
+
   // Check if a task is overdue (for status styling)
   const isTaskOverdue = (task: ScheduleTask): boolean => {
-    if (!task.end_at || task.status === 'concluida' || task.status === 'cancelada') return false;
+    if (task.status === 'concluida' || task.status === 'cancelada') return false;
+    
+    // Check if task has 2+ end_at changes - considered overdue regardless of date
+    if (hasMultipleEndAtChanges(task.id)) return true;
+    
+    if (!task.end_at) return false;
     const now = new Date();
     const brazilNow = toZonedTime(now, BRAZIL_TIMEZONE);
     brazilNow.setHours(23, 59, 59, 999);
@@ -643,23 +664,26 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
     const brazilNow = toZonedTime(now, BRAZIL_TIMEZONE);
     brazilNow.setHours(23, 59, 59, 999);
 
-    // Filter tasks that are not completed and have end_at
+    // Filter tasks that are not completed and not cancelled
     const nonCompletedTasks = tasks.filter(t => 
       t.status !== 'concluida' && 
-      t.status !== 'cancelada' && 
-      t.end_at
+      t.status !== 'cancelada'
     );
 
-    // Find overdue tasks
+    // Find overdue tasks (including those with 2+ end_at changes)
     const overdueTasks = nonCompletedTasks.filter(task => {
+      // Check if task has 2+ end_at changes - considered overdue
+      if (hasMultipleEndAtChanges(task.id)) return true;
+      
       if (!task.end_at) return false;
       const taskEndDate = toZonedTime(new Date(task.end_at), BRAZIL_TIMEZONE);
       return taskEndDate < brazilNow;
     });
 
-    // Find tasks with more than 7 days overdue
+    // Find tasks with more than 7 days overdue (only date-based, not change-based)
     const tasksOver7Days = overdueTasks.filter(task => {
-      const taskEndDate = toZonedTime(new Date(task.end_at!), BRAZIL_TIMEZONE);
+      if (!task.end_at) return false;
+      const taskEndDate = toZonedTime(new Date(task.end_at), BRAZIL_TIMEZONE);
       const daysOverdue = differenceInDays(brazilNow, taskEndDate);
       return daysOverdue > 7;
     });
@@ -696,7 +720,7 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
       reason: `${overdueTasks.length} atividade(s) atrasada(s).`, 
       overdueTasks 
     };
-  }, [tasks, totalTasks]);
+  }, [tasks, totalTasks, endAtChangesCount]);
 
   const getTrafficLightColor = (color: 'verde' | 'amarelo' | 'vermelho' | 'cinza'): string => {
     switch (color) {
