@@ -2,9 +2,13 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
+import { isTaskOlderThan24Hours } from './useScheduleTaskHistory';
 
 type ScheduleTask = Tables<'schedule_task'>;
 type ScheduleTaskInsert = Omit<ScheduleTask, 'id' | 'created_at' | 'updated_at'>;
+
+// Fields that should be tracked for history
+const TRACKED_FIELDS = ['start_at', 'end_at', 'status', 'responsavel'];
 
 export const useScheduleTasks = (priorityListId: string | null) => {
   const [tasks, setTasks] = useState<ScheduleTask[]>([]);
@@ -63,8 +67,32 @@ export const useScheduleTasks = (priorityListId: string | null) => {
     }
   };
 
+  const recordHistory = async (
+    taskId: string,
+    field: string,
+    oldValue: string | null,
+    newValue: string | null
+  ) => {
+    try {
+      await supabase
+        .from('schedule_task_history')
+        .insert({
+          task_id: taskId,
+          campo_alterado: field,
+          valor_anterior: oldValue,
+          valor_novo: newValue,
+          alterado_por: null // Can be enhanced to track user
+        });
+    } catch (error) {
+      console.error('Erro ao registrar histórico:', error);
+    }
+  };
+
   const updateTask = async (id: string, updates: Partial<ScheduleTask>) => {
     try {
+      // Get current task state for history comparison
+      const currentTask = tasks.find(t => t.id === id);
+      
       const { data, error } = await supabase
         .from('schedule_task')
         .update(updates)
@@ -73,6 +101,27 @@ export const useScheduleTasks = (priorityListId: string | null) => {
         .single();
 
       if (error) throw error;
+      
+      // Record history for tracked fields if task is older than 24 hours
+      if (currentTask && isTaskOlderThan24Hours(currentTask.created_at)) {
+        for (const field of TRACKED_FIELDS) {
+          if (field in updates) {
+            const oldValue = currentTask[field as keyof ScheduleTask];
+            const newValue = updates[field as keyof ScheduleTask];
+            
+            // Only record if value actually changed
+            if (String(oldValue || '') !== String(newValue || '')) {
+              await recordHistory(
+                id,
+                field,
+                oldValue ? String(oldValue) : null,
+                newValue ? String(newValue) : null
+              );
+            }
+          }
+        }
+      }
+      
       setTasks(prev => prev.map(t => t.id === id ? data : t));
       return data;
     } catch (error) {
