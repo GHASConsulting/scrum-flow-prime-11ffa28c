@@ -332,14 +332,15 @@ const DashboardClientes = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div>
+      <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
+        {/* Header - Fixed */}
+        <div className="flex-shrink-0">
           <h2 className="text-3xl font-bold text-foreground">Clientes</h2>
           <p className="text-muted-foreground mt-1">Visão geral dos indicadores por cliente</p>
         </div>
 
-        {/* Filtros */}
-        <Card>
+        {/* Filtros - Fixed */}
+        <Card className="flex-shrink-0 mt-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Filter className="h-5 w-5" />
@@ -459,19 +460,19 @@ const DashboardClientes = () => {
           </CardContent>
         </Card>
 
-        {/* Grid de Clientes */}
-        <Card>
-          <CardHeader>
+        {/* Grid de Clientes - Scrollable */}
+        <Card className="flex-1 mt-6 min-h-0 flex flex-col">
+          <CardHeader className="flex-shrink-0">
             <CardTitle>Indicadores por Cliente</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-1 overflow-auto min-h-0">
             {isLoading || isLoadingPrioridades || isLoadingProdutividade ? (
               <div className="text-center py-8 text-muted-foreground">Carregando...</div>
             ) : filteredAndSortedClientes.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</div>
             ) : (
               <Table>
-                <TableHeader>
+                <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
                     <SortableHeader field="codigo" className="w-16">Código</SortableHeader>
                     <SortableHeader field="nome" className="text-left">Cliente</SortableHeader>
