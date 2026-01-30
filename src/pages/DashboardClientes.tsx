@@ -286,6 +286,53 @@ const DashboardClientes = () => {
     return result;
   }, [clientesStatus, filterCliente, filterGeral, filterMetodologia, filterPrioridades, filterProdutividade, filterRiscos, sortField, sortDirection]);
 
+  // Calculate summary traffic light for each column
+  const calculateSummaryStatus = (field: 'geral' | 'metodologia' | 'prioridades' | 'produtividade' | 'riscos'): StatusColor => {
+    const statuses = filteredAndSortedClientes.map(c => c[field]);
+    
+    // Filter out 'cinza' (no data) for percentage calculations
+    const measuredStatuses = statuses.filter(s => s !== 'cinza');
+    
+    // If no measured data, return gray
+    if (measuredStatuses.length === 0) {
+      return 'cinza';
+    }
+    
+    const total = measuredStatuses.length;
+    const redCount = measuredStatuses.filter(s => s === 'vermelho').length;
+    const yellowCount = measuredStatuses.filter(s => s === 'amarelo').length;
+    const yellowOrRedCount = redCount + yellowCount;
+    
+    const yellowOrRedPercent = (yellowOrRedCount / total) * 100;
+    const redPercent = (redCount / total) * 100;
+    
+    // Rule: 10% or more exclusively red → RED
+    if (redPercent >= 10) {
+      return 'vermelho';
+    }
+    
+    // Rule: 18% or more yellow or red → RED
+    if (yellowOrRedPercent >= 18) {
+      return 'vermelho';
+    }
+    
+    // Rule: 10% or more yellow or red → YELLOW
+    if (yellowOrRedPercent >= 10) {
+      return 'amarelo';
+    }
+    
+    // Otherwise → GREEN
+    return 'verde';
+  };
+
+  const summaryStatuses = useMemo(() => ({
+    geral: calculateSummaryStatus('geral'),
+    metodologia: calculateSummaryStatus('metodologia'),
+    prioridades: calculateSummaryStatus('prioridades'),
+    produtividade: calculateSummaryStatus('produtividade'),
+    riscos: calculateSummaryStatus('riscos'),
+  }), [filteredAndSortedClientes]);
+
   const StatusFilterSelect = ({ value, onChange, label }: { value: string; onChange: (v: string) => void; label: string }) => (
     <div>
       <label className="text-sm font-medium">{label}</label>
@@ -473,6 +520,15 @@ const DashboardClientes = () => {
             ) : (
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
+                  <TableRow>
+                    <TableHead className="w-16"></TableHead>
+                    <TableHead className="text-left"></TableHead>
+                    <TableHead className="w-24"><StatusIndicator status={summaryStatuses.geral} /></TableHead>
+                    <TableHead className="w-24"><StatusIndicator status={summaryStatuses.metodologia} /></TableHead>
+                    <TableHead className="w-24"><StatusIndicator status={summaryStatuses.prioridades} /></TableHead>
+                    <TableHead className="w-24"><StatusIndicator status={summaryStatuses.produtividade} /></TableHead>
+                    <TableHead className="w-24"><StatusIndicator status={summaryStatuses.riscos} /></TableHead>
+                  </TableRow>
                   <TableRow>
                     <SortableHeader field="codigo" className="w-16">Código</SortableHeader>
                     <SortableHeader field="nome" className="text-left">Cliente</SortableHeader>
