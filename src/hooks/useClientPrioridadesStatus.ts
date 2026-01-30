@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toZonedTime } from "date-fns-tz";
 
-type StatusColor = 'verde' | 'amarelo' | 'vermelho';
+type StatusColor = 'verde' | 'amarelo' | 'vermelho' | 'cinza';
 
 interface PriorityListStatus {
   listId: string;
@@ -20,7 +20,8 @@ const BRAZIL_TIMEZONE = 'America/Sao_Paulo';
 
 // Calculate traffic light status for a single priority list's tasks
 const calculateListTrafficLight = (tasks: any[]): StatusColor => {
-  if (tasks.length === 0) return 'verde';
+  // Se não há tarefas, retorna cinza (sem dados)
+  if (tasks.length === 0) return 'cinza';
   
   // Get current date in Brazil timezone at 23:59:59
   const now = new Date();
@@ -64,11 +65,17 @@ const calculateListTrafficLight = (tasks: any[]): StatusColor => {
 
 // Calculate overall client status based on all priority lists
 const calculateClientStatus = (listsStatuses: PriorityListStatus[]): StatusColor => {
-  if (listsStatuses.length === 0) return 'verde';
+  if (listsStatuses.length === 0) return 'cinza';
   
-  const redCount = listsStatuses.filter(l => l.status === 'vermelho').length;
-  const yellowCount = listsStatuses.filter(l => l.status === 'amarelo').length;
-  const totalLists = listsStatuses.length;
+  // Filtrar apenas listas que têm dados (não cinza)
+  const listsWithData = listsStatuses.filter(l => l.status !== 'cinza');
+  
+  // Se todas as listas estão sem dados, retorna cinza
+  if (listsWithData.length === 0) return 'cinza';
+  
+  const redCount = listsWithData.filter(l => l.status === 'vermelho').length;
+  const yellowCount = listsWithData.filter(l => l.status === 'amarelo').length;
+  const totalLists = listsWithData.length;
   
   // Red: any list is red OR 51%+ of lists are yellow
   if (redCount > 0) return 'vermelho';
