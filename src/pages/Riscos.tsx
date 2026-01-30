@@ -26,6 +26,8 @@ import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { calculateWorkingDays } from '@/lib/workingDays';
+import { TrafficLightWithHover, type TrafficLightColor } from '@/components/ui/traffic-light';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 
 const AREAS_IMPACTADAS = ['Delivery', 'Comercial', 'Financeiro', 'CS/CX', 'TI', 'Operação'];
 const TIPOS_RISCO_GHAS = ['GHAS - Perda de Contrato', 'GHAS - Multa Contratual', 'GHAS - Jurídico'];
@@ -542,6 +544,37 @@ export default function Riscos() {
       return 0;
     });
   }, [filteredRiscos, sortColumn, sortDirection, clientes]);
+
+  // Traffic light logic based on filtered risks
+  const riscosTrafficLight = useMemo((): { color: TrafficLightColor; message: string } => {
+    if (filteredRiscos.length === 0) {
+      return { color: 'cinza', message: 'Nenhum risco encontrado para os filtros selecionados.' };
+    }
+    
+    const hasAberto = filteredRiscos.some(r => r.status_risco === 'Aberto');
+    const hasEmMitigacao = filteredRiscos.some(r => r.status_risco === 'Em mitigação');
+    
+    if (hasAberto) {
+      const abertosCount = filteredRiscos.filter(r => r.status_risco === 'Aberto').length;
+      return { 
+        color: 'vermelho', 
+        message: `${abertosCount} risco(s) em aberto requer(em) atenção imediata.`
+      };
+    }
+    
+    if (hasEmMitigacao) {
+      const mitigacaoCount = filteredRiscos.filter(r => r.status_risco === 'Em mitigação').length;
+      return { 
+        color: 'amarelo', 
+        message: `${mitigacaoCount} risco(s) em mitigação - acompanhamento em andamento.`
+      };
+    }
+    
+    return { 
+      color: 'verde', 
+      message: 'Todos os riscos estão mitigados ou materializados.'
+    };
+  }, [filteredRiscos]);
 
   const handleSort = (column: string) => {
     if (sortColumn !== column) {
@@ -1191,7 +1224,19 @@ export default function Riscos() {
         {/* Tabela de Riscos */}
         <Card>
           <CardHeader>
-            <CardTitle>Registros ({filteredRiscos.length})</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <TrafficLightWithHover 
+                color={riscosTrafficLight.color}
+                hoverContent={
+                  <div className="space-y-2">
+                    <p className="font-medium">Status dos Riscos</p>
+                    <p className="text-sm text-muted-foreground">{riscosTrafficLight.message}</p>
+                  </div>
+                }
+                size="md"
+              />
+              Registros ({filteredRiscos.length})
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
