@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Plus, Edit, Trash2, Eye, X } from 'lucide-react';
+import { Plus, Trash2, Eye, X, History } from 'lucide-react';
 import { useRiscos, type RiscoInsert, type Risco } from '@/hooks/useRiscos';
 import { useProfiles } from '@/hooks/useProfiles';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
@@ -22,6 +22,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
+import { RiscoHistoryDialog } from '@/components/riscos/RiscoHistoryDialog';
 
 const AREAS_IMPACTADAS = ['Delivery', 'Comercial', 'Financeiro', 'CS/CX', 'TI', 'Operação'];
 const TIPOS_RISCO_GHAS = ['GHAS - Perda de Contrato', 'GHAS - Multa Contratual', 'GHAS - Jurídico'];
@@ -67,6 +68,7 @@ export default function Riscos() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRisco, setEditingRisco] = useState<Risco | null>(null);
   const [viewingRisco, setViewingRisco] = useState<Risco | null>(null);
+  const [historyRisco, setHistoryRisco] = useState<Risco | null>(null);
   const [tipoIdentificacao, setTipoIdentificacao] = useState<'Risco' | 'BO'>('Risco');
   
   // Filtros
@@ -700,19 +702,21 @@ export default function Riscos() {
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => setViewingRisco(risco)}
+                                    title="Visualizar"
                                   >
                                     <Eye className="h-4 w-4" />
                                   </Button>
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => handleOpenDialog(risco)}
+                                    onClick={() => setHistoryRisco(risco)}
+                                    title="Histórico de Acompanhamento"
                                   >
-                                    <Edit className="h-4 w-4" />
+                                    <History className="h-4 w-4" />
                                   </Button>
                                   <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                      <Button variant="ghost" size="icon">
+                                      <Button variant="ghost" size="icon" title="Excluir">
                                         <Trash2 className="h-4 w-4 text-destructive" />
                                       </Button>
                                     </AlertDialogTrigger>
@@ -1033,6 +1037,14 @@ export default function Riscos() {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Histórico Dialog */}
+        <RiscoHistoryDialog
+          riscoId={historyRisco?.id || null}
+          riscoDescricao={historyRisco?.descricao || ''}
+          open={!!historyRisco}
+          onOpenChange={(open) => !open && setHistoryRisco(null)}
+        />
       </div>
     </Layout>
   );

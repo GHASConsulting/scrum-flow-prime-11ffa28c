@@ -963,6 +963,38 @@ export type Database = {
         }
         Relationships: []
       }
+      risco_history: {
+        Row: {
+          created_at: string
+          descricao: string
+          id: string
+          risco_id: string
+          usuario: string
+        }
+        Insert: {
+          created_at?: string
+          descricao: string
+          id?: string
+          risco_id: string
+          usuario: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string
+          id?: string
+          risco_id?: string
+          usuario?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risco_history_risco_id_fkey"
+            columns: ["risco_id"]
+            isOneToOne: false
+            referencedRelation: "risco"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       roadmap: {
         Row: {
           atores: string | null
