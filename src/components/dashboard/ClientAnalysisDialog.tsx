@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, FileText, Copy, Check } from 'lucide-react';
+import { Loader2, FileText, Copy, Check, FileDown } from 'lucide-react';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
 
 interface ClientStatus {
   id: string;
@@ -157,6 +158,97 @@ export const ClientAnalysisDialog = ({
     }
   };
 
+  const handleExportPDF = () => {
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 20;
+      const maxWidth = pageWidth - margin * 2;
+      let yPosition = margin;
+
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Resumo Executivo - Análise de Clientes', margin, yPosition);
+      yPosition += 15;
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+
+      const lines = analysis.split('\n');
+      
+      for (const line of lines) {
+        if (yPosition > pageHeight - margin) {
+          doc.addPage();
+          yPosition = margin;
+        }
+
+        // Headers
+        if (line.startsWith('### ')) {
+          yPosition += 5;
+          doc.setFontSize(12);
+          doc.setFont('helvetica', 'bold');
+          const text = line.slice(4).replace(/\*\*/g, '');
+          doc.text(text, margin, yPosition);
+          yPosition += 8;
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+        } else if (line.startsWith('## ')) {
+          yPosition += 5;
+          doc.setFontSize(13);
+          doc.setFont('helvetica', 'bold');
+          const text = line.slice(3).replace(/\*\*/g, '');
+          doc.text(text, margin, yPosition);
+          yPosition += 10;
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+        } else if (line.startsWith('# ')) {
+          yPosition += 5;
+          doc.setFontSize(14);
+          doc.setFont('helvetica', 'bold');
+          const text = line.slice(2).replace(/\*\*/g, '');
+          doc.text(text, margin, yPosition);
+          yPosition += 10;
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+        } else if (line.match(/^[-*•]\s/) || line.match(/^\d+\.\s/)) {
+          // List items
+          const content = line.replace(/^[-*•]\s/, '• ').replace(/^\d+\.\s/, '').replace(/\*\*/g, '');
+          const splitLines = doc.splitTextToSize(content, maxWidth - 10);
+          for (const splitLine of splitLines) {
+            if (yPosition > pageHeight - margin) {
+              doc.addPage();
+              yPosition = margin;
+            }
+            doc.text(splitLine, margin + 5, yPosition);
+            yPosition += 5;
+          }
+        } else if (line.trim()) {
+          // Regular text
+          const cleanText = line.replace(/\*\*/g, '');
+          const splitLines = doc.splitTextToSize(cleanText, maxWidth);
+          for (const splitLine of splitLines) {
+            if (yPosition > pageHeight - margin) {
+              doc.addPage();
+              yPosition = margin;
+            }
+            doc.text(splitLine, margin, yPosition);
+            yPosition += 5;
+          }
+        } else {
+          yPosition += 3;
+        }
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      doc.save(`Resumo_Executivo_${today}.pdf`);
+      toast.success('PDF exportado com sucesso');
+    } catch (error) {
+      console.error('Erro ao exportar PDF:', error);
+      toast.error('Erro ao exportar PDF');
+    }
+  };
+
   // Parse markdown-like content to styled elements
   const renderAnalysis = (text: string) => {
     const lines = text.split('\n');
@@ -273,7 +365,7 @@ export const ClientAnalysisDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2 text-xl">
@@ -281,25 +373,31 @@ export const ClientAnalysisDialog = ({
               Resumo Executivo - Análise de Clientes
             </DialogTitle>
             {analysis && !isLoading && (
-              <Button variant="outline" size="sm" onClick={handleCopy} className="mr-8">
-                {copied ? (
-                  <>
-                    <Check className="h-4 w-4 mr-1" />
-                    Copiado
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-4 w-4 mr-1" />
-                    Copiar
-                  </>
-                )}
-              </Button>
+              <div className="flex gap-2 mr-8">
+                <Button variant="outline" size="sm" onClick={handleExportPDF}>
+                  <FileDown className="h-4 w-4 mr-1" />
+                  PDF
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleCopy}>
+                  {copied ? (
+                    <>
+                      <Check className="h-4 w-4 mr-1" />
+                      Copiado
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4 mr-1" />
+                      Copiar
+                    </>
+                  )}
+                </Button>
+              </div>
             )}
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 min-h-0">
-          <div ref={analysisRef} className="pr-4 pb-4">
+        <ScrollArea className="flex-1 min-h-0 pr-4">
+          <div ref={analysisRef} className="pb-4">
             {isLoading && !analysis && (
               <div className="flex flex-col items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
