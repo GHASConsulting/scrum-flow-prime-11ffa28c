@@ -10,13 +10,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Plus, Trash2, Eye, X, History, Filter, ChevronDown, ChevronUp, Clock } from 'lucide-react';
+import { Plus, Trash2, Eye, X, History, Filter, ChevronDown, ChevronUp, Clock, ArrowUp, ArrowDown, AlertTriangle } from 'lucide-react';
 import { useRiscos, type RiscoInsert, type Risco } from '@/hooks/useRiscos';
 import { useRiscoHistory } from '@/hooks/useRiscoHistory';
 import { useProfiles } from '@/hooks/useProfiles';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { useAuth } from '@/hooks/useAuth';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -162,6 +162,10 @@ export default function Riscos() {
   const [filterNivelRisco, setFilterNivelRisco] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   
+  // Sorting state
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
+  
   // Date filters (year/month format)
   const currentDate = new Date();
   const currentYear = String(currentDate.getFullYear());
@@ -171,6 +175,27 @@ export default function Riscos() {
   const [filterAnoInicio, setFilterAnoInicio] = useState<string>(currentYear);
   const [filterMesFim, setFilterMesFim] = useState<string>(currentMonth);
   const [filterAnoFim, setFilterAnoFim] = useState<string>(currentYear);
+
+  // Helper function to calculate calendar days
+  const calculateCalendarDays = (startDate: Date, endDate: Date): number => {
+    return differenceInDays(endDate, startDate);
+  };
+
+  // Helper function to get deadline status
+  const getDeadlineStatus = (risco: Risco) => {
+    if (risco.status_risco === 'Mitigado' || !risco.data_limite_acao) return null;
+    
+    const today = new Date();
+    today.setHours(12, 0, 0, 0);
+    const deadline = new Date(risco.data_limite_acao + 'T12:00:00');
+    const daysUntilDeadline = differenceInDays(deadline, today);
+    
+    if (daysUntilDeadline < 0) {
+      return { type: 'overdue', days: Math.abs(daysUntilDeadline) };
+    } else {
+      return { type: 'remaining', days: daysUntilDeadline };
+    }
+  };
   
   const [formData, setFormData] = useState<RiscoInsert>({
     cliente_id: null,
@@ -338,6 +363,77 @@ export default function Riscos() {
       return true;
     });
   }, [riscos, filterCliente, filterDataInicio, filterDataFim, filterResponsavel, filterNivelRisco, filterStatus]);
+
+  // Sorting logic
+  const sortedRiscos = useMemo(() => {
+    if (!sortColumn || !sortDirection) return filteredRiscos;
+    
+    return [...filteredRiscos].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+      
+      switch (sortColumn) {
+        case 'codigo':
+          aValue = a.codigo;
+          bValue = b.codigo;
+          break;
+        case 'cliente':
+          aValue = getClienteName(a).toLowerCase();
+          bValue = getClienteName(b).toLowerCase();
+          break;
+        case 'area':
+          aValue = a.area_impactada.toLowerCase();
+          bValue = b.area_impactada.toLowerCase();
+          break;
+        case 'descricao':
+          aValue = a.descricao.toLowerCase();
+          bValue = b.descricao.toLowerCase();
+          break;
+        case 'nivel':
+          const nivelOrder = { 'Alto': 3, 'Médio': 2, 'Baixo': 1 };
+          aValue = nivelOrder[a.nivel_risco as keyof typeof nivelOrder] || 0;
+          bValue = nivelOrder[b.nivel_risco as keyof typeof nivelOrder] || 0;
+          break;
+        case 'status':
+          aValue = a.status_risco.toLowerCase();
+          bValue = b.status_risco.toLowerCase();
+          break;
+        case 'responsavel':
+          aValue = (a.responsavel || '').toLowerCase();
+          bValue = (b.responsavel || '').toLowerCase();
+          break;
+        case 'data':
+          aValue = a.data_identificacao;
+          bValue = b.data_identificacao;
+          break;
+        default:
+          return 0;
+      }
+      
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredRiscos, sortColumn, sortDirection, clientes]);
+
+  const handleSort = (column: string) => {
+    if (sortColumn !== column) {
+      setSortColumn(column);
+      setSortDirection('asc');
+    } else if (sortDirection === 'asc') {
+      setSortDirection('desc');
+    } else {
+      setSortColumn(null);
+      setSortDirection(null);
+    }
+  };
+
+  const getSortIcon = (column: string) => {
+    if (sortColumn !== column) return null;
+    if (sortDirection === 'asc') return <ArrowUp className="h-4 w-4 ml-1" />;
+    if (sortDirection === 'desc') return <ArrowDown className="h-4 w-4 ml-1" />;
+    return null;
+  };
 
   const clearFilters = () => {
     setFilterCliente('all');
@@ -984,25 +1080,89 @@ export default function Riscos() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[60px]">ID</TableHead>
-                      <TableHead className="w-[100px]">Ações</TableHead>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead>Área</TableHead>
-                      <TableHead>Descrição</TableHead>
-                      <TableHead>Nível</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Responsável</TableHead>
-                      <TableHead>Data Identificação</TableHead>
+                      <TableHead 
+                        className="w-[60px] cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('codigo')}
+                      >
+                        <div className="flex items-center">
+                          ID
+                          {getSortIcon('codigo')}
+                        </div>
+                      </TableHead>
+                      <TableHead className="w-[100px] text-center">Ações</TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('cliente')}
+                      >
+                        <div className="flex items-center">
+                          Cliente
+                          {getSortIcon('cliente')}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('area')}
+                      >
+                        <div className="flex items-center">
+                          Área
+                          {getSortIcon('area')}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('descricao')}
+                      >
+                        <div className="flex items-center">
+                          Descrição
+                          {getSortIcon('descricao')}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('nivel')}
+                      >
+                        <div className="flex items-center">
+                          Nível
+                          {getSortIcon('nivel')}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('status')}
+                      >
+                        <div className="flex items-center">
+                          Status
+                          {getSortIcon('status')}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('responsavel')}
+                      >
+                        <div className="flex items-center">
+                          Responsável
+                          {getSortIcon('responsavel')}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('data')}
+                      >
+                        <div className="flex items-center">
+                          Data Identificação
+                          {getSortIcon('data')}
+                        </div>
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredRiscos.map((risco) => {
+                    {sortedRiscos.map((risco) => {
                       const { emoji, color } = getNivelRiscoDisplay(risco.nivel_risco);
                       return (
                         <TableRow key={risco.id}>
                           <TableCell className="font-medium">{risco.codigo}</TableCell>
                           <TableCell>
-                            <div className="flex gap-2">
+                            <div className="flex justify-center gap-2">
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -1070,16 +1230,38 @@ export default function Riscos() {
                 {/* 1. Tempo e Controle */}
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center gap-3">
+                    <CardTitle className="text-base flex items-center flex-wrap gap-2">
                       <span>Tempo e Controle</span>
                       {viewingRisco.status_risco !== 'Mitigado' && (
-                        <span className="flex items-center gap-1 text-sm font-normal bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
-                          <Clock className="h-3 w-3" />
-                          {Math.floor(calculateWorkingDays(
-                            new Date(viewingRisco.data_identificacao + 'T08:00:00'),
-                            new Date()
-                          ))} dias úteis em aberto
-                        </span>
+                        <>
+                          <span className="flex items-center gap-1 text-sm font-normal bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
+                            <Clock className="h-3 w-3" />
+                            {calculateCalendarDays(
+                              new Date(viewingRisco.data_identificacao + 'T12:00:00'),
+                              new Date()
+                            )} dias corridos em aberto
+                          </span>
+                          {(() => {
+                            const deadlineStatus = getDeadlineStatus(viewingRisco);
+                            if (!deadlineStatus) return null;
+                            
+                            if (deadlineStatus.type === 'overdue') {
+                              return (
+                                <span className="flex items-center gap-1 text-sm font-normal bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
+                                  <AlertTriangle className="h-3 w-3" />
+                                  {deadlineStatus.days} dias de atraso
+                                </span>
+                              );
+                            } else {
+                              return (
+                                <span className="flex items-center gap-1 text-sm font-normal bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                                  <Clock className="h-3 w-3" />
+                                  {deadlineStatus.days} dias para mitigar
+                                </span>
+                              );
+                            }
+                          })()}
+                        </>
                       )}
                     </CardTitle>
                   </CardHeader>
