@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 
 type StatusColor = 'verde' | 'amarelo' | 'vermelho' | 'cinza';
 
-type SortField = 'codigo' | 'nome' | 'geral' | 'metodologia' | 'prioridades' | 'produtividade' | 'riscos';
+type SortField = 'codigo' | 'nome' | 'responsavel' | 'geral' | 'metodologia' | 'prioridades' | 'produtividade' | 'riscos';
 type SortDirection = 'asc' | 'desc' | null;
 
 interface ClienteStatus {
@@ -333,6 +333,8 @@ const DashboardClientes = () => {
           comparison = a.codigo - b.codigo;
         } else if (sortField === 'nome') {
           comparison = a.nome.localeCompare(b.nome, 'pt-BR');
+        } else if (sortField === 'responsavel') {
+          comparison = a.responsavel.localeCompare(b.responsavel, 'pt-BR');
         } else {
           // Status fields - sort by priority
           const aPriority = getStatusPriority(a[sortField]);
@@ -568,8 +570,37 @@ const DashboardClientes = () => {
 
         {/* Grid de Clientes - Scrollable */}
         <Card className="flex-1 mt-6 min-h-0 flex flex-col">
-          <CardHeader className="flex-shrink-0">
-            <CardTitle>Indicadores por Cliente</CardTitle>
+          <CardHeader className="flex-shrink-0 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <CardTitle className="text-base">Indicadores por Cliente</CardTitle>
+                <span className="text-sm text-muted-foreground">
+                  ({filteredAndSortedClientes.length} {filteredAndSortedClientes.length === 1 ? 'cliente' : 'clientes'})
+                </span>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Geral</span>
+                  <ClickableStatusIndicator status={summaryStatuses.geral} onClick={() => handleSummaryClick('geral')} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Metodologia</span>
+                  <ClickableStatusIndicator status={summaryStatuses.metodologia} onClick={() => handleSummaryClick('metodologia')} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Prioridades</span>
+                  <ClickableStatusIndicator status={summaryStatuses.prioridades} onClick={() => handleSummaryClick('prioridades')} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Produtividade</span>
+                  <ClickableStatusIndicator status={summaryStatuses.produtividade} onClick={() => handleSummaryClick('produtividade')} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Riscos e BO's</span>
+                  <ClickableStatusIndicator status={summaryStatuses.riscos} onClick={() => handleSummaryClick('riscos')} />
+                </div>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="flex-1 min-h-0 p-0">
             {isLoading || isLoadingPrioridades || isLoadingProdutividade ? (
@@ -579,31 +610,11 @@ const DashboardClientes = () => {
             ) : (
               <div className="overflow-auto h-full">
                 <Table>
-                  <TableHeader className="sticky top-0 z-20">
-                    <TableRow className="bg-background">
-                      <TableHead className="w-16 sticky left-0 bg-background z-30"></TableHead>
-                      <TableHead className="text-left sticky left-16 bg-background z-30 min-w-[200px]"></TableHead>
-                      <TableHead className="text-left min-w-[150px]"></TableHead>
-                      <TableHead className="w-24">
-                        <ClickableStatusIndicator status={summaryStatuses.geral} onClick={() => handleSummaryClick('geral')} />
-                      </TableHead>
-                      <TableHead className="w-24">
-                        <ClickableStatusIndicator status={summaryStatuses.metodologia} onClick={() => handleSummaryClick('metodologia')} />
-                      </TableHead>
-                      <TableHead className="w-24">
-                        <ClickableStatusIndicator status={summaryStatuses.prioridades} onClick={() => handleSummaryClick('prioridades')} />
-                      </TableHead>
-                      <TableHead className="w-24">
-                        <ClickableStatusIndicator status={summaryStatuses.produtividade} onClick={() => handleSummaryClick('produtividade')} />
-                      </TableHead>
-                      <TableHead className="w-24">
-                        <ClickableStatusIndicator status={summaryStatuses.riscos} onClick={() => handleSummaryClick('riscos')} />
-                      </TableHead>
-                    </TableRow>
-                    <TableRow className="bg-background">
+                  <TableHeader className="sticky top-0 z-20 bg-background">
+                    <TableRow className="bg-background border-b">
                       <SortableHeader field="codigo" className="w-16 sticky left-0 bg-background z-30">Código</SortableHeader>
                       <SortableHeader field="nome" className="text-left sticky left-16 bg-background z-30 min-w-[200px]">Cliente</SortableHeader>
-                      <TableHead className="text-left min-w-[150px]">Responsável</TableHead>
+                      <SortableHeader field="responsavel" className="text-left min-w-[150px]">Responsável</SortableHeader>
                       <SortableHeader field="geral" className="w-24">Geral</SortableHeader>
                       <SortableHeader field="metodologia" className="w-24">Metodologia</SortableHeader>
                       <SortableHeader field="prioridades" className="w-24">Prioridades</SortableHeader>
