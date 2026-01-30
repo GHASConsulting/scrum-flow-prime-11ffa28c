@@ -23,9 +23,10 @@ export const useClientRiscosStatus = (
     const riscosByCliente: Record<string, typeof riscos> = {};
     
     riscos.forEach(risco => {
-      // Filter by date range if specified
-      if (filterDataInicio && risco.data_identificacao < filterDataInicio) return;
-      if (filterDataFim && risco.data_identificacao > filterDataFim) return;
+      // Filter by data_limite_acao: include risks where deadline is within or after the filter start date
+      // A risk is included if its data_limite_acao >= filterDataInicio (deadline is in filtered period or later)
+      if (filterDataInicio && risco.data_limite_acao && risco.data_limite_acao < filterDataInicio) return;
+      // If no data_limite_acao is set, we still include the risk in the calculation
       
       const clienteId = risco.cliente_id;
       if (!clienteId) return;
