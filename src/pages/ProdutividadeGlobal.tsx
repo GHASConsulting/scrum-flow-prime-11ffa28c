@@ -607,24 +607,41 @@ const ProdutividadeGlobal = () => {
     return sum;
   }, [filteredProdutividades]);
   
-  // Obter os valores do registro mais recente quando um cliente está selecionado
-  const latestRecordData = useMemo(() => {
-    if (filterCliente === 'all' || filteredProdutividades.length === 0) {
-      return null;
-    }
+  // Calcular abertos_15_dias agregado (soma dos registros mais recentes de cada cliente)
+  const totalAbertos15Dias = useMemo(() => {
+    if (filteredProdutividades.length === 0) return 0;
     
-    // Pegar o registro mais recente do cliente selecionado
+    // Agrupar por cliente e pegar o registro mais recente de cada
+    const latestByClient = new Map<string, number>();
+    
     const sortedByDate = [...filteredProdutividades].sort((a, b) => 
       new Date(b.data_fim).getTime() - new Date(a.data_fim).getTime()
     );
     
-    const latest = sortedByDate[0];
-    return latest ? {
-      abertos15Dias: latest.abertos_15_dias ?? 0,
-      backlog: latest.backlog ?? 0,
-      abertos: latest.abertos ?? 0
-    } : null;
-  }, [filteredProdutividades, filterCliente]);
+    sortedByDate.forEach((p) => {
+      if (!latestByClient.has(p.cliente_id)) {
+        latestByClient.set(p.cliente_id, Number(p.abertos_15_dias) || 0);
+      }
+    });
+    
+    let sum = 0;
+    latestByClient.forEach((val) => {
+      sum += val;
+    });
+    
+    return sum;
+  }, [filteredProdutividades]);
+  
+  // Dados para o farol baseados nos totais agregados dos filtros
+  const trafficLightData = useMemo(() => {
+    if (filteredProdutividades.length === 0) return null;
+    
+    return {
+      abertos15Dias: totalAbertos15Dias,
+      backlog: totalBacklog,
+      abertos: totalAbertos
+    };
+  }, [filteredProdutividades.length, totalAbertos15Dias, totalBacklog, totalAbertos]);
   
   const uniqueClientes = new Set(filteredProdutividades.map(p => p.cliente_id)).size;
 
@@ -851,11 +868,11 @@ const ProdutividadeGlobal = () => {
           <CardHeader>
             <CardTitle className="flex items-center">
               Registros de Produtividade
-              {latestRecordData !== null && (
+              {trafficLightData !== null && (
                 <ProdutividadeTrafficLight 
-                  abertos15Dias={latestRecordData.abertos15Dias} 
-                  backlog={latestRecordData.backlog}
-                  abertos={latestRecordData.abertos}
+                  abertos15Dias={trafficLightData.abertos15Dias} 
+                  backlog={trafficLightData.backlog}
+                  abertos={trafficLightData.abertos}
                 />
               )}
             </CardTitle>
