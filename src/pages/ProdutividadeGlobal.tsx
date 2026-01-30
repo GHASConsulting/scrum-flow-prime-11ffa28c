@@ -621,7 +621,8 @@ const ProdutividadeGlobal = () => {
     const latest = sortedByDate[0];
     return latest ? {
       abertos15Dias: latest.abertos_15_dias ?? 0,
-      backlog: latest.backlog ?? 0
+      backlog: latest.backlog ?? 0,
+      abertos: latest.abertos ?? 0
     } : null;
   }, [filteredProdutividades, filterCliente]);
   
@@ -853,7 +854,8 @@ const ProdutividadeGlobal = () => {
               {latestRecordData !== null && (
                 <ProdutividadeTrafficLight 
                   abertos15Dias={latestRecordData.abertos15Dias} 
-                  backlog={latestRecordData.backlog} 
+                  backlog={latestRecordData.backlog}
+                  abertos={latestRecordData.abertos}
                 />
               )}
             </CardTitle>

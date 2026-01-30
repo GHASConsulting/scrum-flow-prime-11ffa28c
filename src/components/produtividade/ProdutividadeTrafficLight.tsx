@@ -10,6 +10,7 @@ type StatusColor = 'verde' | 'amarelo' | 'vermelho';
 interface ProdutividadeTrafficLightProps {
   abertos15Dias: number;
   backlog: number;
+  abertos: number;
 }
 
 const getStatusColor = (color: StatusColor): string => {
@@ -31,9 +32,14 @@ const getStatusFromAbertos15Dias = (value: number): StatusColor => {
   return 'vermelho';
 };
 
-const getStatusFromBacklog = (value: number): StatusColor => {
-  if (value > 18) return 'vermelho';
-  if (value >= 12) return 'amarelo';
+const getStatusFromBacklog = (backlog: number, abertos: number): StatusColor => {
+  // Se não há chamados abertos, não há como calcular percentual - considera verde
+  if (abertos === 0) return 'verde';
+  
+  const percentual = (backlog / abertos) * 100;
+  
+  if (percentual >= 18) return 'vermelho';
+  if (percentual >= 12) return 'amarelo';
   return 'verde';
 };
 
@@ -45,6 +51,7 @@ const getWorstStatus = (status1: StatusColor, status2: StatusColor): StatusColor
 const getStatusMessage = (
   abertos15Dias: number, 
   backlog: number,
+  abertos: number,
   statusAbertos: StatusColor,
   statusBacklog: StatusColor
 ): string => {
@@ -59,13 +66,15 @@ const getStatusMessage = (
     messages.push(`Chamados 15 dias: Crítico - ${abertos15Dias} chamados abertos.`);
   }
   
-  // Mensagem para backlog
+  // Mensagem para backlog (percentual)
+  const percentual = abertos > 0 ? ((backlog / abertos) * 100).toFixed(1) : '0';
+  
   if (statusBacklog === 'verde') {
-    messages.push(`Backlog: Situação excelente (${backlog}).`);
+    messages.push(`Backlog: Situação excelente (${backlog} de ${abertos} = ${percentual}%).`);
   } else if (statusBacklog === 'amarelo') {
-    messages.push(`Backlog: Atenção - ${backlog} itens no backlog.`);
+    messages.push(`Backlog: Atenção - ${backlog} de ${abertos} chamados (${percentual}%).`);
   } else {
-    messages.push(`Backlog: Crítico - ${backlog} itens no backlog.`);
+    messages.push(`Backlog: Crítico - ${backlog} de ${abertos} chamados (${percentual}%).`);
   }
   
   return messages.join('\n');
@@ -79,15 +88,15 @@ Chamados abertos há 15 dias:
 • Amarelo: 1 chamado
 • Vermelho: 2 ou mais chamados
 
-Backlog:
-• Verde: Menos de 12 itens
-• Amarelo: 12 a 18 itens
-• Vermelho: Mais de 18 itens`;
+Backlog (% sobre total de abertos):
+• Verde: Menos de 12%
+• Amarelo: 12% a 17,99%
+• Vermelho: 18% ou mais`;
 };
 
-export function ProdutividadeTrafficLight({ abertos15Dias, backlog }: ProdutividadeTrafficLightProps) {
+export function ProdutividadeTrafficLight({ abertos15Dias, backlog, abertos }: ProdutividadeTrafficLightProps) {
   const statusAbertos = getStatusFromAbertos15Dias(abertos15Dias);
-  const statusBacklog = getStatusFromBacklog(backlog);
+  const statusBacklog = getStatusFromBacklog(backlog, abertos);
   const finalStatus = getWorstStatus(statusAbertos, statusBacklog);
 
   return (
@@ -101,7 +110,7 @@ export function ProdutividadeTrafficLight({ abertos15Dias, backlog }: Produtivid
         <div className="space-y-3">
           <div>
             <p className="text-sm font-medium whitespace-pre-line">
-              {getStatusMessage(abertos15Dias, backlog, statusAbertos, statusBacklog)}
+              {getStatusMessage(abertos15Dias, backlog, abertos, statusAbertos, statusBacklog)}
             </p>
           </div>
           <div className="border-t pt-2">
