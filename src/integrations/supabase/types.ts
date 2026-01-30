@@ -847,6 +847,36 @@ export type Database = {
         }
         Relationships: []
       }
+      resumo_executivo_diario: {
+        Row: {
+          conteudo: string
+          created_at: string
+          data_geracao: string
+          id: string
+          periodo_fim: string
+          periodo_inicio: string
+          updated_at: string
+        }
+        Insert: {
+          conteudo: string
+          created_at?: string
+          data_geracao?: string
+          id?: string
+          periodo_fim: string
+          periodo_inicio: string
+          updated_at?: string
+        }
+        Update: {
+          conteudo?: string
+          created_at?: string
+          data_geracao?: string
+          id?: string
+          periodo_fim?: string
+          periodo_inicio?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       retrospectiva: {
         Row: {
           acoes: string[]
