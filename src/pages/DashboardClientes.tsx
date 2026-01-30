@@ -570,66 +570,68 @@ const DashboardClientes = () => {
             ) : filteredAndSortedClientes.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</div>
             ) : (
-              <Table>
-                <TableHeader className="sticky top-0 bg-background z-10">
-                  <TableRow>
-                    <TableHead className="w-16"></TableHead>
-                    <TableHead className="text-left"></TableHead>
-                    <TableHead className="w-24">
-                      <ClickableStatusIndicator status={summaryStatuses.geral} onClick={() => handleSummaryClick('geral')} />
-                    </TableHead>
-                    <TableHead className="w-24">
-                      <ClickableStatusIndicator status={summaryStatuses.metodologia} onClick={() => handleSummaryClick('metodologia')} />
-                    </TableHead>
-                    <TableHead className="w-24">
-                      <ClickableStatusIndicator status={summaryStatuses.prioridades} onClick={() => handleSummaryClick('prioridades')} />
-                    </TableHead>
-                    <TableHead className="w-24">
-                      <ClickableStatusIndicator status={summaryStatuses.produtividade} onClick={() => handleSummaryClick('produtividade')} />
-                    </TableHead>
-                    <TableHead className="w-24">
-                      <ClickableStatusIndicator status={summaryStatuses.riscos} onClick={() => handleSummaryClick('riscos')} />
-                    </TableHead>
-                  </TableRow>
-                  <TableRow>
-                    <SortableHeader field="codigo" className="w-16">Código</SortableHeader>
-                    <SortableHeader field="nome" className="text-left">Cliente</SortableHeader>
-                    <SortableHeader field="geral" className="w-24">Geral</SortableHeader>
-                    <SortableHeader field="metodologia" className="w-24">Metodologia</SortableHeader>
-                    <SortableHeader field="prioridades" className="w-24">Prioridades</SortableHeader>
-                    <SortableHeader field="produtividade" className="w-24">Produtividade</SortableHeader>
-                    <SortableHeader field="riscos" className="w-24">Riscos e BO's</SortableHeader>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAndSortedClientes.map(cliente => (
-                    <TableRow key={cliente.id}>
-                      <TableCell className="font-medium text-center">{cliente.codigo}</TableCell>
-                      <TableCell>{cliente.nome}</TableCell>
-                      <TableCell><StatusIndicator status={cliente.geral} /></TableCell>
-                      <TableCell>
-                        <MetodologiaStatusTooltip 
-                          status={cliente.metodologia} 
-                          metodologiaData={metodologiaStatusMap?.[cliente.id]}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <PrioridadesStatusTooltip 
-                          status={cliente.prioridades} 
-                          prioridadesData={prioridadesStatusMap?.[cliente.id]}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <ProdutividadeStatusTooltip 
-                          status={cliente.produtividade} 
-                          produtividadeData={produtividadeStatusMap?.[cliente.id]}
-                        />
-                      </TableCell>
-                      <TableCell><StatusIndicator status={cliente.riscos} /></TableCell>
+              <div className="relative">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-background z-20">
+                    <TableRow>
+                      <TableHead className="w-16 sticky left-0 bg-background z-30"></TableHead>
+                      <TableHead className="text-left sticky left-16 bg-background z-30"></TableHead>
+                      <TableHead className="w-24">
+                        <ClickableStatusIndicator status={summaryStatuses.geral} onClick={() => handleSummaryClick('geral')} />
+                      </TableHead>
+                      <TableHead className="w-24">
+                        <ClickableStatusIndicator status={summaryStatuses.metodologia} onClick={() => handleSummaryClick('metodologia')} />
+                      </TableHead>
+                      <TableHead className="w-24">
+                        <ClickableStatusIndicator status={summaryStatuses.prioridades} onClick={() => handleSummaryClick('prioridades')} />
+                      </TableHead>
+                      <TableHead className="w-24">
+                        <ClickableStatusIndicator status={summaryStatuses.produtividade} onClick={() => handleSummaryClick('produtividade')} />
+                      </TableHead>
+                      <TableHead className="w-24">
+                        <ClickableStatusIndicator status={summaryStatuses.riscos} onClick={() => handleSummaryClick('riscos')} />
+                      </TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                    <TableRow>
+                      <SortableHeader field="codigo" className="w-16 sticky left-0 bg-background z-30">Código</SortableHeader>
+                      <SortableHeader field="nome" className="text-left sticky left-16 bg-background z-30 min-w-[200px]">Cliente</SortableHeader>
+                      <SortableHeader field="geral" className="w-24">Geral</SortableHeader>
+                      <SortableHeader field="metodologia" className="w-24">Metodologia</SortableHeader>
+                      <SortableHeader field="prioridades" className="w-24">Prioridades</SortableHeader>
+                      <SortableHeader field="produtividade" className="w-24">Produtividade</SortableHeader>
+                      <SortableHeader field="riscos" className="w-24">Riscos e BO's</SortableHeader>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredAndSortedClientes.map(cliente => (
+                      <TableRow key={cliente.id}>
+                        <TableCell className="font-medium text-center sticky left-0 bg-background z-10">{cliente.codigo}</TableCell>
+                        <TableCell className="sticky left-16 bg-background z-10">{cliente.nome}</TableCell>
+                        <TableCell><StatusIndicator status={cliente.geral} /></TableCell>
+                        <TableCell>
+                          <MetodologiaStatusTooltip 
+                            status={cliente.metodologia} 
+                            metodologiaData={metodologiaStatusMap?.[cliente.id]}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <PrioridadesStatusTooltip 
+                            status={cliente.prioridades} 
+                            prioridadesData={prioridadesStatusMap?.[cliente.id]}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <ProdutividadeStatusTooltip 
+                            status={cliente.produtividade} 
+                            produtividadeData={produtividadeStatusMap?.[cliente.id]}
+                          />
+                        </TableCell>
+                        <TableCell><StatusIndicator status={cliente.riscos} /></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
