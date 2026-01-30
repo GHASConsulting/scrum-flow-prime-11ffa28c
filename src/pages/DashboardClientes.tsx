@@ -575,8 +575,8 @@ const DashboardClientes = () => {
             {/* Título */}
             <div className="px-6 py-3">
               <div className="flex items-center gap-3">
-                <h3 className="text-base font-semibold">Indicadores por Cliente</h3>
-                <span className="text-sm text-muted-foreground">
+                <h3 className="text-lg font-semibold">Indicadores por Cliente</h3>
+                <span className="text-base text-muted-foreground">
                   ({filteredAndSortedClientes.length} {filteredAndSortedClientes.length === 1 ? 'cliente' : 'clientes'})
                 </span>
               </div>
@@ -593,7 +593,7 @@ const DashboardClientes = () => {
                 <col className="w-[100px]" />
                 <col className="w-[100px]" />
               </colgroup>
-              <TableHeader>
+              <TableHeader className="text-base">
                 <TableRow className="bg-muted/30">
                   <TableHead></TableHead>
                   <TableHead></TableHead>
