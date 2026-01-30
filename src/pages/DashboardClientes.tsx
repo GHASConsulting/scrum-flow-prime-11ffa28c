@@ -9,6 +9,7 @@ import { useClientPrioridadesStatus } from '@/hooks/useClientPrioridadesStatus';
 import { useClientProdutividadeStatus } from '@/hooks/useClientProdutividadeStatus';
 import { useClientMetodologiaStatus } from '@/hooks/useClientMetodologiaStatus';
 import { useProdutividadeGlobal } from '@/hooks/useProdutividadeGlobal';
+import { useProfiles } from '@/hooks/useProfiles';
 import { PrioridadesStatusTooltip } from '@/components/dashboard/PrioridadesStatusTooltip';
 import { ProdutividadeStatusTooltip } from '@/components/dashboard/ProdutividadeStatusTooltip';
 import { MetodologiaStatusTooltip } from '@/components/dashboard/MetodologiaStatusTooltip';
@@ -25,6 +26,7 @@ interface ClienteStatus {
   id: string;
   codigo: number;
   nome: string;
+  responsavel: string;
   geral: StatusColor;
   metodologia: StatusColor;
   prioridades: StatusColor;
@@ -101,6 +103,16 @@ const DashboardClientes = () => {
   const { records, isLoading } = useClientAccessRecords();
   const { data: prioridadesStatusMap, isLoading: isLoadingPrioridades } = useClientPrioridadesStatus();
   const { produtividades } = useProdutividadeGlobal();
+  const { profiles } = useProfiles();
+
+  // Mapa de profiles para lookup rápido
+  const profilesMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    profiles.forEach(p => {
+      map[p.id] = p.nome;
+    });
+    return map;
+  }, [profiles]);
 
   // Filtros
   const [filterCliente, setFilterCliente] = useState<string>('all');
@@ -288,11 +300,15 @@ const DashboardClientes = () => {
       
       // Get metodologia status from the calculated map (cinza if no data)
       const metodologiaStatus = metodologiaStatusMap?.[record.id]?.status || 'cinza';
+
+      // Get responsável name from profiles map
+      const responsavelNome = record.responsavel_id ? profilesMap[record.responsavel_id] || '' : '';
       
       return {
         id: record.id,
         codigo: record.codigo,
         nome: record.cliente,
+        responsavel: responsavelNome,
         // Indicadores sem regras definidas ficam cinza (sem dados para calcular)
         geral: 'cinza' as StatusColor,
         metodologia: metodologiaStatus,
@@ -301,7 +317,7 @@ const DashboardClientes = () => {
         riscos: 'cinza' as StatusColor,
       };
     });
-  }, [records, prioridadesStatusMap, produtividadeStatusMap, metodologiaStatusMap]);
+  }, [records, prioridadesStatusMap, produtividadeStatusMap, metodologiaStatusMap, profilesMap]);
 
   // Aplicar filtros e ordenação
   const filteredAndSortedClientes = useMemo(() => {
@@ -564,18 +580,19 @@ const DashboardClientes = () => {
           <CardHeader className="flex-shrink-0">
             <CardTitle>Indicadores por Cliente</CardTitle>
           </CardHeader>
-          <CardContent className="flex-1 overflow-auto min-h-0">
+          <CardContent className="flex-1 min-h-0 p-0">
             {isLoading || isLoadingPrioridades || isLoadingProdutividade ? (
               <div className="text-center py-8 text-muted-foreground">Carregando...</div>
             ) : filteredAndSortedClientes.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</div>
             ) : (
-              <div className="relative">
+              <div className="overflow-auto h-full">
                 <Table>
-                  <TableHeader className="sticky top-0 bg-background z-20">
-                    <TableRow>
+                  <TableHeader className="sticky top-0 z-20">
+                    <TableRow className="bg-background">
                       <TableHead className="w-16 sticky left-0 bg-background z-30"></TableHead>
-                      <TableHead className="text-left sticky left-16 bg-background z-30"></TableHead>
+                      <TableHead className="text-left sticky left-16 bg-background z-30 min-w-[200px]"></TableHead>
+                      <TableHead className="text-left min-w-[150px]"></TableHead>
                       <TableHead className="w-24">
                         <ClickableStatusIndicator status={summaryStatuses.geral} onClick={() => handleSummaryClick('geral')} />
                       </TableHead>
@@ -592,9 +609,10 @@ const DashboardClientes = () => {
                         <ClickableStatusIndicator status={summaryStatuses.riscos} onClick={() => handleSummaryClick('riscos')} />
                       </TableHead>
                     </TableRow>
-                    <TableRow>
+                    <TableRow className="bg-background">
                       <SortableHeader field="codigo" className="w-16 sticky left-0 bg-background z-30">Código</SortableHeader>
                       <SortableHeader field="nome" className="text-left sticky left-16 bg-background z-30 min-w-[200px]">Cliente</SortableHeader>
+                      <TableHead className="text-left min-w-[150px]">Responsável</TableHead>
                       <SortableHeader field="geral" className="w-24">Geral</SortableHeader>
                       <SortableHeader field="metodologia" className="w-24">Metodologia</SortableHeader>
                       <SortableHeader field="prioridades" className="w-24">Prioridades</SortableHeader>
@@ -606,7 +624,8 @@ const DashboardClientes = () => {
                     {filteredAndSortedClientes.map(cliente => (
                       <TableRow key={cliente.id}>
                         <TableCell className="font-medium text-center sticky left-0 bg-background z-10">{cliente.codigo}</TableCell>
-                        <TableCell className="sticky left-16 bg-background z-10">{cliente.nome}</TableCell>
+                        <TableCell className="sticky left-16 bg-background z-10 font-semibold">{cliente.nome}</TableCell>
+                        <TableCell className="font-semibold">{cliente.responsavel}</TableCell>
                         <TableCell><StatusIndicator status={cliente.geral} /></TableCell>
                         <TableCell>
                           <MetodologiaStatusTooltip 
