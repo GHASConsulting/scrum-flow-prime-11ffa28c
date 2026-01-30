@@ -7,6 +7,7 @@ export interface ClientAccessRecord {
   codigo: number;
   cliente: string;
   ativo: boolean;
+  responsavel_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -112,6 +113,7 @@ export const useClientAccessRecords = (includeInactive = false) => {
   const createRecord = useMutation({
     mutationFn: async (data: {
       cliente: string;
+      responsavel_id?: string | null;
       vpn_access: VpnAccess[];
       server_access: ServerAccess[];
       docker_access: DockerAccess[];
@@ -120,7 +122,10 @@ export const useClientAccessRecords = (includeInactive = false) => {
     }) => {
       const { data: mainRecord, error: mainError } = await supabase
         .from("client_access_records")
-        .insert({ cliente: data.cliente })
+        .insert({ 
+          cliente: data.cliente,
+          responsavel_id: data.responsavel_id || null
+        })
         .select()
         .single();
 
@@ -159,6 +164,7 @@ export const useClientAccessRecords = (includeInactive = false) => {
     mutationFn: async (data: {
       id: string;
       cliente: string;
+      responsavel_id?: string | null;
       vpn_access: VpnAccess[];
       server_access: ServerAccess[];
       docker_access: DockerAccess[];
@@ -167,7 +173,10 @@ export const useClientAccessRecords = (includeInactive = false) => {
     }) => {
       const { error: mainError } = await supabase
         .from("client_access_records")
-        .update({ cliente: data.cliente })
+        .update({ 
+          cliente: data.cliente,
+          responsavel_id: data.responsavel_id || null
+        })
         .eq("id", data.id);
 
       if (mainError) throw mainError;

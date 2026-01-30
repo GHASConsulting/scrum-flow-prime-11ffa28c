@@ -91,6 +91,8 @@ interface CadastrosContentProps {
   setIsEditClienteDialogOpen: (open: boolean) => void;
   newClienteNome: string;
   setNewClienteNome: (nome: string) => void;
+  newClienteResponsavel: string;
+  setNewClienteResponsavel: (responsavel: string) => void;
   editingCliente: any;
   setEditingCliente: (cliente: any) => void;
   handleAddCliente: () => void;
@@ -98,6 +100,7 @@ interface CadastrosContentProps {
   handleUpdateCliente: () => void;
   handleDeleteCliente: (id: string) => void;
   handleToggleClienteAtivo: (id: string, ativo: boolean) => void;
+  profiles: any[];
   // Setor (area_documento)
   isLoadingAreaDoc: boolean;
   isAddAreaDocDialogOpen: boolean;
@@ -446,32 +449,37 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
                 <TableHead className="w-[80px]">Código</TableHead>
                 <TableHead className="w-[100px] text-center">Ações</TableHead>
                 <TableHead>Nome</TableHead>
+                <TableHead>Responsável</TableHead>
                 <TableHead className="w-[100px] text-center">Ativo</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {props.clientes.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.codigo}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-center gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => props.handleEditCliente(item)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => props.handleDeleteCliente(item.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium">{item.cliente}</TableCell>
-                  <TableCell className="text-center">
-                    <Switch
-                      checked={item.ativo}
-                      onCheckedChange={() => props.handleToggleClienteAtivo(item.id, item.ativo)}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
+              {props.clientes.map((item) => {
+                const responsavel = props.profiles.find((p) => p.id === item.responsavel_id);
+                return (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium">{item.codigo}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-center gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => props.handleEditCliente(item)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => props.handleDeleteCliente(item.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">{item.cliente}</TableCell>
+                    <TableCell className="text-muted-foreground">{responsavel?.nome || '-'}</TableCell>
+                    <TableCell className="text-center">
+                      <Switch
+                        checked={item.ativo}
+                        onCheckedChange={() => props.handleToggleClienteAtivo(item.id, item.ativo)}
+                      />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         )}

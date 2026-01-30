@@ -7,6 +7,7 @@ import { usePrestadorServico, NIVEL_OPTIONS } from '@/hooks/usePrestadorServico'
 import { useTipoDocumento } from '@/hooks/useTipoDocumento';
 import { useAreaDocumento } from '@/hooks/useAreaDocumento';
 import { useTipoDocumentoCliente } from '@/hooks/useTipoDocumentoCliente';
+import { useProfiles } from '@/hooks/useProfiles';
 import { toast } from 'sonner';
 import { CadastrosSidebar, type CadastroType } from '@/components/cadastros/CadastrosSidebar';
 import { CadastrosContent } from '@/components/cadastros/CadastrosContent';
@@ -65,7 +66,7 @@ const CadastrosSistema = () => {
     updateTipoDocumentoCliente,
     deleteTipoDocumentoCliente
   } = useTipoDocumentoCliente();
-
+  const { profiles } = useProfiles();
   // Estado para Área Sprint
   const [isAddAreaDialogOpen, setIsAddAreaDialogOpen] = useState(false);
   const [isEditAreaDialogOpen, setIsEditAreaDialogOpen] = useState(false);
@@ -92,11 +93,13 @@ const CadastrosSistema = () => {
   const [isAddClienteDialogOpen, setIsAddClienteDialogOpen] = useState(false);
   const [isEditClienteDialogOpen, setIsEditClienteDialogOpen] = useState(false);
   const [newClienteNome, setNewClienteNome] = useState('');
+  const [newClienteResponsavel, setNewClienteResponsavel] = useState('');
   const [editingCliente, setEditingCliente] = useState<{
     id: string;
     codigo: number;
     cliente: string;
     ativo: boolean;
+    responsavel_id: string | null;
   } | null>(null);
 
   // Estado para Prestador de Serviço
@@ -260,6 +263,7 @@ const CadastrosSistema = () => {
     try {
       await createRecord.mutateAsync({
         cliente: newClienteNome.trim(),
+        responsavel_id: newClienteResponsavel || null,
         vpn_access: [],
         server_access: [],
         docker_access: [],
@@ -267,12 +271,13 @@ const CadastrosSistema = () => {
         app_access: []
       });
       setNewClienteNome('');
+      setNewClienteResponsavel('');
       setIsAddClienteDialogOpen(false);
     } catch (error) {
       // Error handled in hook
     }
   };
-  const handleEditCliente = (item: { id: string; codigo: number; cliente: string; ativo: boolean }) => {
+  const handleEditCliente = (item: { id: string; codigo: number; cliente: string; ativo: boolean; responsavel_id: string | null }) => {
     setEditingCliente({ ...item });
     setIsEditClienteDialogOpen(true);
   };
@@ -286,6 +291,7 @@ const CadastrosSistema = () => {
       await updateRecord.mutateAsync({
         id: editingCliente.id,
         cliente: editingCliente.cliente.trim(),
+        responsavel_id: editingCliente.responsavel_id,
         vpn_access: [],
         server_access: [],
         docker_access: [],
@@ -651,6 +657,8 @@ const CadastrosSistema = () => {
             setIsEditClienteDialogOpen={setIsEditClienteDialogOpen}
             newClienteNome={newClienteNome}
             setNewClienteNome={setNewClienteNome}
+            newClienteResponsavel={newClienteResponsavel}
+            setNewClienteResponsavel={setNewClienteResponsavel}
             editingCliente={editingCliente}
             setEditingCliente={setEditingCliente}
             handleAddCliente={handleAddCliente}
@@ -658,6 +666,7 @@ const CadastrosSistema = () => {
             handleUpdateCliente={handleUpdateCliente}
             handleDeleteCliente={handleDeleteCliente}
             handleToggleClienteAtivo={handleToggleClienteAtivo}
+            profiles={profiles}
             // Setor
             isLoadingAreaDoc={isLoadingAreaDoc}
             isAddAreaDocDialogOpen={isAddAreaDocDialogOpen}
@@ -754,10 +763,13 @@ const CadastrosSistema = () => {
           setIsEditClienteDialogOpen={setIsEditClienteDialogOpen}
           newClienteNome={newClienteNome}
           setNewClienteNome={setNewClienteNome}
+          newClienteResponsavel={newClienteResponsavel}
+          setNewClienteResponsavel={setNewClienteResponsavel}
           editingCliente={editingCliente}
           setEditingCliente={setEditingCliente}
           handleAddCliente={handleAddCliente}
           handleUpdateCliente={handleUpdateCliente}
+          profiles={profiles}
           // Setor
           isAddAreaDocDialogOpen={isAddAreaDocDialogOpen}
           setIsAddAreaDocDialogOpen={setIsAddAreaDocDialogOpen}

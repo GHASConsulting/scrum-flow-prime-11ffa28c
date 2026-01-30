@@ -66,10 +66,13 @@ interface CadastrosDialogsProps {
   setIsEditClienteDialogOpen: (open: boolean) => void;
   newClienteNome: string;
   setNewClienteNome: (nome: string) => void;
+  newClienteResponsavel: string;
+  setNewClienteResponsavel: (responsavel: string) => void;
   editingCliente: any;
   setEditingCliente: (cliente: any) => void;
   handleAddCliente: () => void;
   handleUpdateCliente: () => void;
+  profiles: any[];
   // Setor (area_documento)
   isAddAreaDocDialogOpen: boolean;
   setIsAddAreaDocDialogOpen: (open: boolean) => void;
@@ -469,6 +472,22 @@ export const CadastrosDialogs = (props: CadastrosDialogsProps) => {
                 placeholder="Digite o nome do cliente"
               />
             </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Responsável</label>
+              <Select value={props.newClienteResponsavel} onValueChange={props.setNewClienteResponsavel}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o responsável" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Nenhum</SelectItem>
+                  {props.profiles.map((profile) => (
+                    <SelectItem key={profile.id} value={profile.id}>
+                      {profile.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => props.setIsAddClienteDialogOpen(false)}>
@@ -496,6 +515,27 @@ export const CadastrosDialogs = (props: CadastrosDialogsProps) => {
                   }
                   placeholder="Digite o nome do cliente"
                 />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Responsável</label>
+                <Select 
+                  value={props.editingCliente.responsavel_id || ''} 
+                  onValueChange={(value) =>
+                    props.setEditingCliente({ ...props.editingCliente, responsavel_id: value || null })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o responsável" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Nenhum</SelectItem>
+                    {props.profiles.map((profile) => (
+                      <SelectItem key={profile.id} value={profile.id}>
+                        {profile.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           )}
