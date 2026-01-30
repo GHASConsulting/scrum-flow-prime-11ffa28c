@@ -569,88 +569,94 @@ const DashboardClientes = () => {
         </Card>
 
         {/* Grid de Clientes - Scrollable */}
-        <Card className="flex-1 mt-6 min-h-0 flex flex-col">
-          <CardHeader className="flex-shrink-0 py-3">
-            <div className="flex items-center gap-3">
-              <CardTitle className="text-base">Indicadores por Cliente</CardTitle>
-              <span className="text-sm text-muted-foreground">
-                ({filteredAndSortedClientes.length} {filteredAndSortedClientes.length === 1 ? 'cliente' : 'clientes'})
-              </span>
+        <Card className="flex-1 mt-6 min-h-0 flex flex-col overflow-hidden">
+          {/* Header fixo - não se move com scroll */}
+          <div className="flex-shrink-0 border-b">
+            {/* Título */}
+            <div className="px-6 py-3">
+              <div className="flex items-center gap-3">
+                <h3 className="text-base font-semibold">Indicadores por Cliente</h3>
+                <span className="text-sm text-muted-foreground">
+                  ({filteredAndSortedClientes.length} {filteredAndSortedClientes.length === 1 ? 'cliente' : 'clientes'})
+                </span>
+              </div>
             </div>
-          </CardHeader>
-          <CardContent className="flex-1 min-h-0 p-0">
+            {/* Cabeçalho da tabela - fixo */}
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/30">
+                  <TableHead className="w-16"></TableHead>
+                  <TableHead className="text-left min-w-[200px]"></TableHead>
+                  <TableHead className="text-left min-w-[150px]"></TableHead>
+                  <TableHead className="w-24">
+                    <ClickableStatusIndicator status={summaryStatuses.geral} onClick={() => handleSummaryClick('geral')} />
+                  </TableHead>
+                  <TableHead className="w-24">
+                    <ClickableStatusIndicator status={summaryStatuses.metodologia} onClick={() => handleSummaryClick('metodologia')} />
+                  </TableHead>
+                  <TableHead className="w-24">
+                    <ClickableStatusIndicator status={summaryStatuses.prioridades} onClick={() => handleSummaryClick('prioridades')} />
+                  </TableHead>
+                  <TableHead className="w-24">
+                    <ClickableStatusIndicator status={summaryStatuses.produtividade} onClick={() => handleSummaryClick('produtividade')} />
+                  </TableHead>
+                  <TableHead className="w-24">
+                    <ClickableStatusIndicator status={summaryStatuses.riscos} onClick={() => handleSummaryClick('riscos')} />
+                  </TableHead>
+                </TableRow>
+                <TableRow className="bg-muted/30 border-b">
+                  <SortableHeader field="codigo" className="w-16">Código</SortableHeader>
+                  <SortableHeader field="nome" className="text-left min-w-[200px]">Cliente</SortableHeader>
+                  <SortableHeader field="responsavel" className="text-left min-w-[150px]">Responsável</SortableHeader>
+                  <SortableHeader field="geral" className="w-24">Geral</SortableHeader>
+                  <SortableHeader field="metodologia" className="w-24">Metodologia</SortableHeader>
+                  <SortableHeader field="prioridades" className="w-24">Prioridades</SortableHeader>
+                  <SortableHeader field="produtividade" className="w-24">Produtividade</SortableHeader>
+                  <SortableHeader field="riscos" className="w-24">Riscos e BO's</SortableHeader>
+                </TableRow>
+              </TableHeader>
+            </Table>
+          </div>
+          {/* Corpo da tabela - scrollável */}
+          <div className="flex-1 overflow-auto">
             {isLoading || isLoadingPrioridades || isLoadingProdutividade ? (
               <div className="text-center py-8 text-muted-foreground">Carregando...</div>
             ) : filteredAndSortedClientes.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</div>
             ) : (
-              <div className="overflow-auto h-full">
-                <Table>
-                  <TableHeader className="sticky top-0 z-20 bg-background">
-                    <TableRow className="bg-background">
-                      <TableHead className="w-16 sticky left-0 bg-background z-30"></TableHead>
-                      <TableHead className="text-left sticky left-16 bg-background z-30 min-w-[200px]"></TableHead>
-                      <TableHead className="text-left min-w-[150px]"></TableHead>
-                      <TableHead className="w-24">
-                        <ClickableStatusIndicator status={summaryStatuses.geral} onClick={() => handleSummaryClick('geral')} />
-                      </TableHead>
-                      <TableHead className="w-24">
-                        <ClickableStatusIndicator status={summaryStatuses.metodologia} onClick={() => handleSummaryClick('metodologia')} />
-                      </TableHead>
-                      <TableHead className="w-24">
-                        <ClickableStatusIndicator status={summaryStatuses.prioridades} onClick={() => handleSummaryClick('prioridades')} />
-                      </TableHead>
-                      <TableHead className="w-24">
-                        <ClickableStatusIndicator status={summaryStatuses.produtividade} onClick={() => handleSummaryClick('produtividade')} />
-                      </TableHead>
-                      <TableHead className="w-24">
-                        <ClickableStatusIndicator status={summaryStatuses.riscos} onClick={() => handleSummaryClick('riscos')} />
-                      </TableHead>
+              <Table>
+                <TableBody>
+                  {filteredAndSortedClientes.map(cliente => (
+                    <TableRow key={cliente.id}>
+                      <TableCell className="w-16 font-medium text-center">{cliente.codigo}</TableCell>
+                      <TableCell className="min-w-[200px] font-semibold">{cliente.nome}</TableCell>
+                      <TableCell className="min-w-[150px] font-semibold">{cliente.responsavel}</TableCell>
+                      <TableCell className="w-24"><StatusIndicator status={cliente.geral} /></TableCell>
+                      <TableCell className="w-24">
+                        <MetodologiaStatusTooltip 
+                          status={cliente.metodologia} 
+                          metodologiaData={metodologiaStatusMap?.[cliente.id]}
+                        />
+                      </TableCell>
+                      <TableCell className="w-24">
+                        <PrioridadesStatusTooltip 
+                          status={cliente.prioridades} 
+                          prioridadesData={prioridadesStatusMap?.[cliente.id]}
+                        />
+                      </TableCell>
+                      <TableCell className="w-24">
+                        <ProdutividadeStatusTooltip 
+                          status={cliente.produtividade} 
+                          produtividadeData={produtividadeStatusMap?.[cliente.id]}
+                        />
+                      </TableCell>
+                      <TableCell className="w-24"><StatusIndicator status={cliente.riscos} /></TableCell>
                     </TableRow>
-                    <TableRow className="bg-background border-b">
-                      <SortableHeader field="codigo" className="w-16 sticky left-0 bg-background z-30">Código</SortableHeader>
-                      <SortableHeader field="nome" className="text-left sticky left-16 bg-background z-30 min-w-[200px]">Cliente</SortableHeader>
-                      <SortableHeader field="responsavel" className="text-left min-w-[150px]">Responsável</SortableHeader>
-                      <SortableHeader field="geral" className="w-24">Geral</SortableHeader>
-                      <SortableHeader field="metodologia" className="w-24">Metodologia</SortableHeader>
-                      <SortableHeader field="prioridades" className="w-24">Prioridades</SortableHeader>
-                      <SortableHeader field="produtividade" className="w-24">Produtividade</SortableHeader>
-                      <SortableHeader field="riscos" className="w-24">Riscos e BO's</SortableHeader>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredAndSortedClientes.map(cliente => (
-                      <TableRow key={cliente.id}>
-                        <TableCell className="font-medium text-center sticky left-0 bg-background z-10">{cliente.codigo}</TableCell>
-                        <TableCell className="sticky left-16 bg-background z-10 font-semibold">{cliente.nome}</TableCell>
-                        <TableCell className="font-semibold">{cliente.responsavel}</TableCell>
-                        <TableCell><StatusIndicator status={cliente.geral} /></TableCell>
-                        <TableCell>
-                          <MetodologiaStatusTooltip 
-                            status={cliente.metodologia} 
-                            metodologiaData={metodologiaStatusMap?.[cliente.id]}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <PrioridadesStatusTooltip 
-                            status={cliente.prioridades} 
-                            prioridadesData={prioridadesStatusMap?.[cliente.id]}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <ProdutividadeStatusTooltip 
-                            status={cliente.produtividade} 
-                            produtividadeData={produtividadeStatusMap?.[cliente.id]}
-                          />
-                        </TableCell>
-                        <TableCell><StatusIndicator status={cliente.riscos} /></TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                  ))}
+                </TableBody>
+              </Table>
             )}
-          </CardContent>
+          </div>
         </Card>
 
         {/* Summary Status Dialog */}
