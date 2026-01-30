@@ -111,10 +111,15 @@ const DashboardClientes = () => {
   const [filterRiscos, setFilterRiscos] = useState<string>('all');
   
   // Date filters (year/month format like produtividade-global)
-  const [filterMesInicio, setFilterMesInicio] = useState<string>('');
-  const [filterAnoInicio, setFilterAnoInicio] = useState<string>('');
-  const [filterMesFim, setFilterMesFim] = useState<string>('');
-  const [filterAnoFim, setFilterAnoFim] = useState<string>('');
+  // Default to current month/year
+  const currentDate = new Date();
+  const currentYear = String(currentDate.getFullYear());
+  const currentMonth = String(currentDate.getMonth() + 1).padStart(2, '0');
+  
+  const [filterMesInicio, setFilterMesInicio] = useState<string>(currentMonth);
+  const [filterAnoInicio, setFilterAnoInicio] = useState<string>(currentYear);
+  const [filterMesFim, setFilterMesFim] = useState<string>(currentMonth);
+  const [filterAnoFim, setFilterAnoFim] = useState<string>(currentYear);
 
   // Dialog state for summary status
   const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
