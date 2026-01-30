@@ -253,6 +253,45 @@ const DashboardClientes = () => {
     return <ArrowUpDown className="h-3 w-3 ml-1 opacity-50" />;
   };
 
+  // Calculate general status based on the 4 other indicators
+  const calculateGeralStatus = (
+    metodologia: TrafficLightColor,
+    prioridades: TrafficLightColor,
+    produtividade: TrafficLightColor,
+    riscos: TrafficLightColor
+  ): TrafficLightColor => {
+    const indicators = [metodologia, prioridades, produtividade, riscos];
+    
+    // Filter out 'cinza' (no data) for calculations
+    const measuredIndicators = indicators.filter(i => i !== 'cinza');
+    
+    // If no measured data, return gray
+    if (measuredIndicators.length === 0) {
+      return 'cinza';
+    }
+    
+    const redCount = measuredIndicators.filter(i => i === 'vermelho').length;
+    const yellowCount = measuredIndicators.filter(i => i === 'amarelo').length;
+    
+    // If at least 1 indicator is red → red
+    if (redCount > 0) {
+      return 'vermelho';
+    }
+    
+    // If 2 or more indicators are yellow → red
+    if (yellowCount >= 2) {
+      return 'vermelho';
+    }
+    
+    // If at least 1 indicator is yellow → yellow
+    if (yellowCount > 0) {
+      return 'amarelo';
+    }
+    
+    // Otherwise → green
+    return 'verde';
+  };
+
   // Gerar status dos clientes
   const clientesStatus: ClienteStatus[] = useMemo(() => {
     return records.map(record => {
@@ -268,6 +307,9 @@ const DashboardClientes = () => {
       // Get riscos status from the calculated map (cinza if no data)
       const riscosStatus = riscosStatusMap?.[record.id]?.status || 'cinza';
 
+      // Calculate general status based on the 4 other indicators
+      const geralStatus = calculateGeralStatus(metodologiaStatus, prioridadesStatus, produtividadeStatus, riscosStatus);
+
       // Get responsável name from profiles map
       const responsavelNome = record.responsavel_id ? profilesMap[record.responsavel_id] || '' : '';
       
@@ -276,8 +318,7 @@ const DashboardClientes = () => {
         codigo: record.codigo,
         nome: record.cliente,
         responsavel: responsavelNome,
-        // Indicadores sem regras definidas ficam cinza (sem dados para calcular)
-        geral: 'cinza' as TrafficLightColor,
+        geral: geralStatus,
         metodologia: metodologiaStatus,
         prioridades: prioridadesStatus,
         produtividade: produtividadeStatus,
