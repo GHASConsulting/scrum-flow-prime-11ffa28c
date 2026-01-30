@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Layout } from '@/components/Layout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,10 +10,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Plus, Trash2, Eye, X, History } from 'lucide-react';
+import { Plus, Trash2, Eye, X, History, Filter, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRiscos, type RiscoInsert, type Risco } from '@/hooks/useRiscos';
+import { useRiscoHistory } from '@/hooks/useRiscoHistory';
 import { useProfiles } from '@/hooks/useProfiles';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
+import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
@@ -22,7 +23,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
-import { RiscoHistoryDialog } from '@/components/riscos/RiscoHistoryDialog';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const AREAS_IMPACTADAS = ['Delivery', 'Comercial', 'Financeiro', 'CS/CX', 'TI', 'Operação'];
 const TIPOS_RISCO_GHAS = ['GHAS - Perda de Contrato', 'GHAS - Multa Contratual', 'GHAS - Jurídico'];
@@ -61,6 +62,89 @@ const getStatusBadgeClass = (status: string) => {
   }
 };
 
+// Component to display history in the detail dialog
+const RiscoHistorySection = ({ riscoId }: { riscoId: string }) => {
+  const { history, loading, addHistoryEntry } = useRiscoHistory(riscoId);
+  const { userName } = useAuth();
+  const [newEntry, setNewEntry] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
+
+  const handleAddEntry = async () => {
+    if (!newEntry.trim()) return;
+    
+    try {
+      await addHistoryEntry(newEntry, userName || 'Usuário');
+      setNewEntry('');
+      setIsAdding(false);
+    } catch (error) {
+      console.error('Erro ao adicionar histórico:', error);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <History className="h-4 w-4" />
+            Histórico de Acompanhamento
+          </span>
+          {!isAdding && (
+            <Button variant="outline" size="sm" onClick={() => setIsAdding(true)}>
+              <Plus className="h-4 w-4 mr-1" />
+              Adicionar
+            </Button>
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        {isAdding && (
+          <div className="space-y-2 p-3 border rounded-lg bg-muted/30">
+            <Textarea
+              placeholder="Descreva a atualização do acompanhamento..."
+              value={newEntry}
+              onChange={(e) => setNewEntry(e.target.value)}
+              rows={3}
+            />
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => { setIsAdding(false); setNewEntry(''); }}>
+                Cancelar
+              </Button>
+              <Button size="sm" onClick={handleAddEntry} disabled={!newEntry.trim()}>
+                Salvar
+              </Button>
+            </div>
+          </div>
+        )}
+        
+        {loading ? (
+          <div className="text-center py-4 text-muted-foreground">Carregando...</div>
+        ) : history.length === 0 ? (
+          <div className="text-center py-4 text-muted-foreground">
+            Nenhum registro de acompanhamento.
+          </div>
+        ) : (
+          <div className="space-y-3 max-h-60 overflow-y-auto">
+            {history.map((entry) => (
+              <div key={entry.id} className="p-3 border rounded-lg bg-muted/20">
+                <div className="flex justify-between items-start mb-1">
+                  <span className="font-medium text-xs text-muted-foreground">
+                    {format(new Date(entry.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                  </span>
+                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                    {entry.usuario}
+                  </span>
+                </div>
+                <p className="text-sm">{entry.descricao}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
 export default function Riscos() {
   const { riscos, loading, addRisco, updateRisco, deleteRisco } = useRiscos();
   const { profiles } = useProfiles();
@@ -68,15 +152,24 @@ export default function Riscos() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRisco, setEditingRisco] = useState<Risco | null>(null);
   const [viewingRisco, setViewingRisco] = useState<Risco | null>(null);
-  const [historyRisco, setHistoryRisco] = useState<Risco | null>(null);
   const [tipoIdentificacao, setTipoIdentificacao] = useState<'Risco' | 'BO'>('Risco');
   
-  // Filtros
-  const [filterTipo, setFilterTipo] = useState<string>('all');
-  const [filterDataInicio, setFilterDataInicio] = useState<Date | undefined>(undefined);
-  const [filterDataFim, setFilterDataFim] = useState<Date | undefined>(undefined);
+  // Filtros - estilo DashboardClientes
+  const [filtersExpanded, setFiltersExpanded] = useState(true);
+  const [filterCliente, setFilterCliente] = useState<string>('all');
   const [filterResponsavel, setFilterResponsavel] = useState<string>('all');
   const [filterNivelRisco, setFilterNivelRisco] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  
+  // Date filters (year/month format)
+  const currentDate = new Date();
+  const currentYear = String(currentDate.getFullYear());
+  const currentMonth = String(currentDate.getMonth() + 1).padStart(2, '0');
+  
+  const [filterMesInicio, setFilterMesInicio] = useState<string>(currentMonth);
+  const [filterAnoInicio, setFilterAnoInicio] = useState<string>(currentYear);
+  const [filterMesFim, setFilterMesFim] = useState<string>(currentMonth);
+  const [filterAnoFim, setFilterAnoFim] = useState<string>(currentYear);
   
   const [formData, setFormData] = useState<RiscoInsert>({
     projeto: '',
@@ -98,6 +191,153 @@ export default function Riscos() {
     impacto_real_ocorrido: null,
     licao_aprendida: null,
   });
+
+  // Generate available months/years based on riscos
+  const availableMonthYears = useMemo(() => {
+    const monthYearSet = new Set<string>();
+    
+    riscos.forEach((r) => {
+      const date = new Date(r.data_identificacao + 'T12:00:00');
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      monthYearSet.add(key);
+    });
+    
+    // Always include current month/year
+    monthYearSet.add(`${currentYear}-${currentMonth}`);
+    
+    return Array.from(monthYearSet).sort();
+  }, [riscos, currentYear, currentMonth]);
+
+  const availableYears = useMemo(() => {
+    const years = new Set<string>();
+    availableMonthYears.forEach((my) => {
+      years.add(my.split('-')[0]);
+    });
+    return Array.from(years).sort();
+  }, [availableMonthYears]);
+
+  const getAvailableMonths = (selectedYear: string) => {
+    if (!selectedYear) return [];
+    
+    const monthLabels: Record<string, string> = {
+      '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril',
+      '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto',
+      '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro',
+    };
+    
+    return availableMonthYears
+      .filter((my) => my.startsWith(selectedYear))
+      .map((my) => {
+        const month = my.split('-')[1];
+        return { value: month, label: monthLabels[month] };
+      })
+      .sort((a, b) => a.value.localeCompare(b.value));
+  };
+
+  const handleMesInicioChange = (value: string) => {
+    const newValue = value === 'all' ? '' : value;
+    setFilterMesInicio(newValue);
+    setFilterMesFim(newValue);
+  };
+
+  const handleAnoInicioChange = (value: string) => {
+    const newValue = value === 'all' ? '' : value;
+    setFilterAnoInicio(newValue);
+    setFilterAnoFim(newValue);
+    if (value === 'all') {
+      setFilterMesInicio('');
+      setFilterMesFim('');
+    }
+  };
+
+  const handleAnoFimChange = (value: string) => {
+    const newValue = value === 'all' ? '' : value;
+    setFilterAnoFim(newValue);
+    if (value === 'all') {
+      setFilterMesFim('');
+    }
+  };
+
+  const handleMesFimChange = (value: string) => {
+    const newValue = value === 'all' ? '' : value;
+    setFilterMesFim(newValue);
+  };
+
+  // Build date strings for filtering
+  const filterDataInicio = useMemo(() => {
+    if (filterAnoInicio && filterMesInicio) {
+      return `${filterAnoInicio}-${filterMesInicio}-01`;
+    }
+    return undefined;
+  }, [filterAnoInicio, filterMesInicio]);
+
+  const filterDataFim = useMemo(() => {
+    if (filterAnoFim && filterMesFim) {
+      const year = parseInt(filterAnoFim);
+      const month = parseInt(filterMesFim);
+      const lastDay = new Date(year, month, 0).getDate();
+      return `${filterAnoFim}-${filterMesFim}-${String(lastDay).padStart(2, '0')}`;
+    }
+    return undefined;
+  }, [filterAnoFim, filterMesFim]);
+
+  // Lista única de responsáveis
+  const uniqueResponsaveis = useMemo(() => {
+    return Array.from(new Set(riscos.map(r => r.responsavel).filter(Boolean))) as string[];
+  }, [riscos]);
+
+  // Lista única de clientes nos riscos
+  const uniqueClientes = useMemo(() => {
+    return Array.from(new Set(riscos.map(r => r.projeto).filter(Boolean))).sort();
+  }, [riscos]);
+
+  // Aplicar filtros
+  const filteredRiscos = useMemo(() => {
+    return riscos.filter(risco => {
+      // Filtro por cliente/projeto
+      if (filterCliente !== 'all' && risco.projeto !== filterCliente) return false;
+
+      // Filtro por data de identificação (início)
+      if (filterDataInicio) {
+        const dataRisco = risco.data_identificacao;
+        if (dataRisco < filterDataInicio) return false;
+      }
+
+      // Filtro por data de identificação (fim)
+      if (filterDataFim) {
+        const dataRisco = risco.data_identificacao;
+        if (dataRisco > filterDataFim) return false;
+      }
+
+      // Filtro por responsável
+      if (filterResponsavel !== 'all') {
+        if (risco.responsavel !== filterResponsavel) return false;
+      }
+
+      // Filtro por nível de risco
+      if (filterNivelRisco !== 'all') {
+        if (risco.nivel_risco !== filterNivelRisco) return false;
+      }
+
+      // Filtro por status
+      if (filterStatus !== 'all') {
+        if (risco.status_risco !== filterStatus) return false;
+      }
+
+      return true;
+    });
+  }, [riscos, filterCliente, filterDataInicio, filterDataFim, filterResponsavel, filterNivelRisco, filterStatus]);
+
+  const clearFilters = () => {
+    setFilterCliente('all');
+    setFilterResponsavel('all');
+    setFilterNivelRisco('all');
+    setFilterStatus('all');
+    setFilterMesInicio(currentMonth);
+    setFilterAnoInicio(currentYear);
+    setFilterMesFim(currentMonth);
+    setFilterAnoFim(currentYear);
+  };
 
   const resetForm = () => {
     setFormData({
@@ -171,62 +411,6 @@ export default function Riscos() {
   const handleDelete = async (id: string) => {
     await deleteRisco(id);
   };
-
-  // Função para limpar filtros
-  const clearFilters = () => {
-    setFilterTipo('all');
-    setFilterDataInicio(undefined);
-    setFilterDataFim(undefined);
-    setFilterResponsavel('all');
-    setFilterNivelRisco('all');
-  };
-
-  // Lista única de responsáveis
-  const uniqueResponsaveis = Array.from(new Set(riscos.map(r => r.responsavel).filter(Boolean))) as string[];
-
-  // Determinar tipo (Risco ou BO) baseado no tipo_risco_ghas
-  const getTipo = (risco: Risco) => {
-    // Se probabilidade é "Alta" e impacto é "Alta", considera como BO (já ocorreu)
-    // Caso contrário, é Risco (possibilidade)
-    // Simplificando: usamos o campo risco_ocorreu para determinar
-    return risco.risco_ocorreu ? 'BO' : 'Risco';
-  };
-
-  // Aplicar filtros
-  const filteredRiscos = riscos.filter(risco => {
-    // Filtro por tipo (Risco ou BO)
-    if (filterTipo !== 'all') {
-      const tipo = getTipo(risco);
-      if (tipo !== filterTipo) return false;
-    }
-
-    // Filtro por data de identificação (início)
-    if (filterDataInicio) {
-      const dataRisco = new Date(risco.data_identificacao + 'T00:00:00');
-      if (dataRisco < filterDataInicio) return false;
-    }
-
-    // Filtro por data de identificação (fim)
-    if (filterDataFim) {
-      const dataRisco = new Date(risco.data_identificacao + 'T00:00:00');
-      if (dataRisco > filterDataFim) return false;
-    }
-
-    // Filtro por responsável
-    if (filterResponsavel !== 'all') {
-      if (risco.responsavel !== filterResponsavel) return false;
-    }
-
-    // Filtro por nível de risco
-    if (filterNivelRisco !== 'all') {
-      if (risco.nivel_risco !== filterNivelRisco) return false;
-    }
-
-    return true;
-  });
-
-  const riscosAbertos = filteredRiscos.filter(r => r.status_risco === 'Aberto' || r.status_risco === 'Em mitigação');
-  const riscosResolvidos = filteredRiscos.filter(r => r.status_risco === 'Mitigado' || r.status_risco === 'Materializado');
 
   return (
     <Layout>
@@ -410,9 +594,7 @@ export default function Riscos() {
                                 (formData.probabilidade === 'Alta' && formData.impacto === 'Média') ||
                                 (formData.probabilidade === 'Média' && formData.impacto === 'Alta')
                                   ? 'Alto'
-                                  : (formData.probabilidade === 'Baixa' && formData.impacto === 'Baixa') ||
-                                    (formData.probabilidade === 'Baixa' && formData.impacto === 'Média') ||
-                                    (formData.probabilidade === 'Média' && formData.impacto === 'Baixa')
+                                  : (formData.probabilidade === 'Baixa' && formData.impacto === 'Baixa')
                                     ? 'Baixo'
                                     : 'Médio';
                               const { emoji, color } = getNivelRiscoDisplay(nivel);
@@ -442,7 +624,7 @@ export default function Riscos() {
                           required
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecione a origem" />
+                            <SelectValue placeholder="Selecione" />
                           </SelectTrigger>
                           <SelectContent>
                             {ORIGENS_RISCO.map((origem) => (
@@ -452,7 +634,7 @@ export default function Riscos() {
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="responsavel">Responsável pelo Risco</Label>
+                        <Label htmlFor="responsavel">Responsável</Label>
                         <Select
                           value={formData.responsavel || ''}
                           onValueChange={(value) => setFormData({ ...formData, responsavel: value || null })}
@@ -462,21 +644,13 @@ export default function Riscos() {
                           </SelectTrigger>
                           <SelectContent>
                             {profiles.map((profile) => (
-                              <SelectItem key={profile.id} value={profile.nome}>{profile.nome}</SelectItem>
+                              <SelectItem key={profile.id} value={profile.nome}>
+                                {profile.nome}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="plano_mitigacao">Plano de Mitigação</Label>
-                      <Textarea
-                        id="plano_mitigacao"
-                        placeholder="O que será feito para reduzir ou evitar o risco"
-                        value={formData.plano_mitigacao || ''}
-                        onChange={(e) => setFormData({ ...formData, plano_mitigacao: e.target.value || null })}
-                        rows={3}
-                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="status_risco">Status do Risco *</Label>
@@ -486,7 +660,7 @@ export default function Riscos() {
                         required
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecione o status" />
+                          <SelectValue placeholder="Selecione" />
                         </SelectTrigger>
                         <SelectContent>
                           {STATUS_RISCO.map((status) => (
@@ -494,6 +668,16 @@ export default function Riscos() {
                           ))}
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="plano_mitigacao">Plano de Mitigação</Label>
+                      <Textarea
+                        id="plano_mitigacao"
+                        placeholder="Descreva as ações para mitigar o risco"
+                        value={formData.plano_mitigacao || ''}
+                        onChange={(e) => setFormData({ ...formData, plano_mitigacao: e.target.value || null })}
+                        rows={3}
+                      />
                     </div>
                   </CardContent>
                 </Card>
@@ -562,26 +746,6 @@ export default function Riscos() {
                         </Popover>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="comentario_acompanhamento">Comentário de Acompanhamento</Label>
-                      <Textarea
-                        id="comentario_acompanhamento"
-                        placeholder="Adicione comentários sobre o acompanhamento do risco"
-                        value={formData.comentario_acompanhamento || ''}
-                        onChange={(e) => setFormData({ ...formData, comentario_acompanhamento: e.target.value || null })}
-                        rows={2}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="historico">Histórico</Label>
-                      <Textarea
-                        id="historico"
-                        placeholder="Campo livre para histórico curto"
-                        value={formData.historico || ''}
-                        onChange={(e) => setFormData({ ...formData, historico: e.target.value || null })}
-                        rows={2}
-                      />
-                    </div>
                   </CardContent>
                 </Card>
 
@@ -641,204 +805,125 @@ export default function Riscos() {
           </Dialog>
         </div>
 
-        <Tabs defaultValue="registro" className="w-full">
-          <TabsList>
-            <TabsTrigger value="registro">Registro</TabsTrigger>
-            <TabsTrigger value="acompanhamento">Acompanhamento</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="registro">
-            <Card>
-              <CardHeader>
-                <CardTitle>Todos os Riscos Registrados</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loading ? (
-                  <div className="flex justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                  </div>
-                ) : riscos.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    Nenhum risco registrado ainda.
-                  </div>
+        {/* Filtros - estilo DashboardClientes */}
+        <Card>
+          <CardHeader 
+            className="cursor-pointer hover:bg-muted/30 transition-colors"
+            onClick={() => setFiltersExpanded(!filtersExpanded)}
+          >
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Filter className="h-5 w-5" />
+                Filtros
+              </div>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                {filtersExpanded ? (
+                  <ChevronUp className="h-4 w-4" />
                 ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Projeto</TableHead>
-                          <TableHead>Área</TableHead>
-                          <TableHead>Descrição</TableHead>
-                          <TableHead>Nível</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Responsável</TableHead>
-                          <TableHead>Data Identificação</TableHead>
-                          <TableHead className="text-right">Ações</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {riscos.map((risco) => {
-                          const { emoji, color } = getNivelRiscoDisplay(risco.nivel_risco);
-                          return (
-                            <TableRow key={risco.id}>
-                              <TableCell className="font-medium">{risco.projeto}</TableCell>
-                              <TableCell>{risco.area_impactada}</TableCell>
-                              <TableCell className="max-w-xs truncate">{risco.descricao}</TableCell>
-                              <TableCell>
-                                <span className={color}>{emoji} {risco.nivel_risco}</span>
-                              </TableCell>
-                              <TableCell>
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(risco.status_risco)}`}>
-                                  {risco.status_risco}
-                                </span>
-                              </TableCell>
-                              <TableCell>{risco.responsavel || '-'}</TableCell>
-                              <TableCell>
-                                {format(new Date(risco.data_identificacao + 'T00:00:00'), "dd/MM/yyyy", { locale: ptBR })}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setViewingRisco(risco)}
-                                    title="Visualizar"
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setHistoryRisco(risco)}
-                                    title="Histórico de Acompanhamento"
-                                  >
-                                    <History className="h-4 w-4" />
-                                  </Button>
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button variant="ghost" size="icon" title="Excluir">
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          Tem certeza que deseja excluir este risco? Esta ação não pode ser desfeita.
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDelete(risco.id)}>
-                                          Excluir
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
+                  <ChevronDown className="h-4 w-4" />
                 )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="acompanhamento">
-            <div className="grid gap-6">
-              {/* Filtros */}
-              <div className="flex flex-wrap gap-4 items-end p-4 bg-muted/50 rounded-lg">
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Tipo</Label>
-                  <Select value={filterTipo} onValueChange={setFilterTipo}>
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue placeholder="Todos" />
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          {filtersExpanded && (
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Ano Início</Label>
+                  <Select value={filterAnoInicio || 'all'} onValueChange={handleAnoInicioChange}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="Risco">Risco</SelectItem>
-                      <SelectItem value="BO">BO</SelectItem>
+                      {availableYears.map(year => (
+                        <SelectItem key={year} value={year}>{year}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Data Identificação (De)</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-[140px] justify-start text-left font-normal",
-                          !filterDataInicio && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {filterDataInicio ? format(filterDataInicio, "dd/MM/yyyy", { locale: ptBR }) : "Início"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={filterDataInicio}
-                        onSelect={setFilterDataInicio}
-                        initialFocus
-                        locale={ptBR}
-                      />
-                    </PopoverContent>
-                  </Popover>
+                <div>
+                  <Label className="text-sm font-medium">Mês Início</Label>
+                  <Select 
+                    value={filterMesInicio || 'all'} 
+                    onValueChange={handleMesInicioChange}
+                    disabled={!filterAnoInicio}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {getAvailableMonths(filterAnoInicio).map(month => (
+                        <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Data Identificação (Até)</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-[140px] justify-start text-left font-normal",
-                          !filterDataFim && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {filterDataFim ? format(filterDataFim, "dd/MM/yyyy", { locale: ptBR }) : "Fim"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={filterDataFim}
-                        onSelect={setFilterDataFim}
-                        initialFocus
-                        locale={ptBR}
-                      />
-                    </PopoverContent>
-                  </Popover>
+                <div>
+                  <Label className="text-sm font-medium">Ano Fim</Label>
+                  <Select value={filterAnoFim || 'all'} onValueChange={handleAnoFimChange}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {availableYears.map(year => (
+                        <SelectItem key={year} value={year}>{year}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Responsável</Label>
-                  <Select value={filterResponsavel} onValueChange={setFilterResponsavel}>
-                    <SelectTrigger className="w-[180px]">
+                <div>
+                  <Label className="text-sm font-medium">Mês Fim</Label>
+                  <Select 
+                    value={filterMesFim || 'all'} 
+                    onValueChange={handleMesFimChange}
+                    disabled={!filterAnoFim}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {getAvailableMonths(filterAnoFim).map(month => (
+                        <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Cliente</Label>
+                  <Select value={filterCliente} onValueChange={setFilterCliente}>
+                    <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Todos" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos</SelectItem>
-                      {uniqueResponsaveis.map((resp) => (
+                      {uniqueClientes.map(cliente => (
+                        <SelectItem key={cliente} value={cliente}>{cliente}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Responsável</Label>
+                  <Select value={filterResponsavel} onValueChange={setFilterResponsavel}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {uniqueResponsaveis.map(resp => (
                         <SelectItem key={resp} value={resp}>{resp}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Nível do Risco</Label>
+                <div>
+                  <Label className="text-sm font-medium">Nível</Label>
                   <Select value={filterNivelRisco} onValueChange={setFilterNivelRisco}>
-                    <SelectTrigger className="w-[140px]">
+                    <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Todos" />
                     </SelectTrigger>
                     <SelectContent>
@@ -849,117 +934,110 @@ export default function Riscos() {
                     </SelectContent>
                   </Select>
                 </div>
-
-                <Button variant="outline" size="sm" onClick={clearFilters} className="h-10">
-                  <X className="h-4 w-4 mr-1" />
-                  Limpar
-                </Button>
+                <div className="flex items-end">
+                  <Button variant="outline" size="sm" onClick={clearFilters} className="h-10 w-full">
+                    <X className="h-4 w-4 mr-1" />
+                    Limpar
+                  </Button>
+                </div>
               </div>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-red-600">Riscos em Aberto / Em Mitigação ({riscosAbertos.length})</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {riscosAbertos.length === 0 ? (
-                    <div className="text-center py-4 text-muted-foreground">
-                      Nenhum risco em aberto ou em mitigação.
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Projeto</TableHead>
-                            <TableHead>Descrição</TableHead>
-                            <TableHead>Nível</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Data Limite</TableHead>
-                            <TableHead>Responsável</TableHead>
-                            <TableHead>Última Atualização</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {riscosAbertos.map((risco) => {
-                            const { emoji, color } = getNivelRiscoDisplay(risco.nivel_risco);
-                            return (
-                              <TableRow key={risco.id}>
-                                <TableCell className="font-medium">{risco.projeto}</TableCell>
-                                <TableCell className="max-w-xs truncate">{risco.descricao}</TableCell>
-                                <TableCell>
-                                  <span className={color}>{emoji} {risco.nivel_risco}</span>
-                                </TableCell>
-                                <TableCell>
-                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(risco.status_risco)}`}>
-                                    {risco.status_risco}
-                                  </span>
-                                </TableCell>
-                                <TableCell>
-                                  {risco.data_limite_acao
-                                    ? format(new Date(risco.data_limite_acao + 'T00:00:00'), "dd/MM/yyyy", { locale: ptBR })
-                                    : '-'}
-                                </TableCell>
-                                <TableCell>{risco.responsavel || '-'}</TableCell>
-                                <TableCell>
-                                  {format(new Date(risco.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+            </CardContent>
+          )}
+        </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-green-600">Riscos Resolvidos ({riscosResolvidos.length})</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {riscosResolvidos.length === 0 ? (
-                    <div className="text-center py-4 text-muted-foreground">
-                      Nenhum risco resolvido ainda.
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Projeto</TableHead>
-                            <TableHead>Descrição</TableHead>
-                            <TableHead>Status Final</TableHead>
-                            <TableHead>Risco Ocorreu?</TableHead>
-                            <TableHead>Impacto Real</TableHead>
-                            <TableHead>Lição Aprendida</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {riscosResolvidos.map((risco) => (
-                            <TableRow key={risco.id}>
-                              <TableCell className="font-medium">{risco.projeto}</TableCell>
-                              <TableCell className="max-w-xs truncate">{risco.descricao}</TableCell>
-                              <TableCell>
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(risco.status_risco)}`}>
-                                  {risco.status_risco}
-                                </span>
-                              </TableCell>
-                              <TableCell>{risco.risco_ocorreu ? 'Sim' : 'Não'}</TableCell>
-                              <TableCell>{risco.impacto_real_ocorrido || '-'}</TableCell>
-                              <TableCell className="max-w-xs truncate">{risco.licao_aprendida || '-'}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
+        {/* Tabela de Riscos */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Registros ({filteredRiscos.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : filteredRiscos.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Nenhum risco encontrado.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Projeto</TableHead>
+                      <TableHead>Área</TableHead>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead>Nível</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Responsável</TableHead>
+                      <TableHead>Data Identificação</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredRiscos.map((risco) => {
+                      const { emoji, color } = getNivelRiscoDisplay(risco.nivel_risco);
+                      return (
+                        <TableRow key={risco.id}>
+                          <TableCell className="font-medium">{risco.projeto}</TableCell>
+                          <TableCell>{risco.area_impactada}</TableCell>
+                          <TableCell className="max-w-xs truncate">{risco.descricao}</TableCell>
+                          <TableCell>
+                            <span className={color}>{emoji} {risco.nivel_risco}</span>
+                          </TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(risco.status_risco)}`}>
+                              {risco.status_risco}
+                            </span>
+                          </TableCell>
+                          <TableCell>{risco.responsavel || '-'}</TableCell>
+                          <TableCell>
+                            {format(new Date(risco.data_identificacao + 'T00:00:00'), "dd/MM/yyyy", { locale: ptBR })}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setViewingRisco(risco)}
+                                title="Visualizar"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" title="Excluir">
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Tem certeza que deseja excluir este risco? Esta ação não pode ser desfeita.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDelete(risco.id)}>
+                                      Excluir
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-        {/* Dialog para visualização detalhada */}
+        {/* Dialog para visualização detalhada - Reordenado */}
         <Dialog open={!!viewingRisco} onOpenChange={() => setViewingRisco(null)}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -967,18 +1045,21 @@ export default function Riscos() {
             </DialogHeader>
             {viewingRisco && (
               <div className="space-y-4">
+                {/* 1. Tempo e Controle */}
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Identificação</CardTitle>
+                    <CardTitle className="text-base">Tempo e Controle</CardTitle>
                   </CardHeader>
-                  <CardContent className="grid grid-cols-2 gap-4 text-sm">
-                    <div><strong>Projeto:</strong> {viewingRisco.projeto}</div>
-                    <div><strong>Área Impactada:</strong> {viewingRisco.area_impactada}</div>
-                    <div><strong>Tipo Risco GHAS:</strong> {viewingRisco.tipo_risco_ghas}</div>
-                    <div><strong>Tipo Risco Cliente:</strong> {viewingRisco.tipo_risco_cliente}</div>
-                    <div className="col-span-2"><strong>Descrição:</strong> {viewingRisco.descricao}</div>
+                  <CardContent className="space-y-2 text-sm">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div><strong>Data Identificação:</strong> {format(new Date(viewingRisco.data_identificacao + 'T00:00:00'), "dd/MM/yyyy", { locale: ptBR })}</div>
+                      <div><strong>Data Limite:</strong> {viewingRisco.data_limite_acao ? format(new Date(viewingRisco.data_limite_acao + 'T00:00:00'), "dd/MM/yyyy", { locale: ptBR }) : '-'}</div>
+                    </div>
+                    <div><strong>Última Atualização:</strong> {format(new Date(viewingRisco.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</div>
                   </CardContent>
                 </Card>
+
+                {/* 2. Avaliação */}
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base">Avaliação</CardTitle>
@@ -994,6 +1075,8 @@ export default function Riscos() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* 3. Responsabilidade e Ação */}
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base">Responsabilidade e Ação</CardTitle>
@@ -1007,20 +1090,25 @@ export default function Riscos() {
                     <div><strong>Plano de Mitigação:</strong> {viewingRisco.plano_mitigacao || '-'}</div>
                   </CardContent>
                 </Card>
+
+                {/* 4. Identificação */}
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Tempo e Controle</CardTitle>
+                    <CardTitle className="text-base">Identificação</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-2 text-sm">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div><strong>Data Identificação:</strong> {format(new Date(viewingRisco.data_identificacao + 'T00:00:00'), "dd/MM/yyyy", { locale: ptBR })}</div>
-                      <div><strong>Data Limite:</strong> {viewingRisco.data_limite_acao ? format(new Date(viewingRisco.data_limite_acao + 'T00:00:00'), "dd/MM/yyyy", { locale: ptBR }) : '-'}</div>
-                    </div>
-                    <div><strong>Última Atualização:</strong> {format(new Date(viewingRisco.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</div>
-                    <div><strong>Comentário:</strong> {viewingRisco.comentario_acompanhamento || '-'}</div>
-                    <div><strong>Histórico:</strong> {viewingRisco.historico || '-'}</div>
+                  <CardContent className="grid grid-cols-2 gap-4 text-sm">
+                    <div><strong>Projeto:</strong> {viewingRisco.projeto}</div>
+                    <div><strong>Área Impactada:</strong> {viewingRisco.area_impactada}</div>
+                    <div><strong>Tipo Risco GHAS:</strong> {viewingRisco.tipo_risco_ghas}</div>
+                    <div><strong>Tipo Risco Cliente:</strong> {viewingRisco.tipo_risco_cliente}</div>
+                    <div className="col-span-2"><strong>Descrição:</strong> {viewingRisco.descricao}</div>
                   </CardContent>
                 </Card>
+
+                {/* 5. Histórico de Acompanhamento */}
+                <RiscoHistorySection riscoId={viewingRisco.id} />
+
+                {/* Resultado (se o risco ocorreu) */}
                 {viewingRisco.risco_ocorreu && (
                   <Card>
                     <CardHeader className="pb-2">
@@ -1037,14 +1125,6 @@ export default function Riscos() {
             )}
           </DialogContent>
         </Dialog>
-
-        {/* Histórico Dialog */}
-        <RiscoHistoryDialog
-          riscoId={historyRisco?.id || null}
-          riscoDescricao={historyRisco?.descricao || ''}
-          open={!!historyRisco}
-          onOpenChange={(open) => !open && setHistoryRisco(null)}
-        />
       </div>
     </Layout>
   );
