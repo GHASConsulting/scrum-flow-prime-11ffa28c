@@ -407,17 +407,20 @@ const DashboardClientes = () => {
     return Array.from(responsaveis).sort((a, b) => a.localeCompare(b, 'pt-BR'));
   }, [clientesStatus]);
 
-  const SortableHeader = ({ field, children, className }: { field: SortField; children: React.ReactNode; className?: string }) => (
-    <TableHead 
-      className={`cursor-pointer hover:bg-muted/50 select-none ${className || ''}`}
-      onClick={() => handleSort(field)}
-    >
-      <div className="flex items-center justify-center">
-        {children}
-        <SortIcon field={field} />
-      </div>
-    </TableHead>
-  );
+  const SortableHeader = ({ field, children, className }: { field: SortField; children: React.ReactNode; className?: string }) => {
+    const isLeftAligned = className?.includes('text-left');
+    return (
+      <TableHead 
+        className={`cursor-pointer hover:bg-muted/50 select-none ${className || ''}`}
+        onClick={() => handleSort(field)}
+      >
+        <div className={`flex items-center ${isLeftAligned ? 'justify-start' : 'justify-center'}`}>
+          {children}
+          <SortIcon field={field} />
+        </div>
+      </TableHead>
+    );
+  };
 
   return (
     <Layout>
