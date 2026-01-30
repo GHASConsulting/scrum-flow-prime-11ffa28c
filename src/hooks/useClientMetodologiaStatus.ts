@@ -1,7 +1,5 @@
-import { useMemo } from 'react';
-import { useBacklog } from './useBacklog';
-import { useSprints } from './useSprints';
-import { useSprintTarefas } from './useSprintTarefas';
+import { useState, useEffect, useMemo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 type StatusColor = 'verde' | 'amarelo' | 'vermelho' | 'cinza';
 
@@ -14,16 +12,68 @@ interface MetodologiaStatusData {
   desvio: number;
 }
 
+interface BacklogItem {
+  id: string;
+  cliente_id: string | null;
+  tipo_tarefa: string | null;
+  status: string;
+}
+
+interface Sprint {
+  id: string;
+  data_inicio: string;
+  data_fim: string;
+}
+
+interface SprintTarefa {
+  backlog_id: string;
+  sprint_id: string;
+}
+
 export function useClientMetodologiaStatus(
   filterDataInicio?: string,
   filterDataFim?: string
 ) {
-  const { backlog } = useBacklog();
-  const { sprints } = useSprints();
-  const { sprintTarefas } = useSprintTarefas();
+  const [backlog, setBacklog] = useState<BacklogItem[]>([]);
+  const [sprints, setSprints] = useState<Sprint[]>([]);
+  const [sprintTarefas, setSprintTarefas] = useState<SprintTarefa[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [backlogRes, sprintsRes, sprintTarefasRes] = await Promise.all([
+          supabase
+            .from('backlog')
+            .select('id, cliente_id, tipo_tarefa, status')
+            .eq('tipo_tarefa', 'Cliente')
+            .not('cliente_id', 'is', null),
+          supabase
+            .from('sprint')
+            .select('id, data_inicio, data_fim'),
+          supabase
+            .from('sprint_tarefas')
+            .select('backlog_id, sprint_id')
+        ]);
+
+        if (backlogRes.data) setBacklog(backlogRes.data);
+        if (sprintsRes.data) setSprints(sprintsRes.data);
+        if (sprintTarefasRes.data) setSprintTarefas(sprintTarefasRes.data);
+      } catch (error) {
+        console.error('Erro ao carregar dados de metodologia:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const data = useMemo(() => {
     const statusMap: Record<string, MetodologiaStatusData> = {};
+
+    if (loading) return statusMap;
 
     const hoje = new Date();
     let percentualTempoTranscorrido = 100;
@@ -64,13 +114,8 @@ export function useClientMetodologiaStatus(
 
     const sprintIdsNoPeriodo = new Set(sprintsNoPeriodo.map(s => s.id));
 
-    // Filtrar apenas tarefas do backlog com tipo_tarefa = "Cliente" e cliente_id preenchido
-    const tarefasCliente = backlog.filter(
-      b => b.tipo_tarefa === 'Cliente' && b.cliente_id
-    );
-
     // Agrupar por cliente_id
-    const clienteIds = new Set(tarefasCliente.map(t => t.cliente_id).filter(Boolean));
+    const clienteIds = new Set(backlog.map(t => t.cliente_id).filter(Boolean));
 
     clienteIds.forEach(clienteId => {
       if (!clienteId) return;
@@ -96,7 +141,7 @@ export function useClientMetodologiaStatus(
       );
 
       // Filtrar tarefas do cliente que estão vinculadas a sprints no período
-      const tarefasDoCliente = tarefasCliente.filter(
+      const tarefasDoCliente = backlog.filter(
         t => t.cliente_id === clienteId && backlogIdsNoPeriodo.has(t.id)
       );
 
@@ -145,7 +190,7 @@ export function useClientMetodologiaStatus(
     });
 
     return statusMap;
-  }, [backlog, sprints, sprintTarefas, filterDataInicio, filterDataFim]);
+  }, [backlog, sprints, sprintTarefas, loading, filterDataInicio, filterDataFim]);
 
-  return { data };
+  return { data, loading };
 }
