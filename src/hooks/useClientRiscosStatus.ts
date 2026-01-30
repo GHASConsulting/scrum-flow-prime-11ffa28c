@@ -46,12 +46,21 @@ export const useClientRiscosStatus = (
       let status: TrafficLightColor;
       let message: string;
 
+      const riscosAtencaoCount = abertosCount + emMitigacaoCount;
+
       if (totalCount === 0) {
         status = 'cinza';
         message = 'Nenhum risco cadastrado para este cliente.';
-      } else if (abertosCount > 0) {
+      } else if (abertosCount > 0 || riscosAtencaoCount > 2) {
+        // Red if any risk is "Aberto" OR if more than 2 risks are in "Aberto" or "Em mitigação" status
         status = 'vermelho';
-        message = `${abertosCount} risco(s) em aberto requer(em) atenção imediata.`;
+        if (abertosCount > 0 && riscosAtencaoCount > 2) {
+          message = `${abertosCount} risco(s) em aberto e ${riscosAtencaoCount} riscos requerem atenção imediata.`;
+        } else if (riscosAtencaoCount > 2) {
+          message = `${riscosAtencaoCount} riscos em aberto ou mitigação requerem atenção imediata.`;
+        } else {
+          message = `${abertosCount} risco(s) em aberto requer(em) atenção imediata.`;
+        }
       } else if (emMitigacaoCount > 0) {
         status = 'amarelo';
         message = `${emMitigacaoCount} risco(s) em mitigação - acompanhamento em andamento.`;
