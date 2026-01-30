@@ -10,6 +10,7 @@ import { useClientProdutividadeStatus } from '@/hooks/useClientProdutividadeStat
 import { useProdutividadeGlobal } from '@/hooks/useProdutividadeGlobal';
 import { PrioridadesStatusTooltip } from '@/components/dashboard/PrioridadesStatusTooltip';
 import { ProdutividadeStatusTooltip } from '@/components/dashboard/ProdutividadeStatusTooltip';
+import { SummaryStatusDialog } from '@/components/dashboard/SummaryStatusDialog';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 
@@ -70,6 +71,24 @@ const getStatusPriority = (status: StatusColor): number => {
   }
 };
 
+const ClickableStatusIndicator = ({ 
+  status, 
+  onClick 
+}: { 
+  status: StatusColor; 
+  onClick: () => void;
+}) => (
+  <div className="flex justify-center">
+    <button
+      onClick={onClick}
+      className="p-1 rounded hover:bg-muted/50 transition-colors cursor-pointer"
+      title="Clique para ver detalhes"
+    >
+      <Circle className={`h-4 w-4 fill-current ${getStatusColor(status)}`} />
+    </button>
+  </div>
+);
+
 const StatusIndicator = ({ status }: { status: StatusColor }) => (
   <div className="flex justify-center">
     <Circle className={`h-4 w-4 fill-current ${getStatusColor(status)}`} />
@@ -94,6 +113,23 @@ const DashboardClientes = () => {
   const [filterAnoInicio, setFilterAnoInicio] = useState<string>('');
   const [filterMesFim, setFilterMesFim] = useState<string>('');
   const [filterAnoFim, setFilterAnoFim] = useState<string>('');
+
+  // Dialog state for summary status
+  const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
+  const [selectedSummaryField, setSelectedSummaryField] = useState<'geral' | 'metodologia' | 'prioridades' | 'produtividade' | 'riscos'>('geral');
+
+  const handleSummaryClick = (field: 'geral' | 'metodologia' | 'prioridades' | 'produtividade' | 'riscos') => {
+    setSelectedSummaryField(field);
+    setSummaryDialogOpen(true);
+  };
+
+  const fieldLabels: Record<string, string> = {
+    geral: 'Geral',
+    metodologia: 'Metodologia',
+    prioridades: 'Prioridades',
+    produtividade: 'Produtividade',
+    riscos: 'Riscos e BO\'s',
+  };
 
   // Generate available months/years based on produtividade records
   const availableMonthYears = useMemo(() => {
@@ -523,11 +559,21 @@ const DashboardClientes = () => {
                   <TableRow>
                     <TableHead className="w-16"></TableHead>
                     <TableHead className="text-left"></TableHead>
-                    <TableHead className="w-24"><StatusIndicator status={summaryStatuses.geral} /></TableHead>
-                    <TableHead className="w-24"><StatusIndicator status={summaryStatuses.metodologia} /></TableHead>
-                    <TableHead className="w-24"><StatusIndicator status={summaryStatuses.prioridades} /></TableHead>
-                    <TableHead className="w-24"><StatusIndicator status={summaryStatuses.produtividade} /></TableHead>
-                    <TableHead className="w-24"><StatusIndicator status={summaryStatuses.riscos} /></TableHead>
+                    <TableHead className="w-24">
+                      <ClickableStatusIndicator status={summaryStatuses.geral} onClick={() => handleSummaryClick('geral')} />
+                    </TableHead>
+                    <TableHead className="w-24">
+                      <ClickableStatusIndicator status={summaryStatuses.metodologia} onClick={() => handleSummaryClick('metodologia')} />
+                    </TableHead>
+                    <TableHead className="w-24">
+                      <ClickableStatusIndicator status={summaryStatuses.prioridades} onClick={() => handleSummaryClick('prioridades')} />
+                    </TableHead>
+                    <TableHead className="w-24">
+                      <ClickableStatusIndicator status={summaryStatuses.produtividade} onClick={() => handleSummaryClick('produtividade')} />
+                    </TableHead>
+                    <TableHead className="w-24">
+                      <ClickableStatusIndicator status={summaryStatuses.riscos} onClick={() => handleSummaryClick('riscos')} />
+                    </TableHead>
                   </TableRow>
                   <TableRow>
                     <SortableHeader field="codigo" className="w-16">Código</SortableHeader>
@@ -566,6 +612,16 @@ const DashboardClientes = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Summary Status Dialog */}
+        <SummaryStatusDialog
+          open={summaryDialogOpen}
+          onOpenChange={setSummaryDialogOpen}
+          field={selectedSummaryField}
+          fieldLabel={fieldLabels[selectedSummaryField]}
+          clientes={filteredAndSortedClientes}
+          summaryStatus={summaryStatuses[selectedSummaryField]}
+        />
       </div>
     </Layout>
   );
