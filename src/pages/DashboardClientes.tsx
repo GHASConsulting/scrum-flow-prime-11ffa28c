@@ -3,14 +3,14 @@ import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Filter, Circle, ArrowUp, ArrowDown, ArrowUpDown, Calendar } from 'lucide-react';
+import { Filter, Circle, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { useClientPrioridadesStatus } from '@/hooks/useClientPrioridadesStatus';
 import { useClientProdutividadeStatus } from '@/hooks/useClientProdutividadeStatus';
+import { useProdutividadeGlobal } from '@/hooks/useProdutividadeGlobal';
 import { PrioridadesStatusTooltip } from '@/components/dashboard/PrioridadesStatusTooltip';
 import { ProdutividadeStatusTooltip } from '@/components/dashboard/ProdutividadeStatusTooltip';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
 type StatusColor = 'verde' | 'amarelo' | 'vermelho' | 'cinza';
@@ -79,6 +79,7 @@ const StatusIndicator = ({ status }: { status: StatusColor }) => (
 const DashboardClientes = () => {
   const { records, isLoading } = useClientAccessRecords();
   const { data: prioridadesStatusMap, isLoading: isLoadingPrioridades } = useClientPrioridadesStatus();
+  const { produtividades } = useProdutividadeGlobal();
 
   // Filtros
   const [filterCliente, setFilterCliente] = useState<string>('all');
@@ -87,13 +88,90 @@ const DashboardClientes = () => {
   const [filterPrioridades, setFilterPrioridades] = useState<string>('all');
   const [filterProdutividade, setFilterProdutividade] = useState<string>('all');
   const [filterRiscos, setFilterRiscos] = useState<string>('all');
-  const [filterDataInicio, setFilterDataInicio] = useState<string>('');
-  const [filterDataFim, setFilterDataFim] = useState<string>('');
+  
+  // Date filters (year/month format like produtividade-global)
+  const [filterMesInicio, setFilterMesInicio] = useState<string>('');
+  const [filterAnoInicio, setFilterAnoInicio] = useState<string>('');
+  const [filterMesFim, setFilterMesFim] = useState<string>('');
+  const [filterAnoFim, setFilterAnoFim] = useState<string>('');
+
+  // Generate available months/years based on produtividade records
+  const availableMonthYears = useMemo(() => {
+    const monthYearSet = new Set<string>();
+    
+    produtividades.forEach((p) => {
+      const startDate = new Date(p.data_inicio + 'T12:00:00');
+      const startKey = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}`;
+      monthYearSet.add(startKey);
+      
+      const endDate = new Date(p.data_fim + 'T12:00:00');
+      const endKey = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}`;
+      monthYearSet.add(endKey);
+    });
+    
+    return Array.from(monthYearSet).sort();
+  }, [produtividades]);
+
+  const availableYears = useMemo(() => {
+    const years = new Set<string>();
+    availableMonthYears.forEach((my) => {
+      years.add(my.split('-')[0]);
+    });
+    return Array.from(years).sort();
+  }, [availableMonthYears]);
+
+  const getAvailableMonths = (selectedYear: string) => {
+    if (!selectedYear) return [];
+    
+    const monthLabels: Record<string, string> = {
+      '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril',
+      '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto',
+      '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro',
+    };
+    
+    return availableMonthYears
+      .filter((my) => my.startsWith(selectedYear))
+      .map((my) => {
+        const month = my.split('-')[1];
+        return { value: month, label: monthLabels[month] };
+      })
+      .sort((a, b) => a.value.localeCompare(b.value));
+  };
+
+  // Sync initial values to final when initial changes
+  const handleMesInicioChange = (value: string) => {
+    setFilterMesInicio(value);
+    setFilterMesFim(value);
+  };
+
+  const handleAnoInicioChange = (value: string) => {
+    setFilterAnoInicio(value);
+    setFilterAnoFim(value);
+  };
+
+  // Build date strings for the hook
+  const filterDataInicio = useMemo(() => {
+    if (filterAnoInicio && filterMesInicio) {
+      return `${filterAnoInicio}-${filterMesInicio}-01`;
+    }
+    return undefined;
+  }, [filterAnoInicio, filterMesInicio]);
+
+  const filterDataFim = useMemo(() => {
+    if (filterAnoFim && filterMesFim) {
+      // Get last day of the month
+      const year = parseInt(filterAnoFim);
+      const month = parseInt(filterMesFim);
+      const lastDay = new Date(year, month, 0).getDate();
+      return `${filterAnoFim}-${filterMesFim}-${String(lastDay).padStart(2, '0')}`;
+    }
+    return undefined;
+  }, [filterAnoFim, filterMesFim]);
 
   // Hook for produtividade status with date filters
   const { data: produtividadeStatusMap, isLoading: isLoadingProdutividade } = useClientProdutividadeStatus(
-    filterDataInicio || undefined,
-    filterDataFim || undefined
+    filterDataInicio,
+    filterDataFim
   );
 
   // Sorting - default to nome ascending
@@ -133,22 +211,22 @@ const DashboardClientes = () => {
   // Gerar status dos clientes
   const clientesStatus: ClienteStatus[] = useMemo(() => {
     return records.map(record => {
-      // Get prioridades status from the calculated map
-      const prioridadesStatus = prioridadesStatusMap?.[record.id]?.status || 'verde';
+      // Get prioridades status from the calculated map (cinza if no data)
+      const prioridadesStatus = prioridadesStatusMap?.[record.id]?.status || 'cinza';
       
-      // Get produtividade status from the calculated map
+      // Get produtividade status from the calculated map (cinza if no data)
       const produtividadeStatus = produtividadeStatusMap?.[record.id]?.status || 'cinza';
       
       return {
         id: record.id,
         codigo: record.codigo,
         nome: record.cliente,
-        // Por enquanto, os outros faróis ficam verdes (regras serão definidas posteriormente)
-        geral: 'verde' as StatusColor,
-        metodologia: 'verde' as StatusColor,
+        // Indicadores sem regras definidas ficam cinza (sem dados para calcular)
+        geral: 'cinza' as StatusColor,
+        metodologia: 'cinza' as StatusColor,
         prioridades: prioridadesStatus,
         produtividade: produtividadeStatus,
-        riscos: 'verde' as StatusColor,
+        riscos: 'cinza' as StatusColor,
       };
     });
   }, [records, prioridadesStatusMap, produtividadeStatusMap]);
@@ -249,24 +327,70 @@ const DashboardClientes = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
               <div>
-                <Label className="text-sm font-medium">Data Início</Label>
-                <Input
-                  type="date"
-                  value={filterDataInicio}
-                  onChange={(e) => setFilterDataInicio(e.target.value)}
-                  className="mt-1"
-                />
+                <Label className="text-sm font-medium">Ano Início</Label>
+                <Select value={filterAnoInicio} onValueChange={handleAnoInicioChange}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todos</SelectItem>
+                    {availableYears.map(year => (
+                      <SelectItem key={year} value={year}>{year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
-                <Label className="text-sm font-medium">Data Fim</Label>
-                <Input
-                  type="date"
-                  value={filterDataFim}
-                  onChange={(e) => setFilterDataFim(e.target.value)}
-                  className="mt-1"
-                />
+                <Label className="text-sm font-medium">Mês Início</Label>
+                <Select 
+                  value={filterMesInicio} 
+                  onValueChange={handleMesInicioChange}
+                  disabled={!filterAnoInicio}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todos</SelectItem>
+                    {getAvailableMonths(filterAnoInicio).map(month => (
+                      <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Ano Fim</Label>
+                <Select value={filterAnoFim} onValueChange={setFilterAnoFim}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todos</SelectItem>
+                    {availableYears.map(year => (
+                      <SelectItem key={year} value={year}>{year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Mês Fim</Label>
+                <Select 
+                  value={filterMesFim} 
+                  onValueChange={setFilterMesFim}
+                  disabled={!filterAnoFim}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todos</SelectItem>
+                    {getAvailableMonths(filterAnoFim).map(month => (
+                      <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label className="text-sm font-medium">Cliente</Label>
@@ -288,8 +412,10 @@ const DashboardClientes = () => {
                 <Button 
                   variant="outline" 
                   onClick={() => {
-                    setFilterDataInicio('');
-                    setFilterDataFim('');
+                    setFilterMesInicio('');
+                    setFilterAnoInicio('');
+                    setFilterMesFim('');
+                    setFilterAnoFim('');
                     setFilterCliente('all');
                     setFilterGeral('all');
                     setFilterMetodologia('all');
