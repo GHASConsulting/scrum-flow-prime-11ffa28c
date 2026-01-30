@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Plus, Trash2, Eye, X, History, Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Trash2, Eye, X, History, Filter, ChevronDown, ChevronUp, Clock } from 'lucide-react';
 import { useRiscos, type RiscoInsert, type Risco } from '@/hooks/useRiscos';
 import { useRiscoHistory } from '@/hooks/useRiscoHistory';
 import { useProfiles } from '@/hooks/useProfiles';
@@ -24,6 +24,7 @@ import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { calculateWorkingDays } from '@/lib/workingDays';
 
 const AREAS_IMPACTADAS = ['Delivery', 'Comercial', 'Financeiro', 'CS/CX', 'TI', 'Operação'];
 const TIPOS_RISCO_GHAS = ['GHAS - Perda de Contrato', 'GHAS - Multa Contratual', 'GHAS - Jurídico'];
@@ -1048,7 +1049,18 @@ export default function Riscos() {
                 {/* 1. Tempo e Controle */}
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Tempo e Controle</CardTitle>
+                    <CardTitle className="text-base flex items-center gap-3">
+                      <span>Tempo e Controle</span>
+                      {viewingRisco.status_risco !== 'Mitigado' && (
+                        <span className="flex items-center gap-1 text-sm font-normal bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
+                          <Clock className="h-3 w-3" />
+                          {Math.floor(calculateWorkingDays(
+                            new Date(viewingRisco.data_identificacao + 'T08:00:00'),
+                            new Date()
+                          ))} dias úteis em aberto
+                        </span>
+                      )}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2 text-sm">
                     <div className="grid grid-cols-2 gap-4">
