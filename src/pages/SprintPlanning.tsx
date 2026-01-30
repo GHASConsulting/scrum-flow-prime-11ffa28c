@@ -342,13 +342,17 @@ const SprintPlanning = () => {
       return;
     }
 
+    // Tipo de tarefa é obrigatório
+    if (!newTask.tipo_tarefa) {
+      toast.error('O tipo é obrigatório');
+      return;
+    }
+
     // Verificar se o tipo de tarefa selecionado exige cliente obrigatório
-    if (newTask.tipo_tarefa) {
-      const tipoTarefaSelecionado = tiposTarefa.find(t => t.nome === newTask.tipo_tarefa);
-      if (tipoTarefaSelecionado?.cliente_obrigatorio && !newTask.cliente_id) {
-        toast.error('O cliente é obrigatório para este tipo de tarefa');
-        return;
-      }
+    const tipoTarefaSelecionado = tiposTarefa.find(t => t.nome === newTask.tipo_tarefa);
+    if (tipoTarefaSelecionado?.cliente_obrigatorio && !newTask.cliente_id) {
+      toast.error('O cliente é obrigatório para este tipo de tarefa');
+      return;
     }
 
     try {
@@ -456,13 +460,17 @@ const SprintPlanning = () => {
       return;
     }
 
+    // Tipo de tarefa é obrigatório
+    if (!editingTask.tipo_tarefa) {
+      toast.error('O tipo é obrigatório');
+      return;
+    }
+
     // Verificar se o tipo de tarefa selecionado exige cliente obrigatório
-    if (editingTask.tipo_tarefa) {
-      const tipoTarefaSelecionado = tiposTarefa.find(t => t.nome === editingTask.tipo_tarefa);
-      if (tipoTarefaSelecionado?.cliente_obrigatorio && !editingTask.cliente_id) {
-        toast.error('O cliente é obrigatório para este tipo de tarefa');
-        return;
-      }
+    const tipoTarefaSelecionado = tiposTarefa.find(t => t.nome === editingTask.tipo_tarefa);
+    if (tipoTarefaSelecionado?.cliente_obrigatorio && !editingTask.cliente_id) {
+      toast.error('O cliente é obrigatório para este tipo de tarefa');
+      return;
     }
 
     try {
