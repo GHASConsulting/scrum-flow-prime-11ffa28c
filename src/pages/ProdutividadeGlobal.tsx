@@ -607,8 +607,8 @@ const ProdutividadeGlobal = () => {
     return sum;
   }, [filteredProdutividades]);
   
-  // Obter o valor de abertos_15_dias do registro mais recente quando um cliente está selecionado
-  const latestAbertos15Dias = useMemo(() => {
+  // Obter os valores do registro mais recente quando um cliente está selecionado
+  const latestRecordData = useMemo(() => {
     if (filterCliente === 'all' || filteredProdutividades.length === 0) {
       return null;
     }
@@ -618,7 +618,11 @@ const ProdutividadeGlobal = () => {
       new Date(b.data_fim).getTime() - new Date(a.data_fim).getTime()
     );
     
-    return sortedByDate[0]?.abertos_15_dias ?? null;
+    const latest = sortedByDate[0];
+    return latest ? {
+      abertos15Dias: latest.abertos_15_dias ?? 0,
+      backlog: latest.backlog ?? 0
+    } : null;
   }, [filteredProdutividades, filterCliente]);
   
   const uniqueClientes = new Set(filteredProdutividades.map(p => p.cliente_id)).size;
@@ -846,8 +850,11 @@ const ProdutividadeGlobal = () => {
           <CardHeader>
             <CardTitle className="flex items-center">
               Registros de Produtividade
-              {latestAbertos15Dias !== null && (
-                <ProdutividadeTrafficLight abertos15Dias={latestAbertos15Dias} />
+              {latestRecordData !== null && (
+                <ProdutividadeTrafficLight 
+                  abertos15Dias={latestRecordData.abertos15Dias} 
+                  backlog={latestRecordData.backlog} 
+                />
               )}
             </CardTitle>
           </CardHeader>
