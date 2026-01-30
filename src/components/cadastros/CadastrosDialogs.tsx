@@ -474,12 +474,12 @@ export const CadastrosDialogs = (props: CadastrosDialogsProps) => {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Responsável</label>
-              <Select value={props.newClienteResponsavel} onValueChange={props.setNewClienteResponsavel}>
+              <Select value={props.newClienteResponsavel || "_none_"} onValueChange={(val) => props.setNewClienteResponsavel(val === "_none_" ? "" : val)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o responsável" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhum</SelectItem>
+                  <SelectItem value="_none_">Nenhum</SelectItem>
                   {props.profiles.map((profile) => (
                     <SelectItem key={profile.id} value={profile.id}>
                       {profile.nome}
@@ -519,16 +519,16 @@ export const CadastrosDialogs = (props: CadastrosDialogsProps) => {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Responsável</label>
                 <Select 
-                  value={props.editingCliente.responsavel_id || ''} 
+                  value={props.editingCliente.responsavel_id || "_none_"} 
                   onValueChange={(value) =>
-                    props.setEditingCliente({ ...props.editingCliente, responsavel_id: value || null })
+                    props.setEditingCliente({ ...props.editingCliente, responsavel_id: value === "_none_" ? null : value })
                   }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o responsável" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum</SelectItem>
+                    <SelectItem value="_none_">Nenhum</SelectItem>
                     {props.profiles.map((profile) => (
                       <SelectItem key={profile.id} value={profile.id}>
                         {profile.nome}
