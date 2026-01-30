@@ -3,7 +3,7 @@ import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Filter, Circle, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { Filter, Circle, ArrowUp, ArrowDown, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
 import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { useClientPrioridadesStatus } from '@/hooks/useClientPrioridadesStatus';
 import { useClientProdutividadeStatus } from '@/hooks/useClientProdutividadeStatus';
@@ -116,11 +116,8 @@ const DashboardClientes = () => {
 
   // Filtros
   const [filterCliente, setFilterCliente] = useState<string>('all');
-  const [filterGeral, setFilterGeral] = useState<string>('all');
-  const [filterMetodologia, setFilterMetodologia] = useState<string>('all');
-  const [filterPrioridades, setFilterPrioridades] = useState<string>('all');
-  const [filterProdutividade, setFilterProdutividade] = useState<string>('all');
-  const [filterRiscos, setFilterRiscos] = useState<string>('all');
+  const [filterResponsavel, setFilterResponsavel] = useState<string>('all');
+  const [filtersExpanded, setFiltersExpanded] = useState<boolean>(true);
   
   // Date filters (year/month format like produtividade-global)
   // Default to current month/year
@@ -323,11 +320,7 @@ const DashboardClientes = () => {
   const filteredAndSortedClientes = useMemo(() => {
     let result = clientesStatus.filter(cliente => {
       if (filterCliente !== 'all' && cliente.id !== filterCliente) return false;
-      if (filterGeral !== 'all' && cliente.geral !== filterGeral) return false;
-      if (filterMetodologia !== 'all' && cliente.metodologia !== filterMetodologia) return false;
-      if (filterPrioridades !== 'all' && cliente.prioridades !== filterPrioridades) return false;
-      if (filterProdutividade !== 'all' && cliente.produtividade !== filterProdutividade) return false;
-      if (filterRiscos !== 'all' && cliente.riscos !== filterRiscos) return false;
+      if (filterResponsavel !== 'all' && cliente.responsavel !== filterResponsavel) return false;
       return true;
     });
 
@@ -352,7 +345,7 @@ const DashboardClientes = () => {
     }
 
     return result;
-  }, [clientesStatus, filterCliente, filterGeral, filterMetodologia, filterPrioridades, filterProdutividade, filterRiscos, sortField, sortDirection]);
+  }, [clientesStatus, filterCliente, filterResponsavel, sortField, sortDirection]);
 
   // Calculate summary traffic light for each column
   const calculateSummaryStatus = (field: 'geral' | 'metodologia' | 'prioridades' | 'produtividade' | 'riscos'): StatusColor => {
@@ -401,37 +394,16 @@ const DashboardClientes = () => {
     riscos: calculateSummaryStatus('riscos'),
   }), [filteredAndSortedClientes]);
 
-  const StatusFilterSelect = ({ value, onChange, label }: { value: string; onChange: (v: string) => void; label: string }) => (
-    <div>
-      <label className="text-sm font-medium">{label}</label>
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger>
-          <SelectValue placeholder="Todos" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todos</SelectItem>
-          <SelectItem value="verde">
-            <div className="flex items-center gap-2">
-              <Circle className="h-3 w-3 fill-green-500 text-green-500" />
-              Verde
-            </div>
-          </SelectItem>
-          <SelectItem value="amarelo">
-            <div className="flex items-center gap-2">
-              <Circle className="h-3 w-3 fill-yellow-500 text-yellow-500" />
-              Amarelo
-            </div>
-          </SelectItem>
-          <SelectItem value="vermelho">
-            <div className="flex items-center gap-2">
-              <Circle className="h-3 w-3 fill-red-500 text-red-500" />
-              Vermelho
-            </div>
-          </SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-  );
+  // Lista única de responsáveis para o filtro
+  const uniqueResponsaveis = useMemo(() => {
+    const responsaveis = new Set<string>();
+    clientesStatus.forEach(c => {
+      if (c.responsavel) {
+        responsaveis.add(c.responsavel);
+      }
+    });
+    return Array.from(responsaveis).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }, [clientesStatus]);
 
   const SortableHeader = ({ field, children, className }: { field: SortField; children: React.ReactNode; className?: string }) => (
     <TableHead 
@@ -454,125 +426,144 @@ const DashboardClientes = () => {
           <p className="text-muted-foreground mt-1">Visão geral dos indicadores por cliente</p>
         </div>
 
-        {/* Filtros - Fixed */}
+        {/* Filtros - Collapsible */}
         <Card className="flex-shrink-0 mt-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filtros
+          <CardHeader 
+            className="cursor-pointer hover:bg-muted/30 transition-colors"
+            onClick={() => setFiltersExpanded(!filtersExpanded)}
+          >
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Filter className="h-5 w-5" />
+                Filtros
+              </div>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                {filtersExpanded ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </Button>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
-              <div>
-                <Label className="text-sm font-medium">Ano Início</Label>
-                <Select value={filterAnoInicio || 'all'} onValueChange={handleAnoInicioChange}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    {availableYears.map(year => (
-                      <SelectItem key={year} value={year}>{year}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          {filtersExpanded && (
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Ano Início</Label>
+                  <Select value={filterAnoInicio || 'all'} onValueChange={handleAnoInicioChange}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {availableYears.map(year => (
+                        <SelectItem key={year} value={year}>{year}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Mês Início</Label>
+                  <Select 
+                    value={filterMesInicio || 'all'} 
+                    onValueChange={handleMesInicioChange}
+                    disabled={!filterAnoInicio}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {getAvailableMonths(filterAnoInicio).map(month => (
+                        <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Ano Fim</Label>
+                  <Select value={filterAnoFim || 'all'} onValueChange={handleAnoFimChange}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {availableYears.map(year => (
+                        <SelectItem key={year} value={year}>{year}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Mês Fim</Label>
+                  <Select 
+                    value={filterMesFim || 'all'} 
+                    onValueChange={handleMesFimChange}
+                    disabled={!filterAnoFim}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {getAvailableMonths(filterAnoFim).map(month => (
+                        <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Cliente</Label>
+                  <Select value={filterCliente} onValueChange={setFilterCliente}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {records.map(record => (
+                        <SelectItem key={record.id} value={record.id}>
+                          {record.cliente}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Responsável</Label>
+                  <Select value={filterResponsavel} onValueChange={setFilterResponsavel}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {uniqueResponsaveis.map(responsavel => (
+                        <SelectItem key={responsavel} value={responsavel}>
+                          {responsavel}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-end">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setFilterMesInicio('');
+                      setFilterAnoInicio('');
+                      setFilterMesFim('');
+                      setFilterAnoFim('');
+                      setFilterCliente('all');
+                      setFilterResponsavel('all');
+                    }}
+                    className="w-full"
+                  >
+                    Limpar Filtros
+                  </Button>
+                </div>
               </div>
-              <div>
-                <Label className="text-sm font-medium">Mês Início</Label>
-                <Select 
-                  value={filterMesInicio || 'all'} 
-                  onValueChange={handleMesInicioChange}
-                  disabled={!filterAnoInicio}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    {getAvailableMonths(filterAnoInicio).map(month => (
-                      <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-sm font-medium">Ano Fim</Label>
-                <Select value={filterAnoFim || 'all'} onValueChange={handleAnoFimChange}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    {availableYears.map(year => (
-                      <SelectItem key={year} value={year}>{year}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-sm font-medium">Mês Fim</Label>
-                <Select 
-                  value={filterMesFim || 'all'} 
-                  onValueChange={handleMesFimChange}
-                  disabled={!filterAnoFim}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    {getAvailableMonths(filterAnoFim).map(month => (
-                      <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-sm font-medium">Cliente</Label>
-                <Select value={filterCliente} onValueChange={setFilterCliente}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    {records.map(record => (
-                      <SelectItem key={record.id} value={record.id}>
-                        {record.cliente}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-end">
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setFilterMesInicio('');
-                    setFilterAnoInicio('');
-                    setFilterMesFim('');
-                    setFilterAnoFim('');
-                    setFilterCliente('all');
-                    setFilterGeral('all');
-                    setFilterMetodologia('all');
-                    setFilterPrioridades('all');
-                    setFilterProdutividade('all');
-                    setFilterRiscos('all');
-                  }}
-                  className="w-full"
-                >
-                  Limpar Filtros
-                </Button>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              <StatusFilterSelect value={filterGeral} onChange={setFilterGeral} label="Geral" />
-              <StatusFilterSelect value={filterMetodologia} onChange={setFilterMetodologia} label="Metodologia" />
-              <StatusFilterSelect value={filterPrioridades} onChange={setFilterPrioridades} label="Prioridades" />
-              <StatusFilterSelect value={filterProdutividade} onChange={setFilterProdutividade} label="Produtividade" />
-              <StatusFilterSelect value={filterRiscos} onChange={setFilterRiscos} label="Riscos e BO's" />
-            </div>
-          </CardContent>
+            </CardContent>
+          )}
         </Card>
 
         {/* Grid de Clientes - Scrollable */}
