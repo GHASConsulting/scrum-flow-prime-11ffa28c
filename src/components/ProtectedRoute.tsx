@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useInactivityLogout } from "@/hooks/useInactivityLogout";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -8,11 +9,15 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Enable inactivity logout for authenticated users
+  useInactivityLogout();
+
   useEffect(() => {
     if (!loading && !user) {
       navigate("/auth", { replace: true, state: { from: location } });
     }
   }, [user, loading, navigate, location]);
+
   useEffect(() => {
     // Redirecionar para alteração de senha se necessário
     // Não redirecionar se já estiver na página de alteração de senha
