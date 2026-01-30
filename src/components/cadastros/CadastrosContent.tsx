@@ -97,6 +97,7 @@ interface CadastrosContentProps {
   handleEditCliente: (item: any) => void;
   handleUpdateCliente: () => void;
   handleDeleteCliente: (id: string) => void;
+  handleToggleClienteAtivo: (id: string, ativo: boolean) => void;
   // Setor (area_documento)
   isLoadingAreaDoc: boolean;
   isAddAreaDocDialogOpen: boolean;
@@ -445,6 +446,7 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
                 <TableHead className="w-[80px]">Código</TableHead>
                 <TableHead className="w-[100px] text-center">Ações</TableHead>
                 <TableHead>Nome</TableHead>
+                <TableHead className="w-[100px] text-center">Ativo</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -462,6 +464,12 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
                     </div>
                   </TableCell>
                   <TableCell className="font-medium">{item.cliente}</TableCell>
+                  <TableCell className="text-center">
+                    <Switch
+                      checked={item.ativo}
+                      onCheckedChange={() => props.handleToggleClienteAtivo(item.id, item.ativo)}
+                    />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
