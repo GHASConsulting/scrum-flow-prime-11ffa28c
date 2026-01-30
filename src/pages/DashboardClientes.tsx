@@ -140,13 +140,33 @@ const DashboardClientes = () => {
 
   // Sync initial values to final when initial changes
   const handleMesInicioChange = (value: string) => {
-    setFilterMesInicio(value);
-    setFilterMesFim(value);
+    const newValue = value === 'all' ? '' : value;
+    setFilterMesInicio(newValue);
+    setFilterMesFim(newValue);
   };
 
   const handleAnoInicioChange = (value: string) => {
-    setFilterAnoInicio(value);
-    setFilterAnoFim(value);
+    const newValue = value === 'all' ? '' : value;
+    setFilterAnoInicio(newValue);
+    setFilterAnoFim(newValue);
+    // Reset month when year changes
+    if (value === 'all') {
+      setFilterMesInicio('');
+      setFilterMesFim('');
+    }
+  };
+
+  const handleAnoFimChange = (value: string) => {
+    const newValue = value === 'all' ? '' : value;
+    setFilterAnoFim(newValue);
+    if (value === 'all') {
+      setFilterMesFim('');
+    }
+  };
+
+  const handleMesFimChange = (value: string) => {
+    const newValue = value === 'all' ? '' : value;
+    setFilterMesFim(newValue);
   };
 
   // Build date strings for the hook
@@ -330,12 +350,12 @@ const DashboardClientes = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
               <div>
                 <Label className="text-sm font-medium">Ano Início</Label>
-                <Select value={filterAnoInicio} onValueChange={handleAnoInicioChange}>
+                <Select value={filterAnoInicio || 'all'} onValueChange={handleAnoInicioChange}>
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     {availableYears.map(year => (
                       <SelectItem key={year} value={year}>{year}</SelectItem>
                     ))}
@@ -345,7 +365,7 @@ const DashboardClientes = () => {
               <div>
                 <Label className="text-sm font-medium">Mês Início</Label>
                 <Select 
-                  value={filterMesInicio} 
+                  value={filterMesInicio || 'all'} 
                   onValueChange={handleMesInicioChange}
                   disabled={!filterAnoInicio}
                 >
@@ -353,7 +373,7 @@ const DashboardClientes = () => {
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     {getAvailableMonths(filterAnoInicio).map(month => (
                       <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
                     ))}
@@ -362,12 +382,12 @@ const DashboardClientes = () => {
               </div>
               <div>
                 <Label className="text-sm font-medium">Ano Fim</Label>
-                <Select value={filterAnoFim} onValueChange={setFilterAnoFim}>
+                <Select value={filterAnoFim || 'all'} onValueChange={handleAnoFimChange}>
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     {availableYears.map(year => (
                       <SelectItem key={year} value={year}>{year}</SelectItem>
                     ))}
@@ -377,15 +397,15 @@ const DashboardClientes = () => {
               <div>
                 <Label className="text-sm font-medium">Mês Fim</Label>
                 <Select 
-                  value={filterMesFim} 
-                  onValueChange={setFilterMesFim}
+                  value={filterMesFim || 'all'} 
+                  onValueChange={handleMesFimChange}
                   disabled={!filterAnoFim}
                 >
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     {getAvailableMonths(filterAnoFim).map(month => (
                       <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
                     ))}
