@@ -808,7 +808,7 @@ const ProdutividadeGlobal = () => {
         </Card>
 
         {/* KPIs */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
@@ -844,6 +844,19 @@ const ProdutividadeGlobal = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Total Backlog</p>
                   <p className="text-2xl font-bold">{totalBacklog}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-lg bg-primary/10">
+                  <AlertCircle className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Abertos há 15 Dias</p>
+                  <p className="text-2xl font-bold">{totalAbertos15Dias}</p>
                 </div>
               </div>
             </CardContent>
