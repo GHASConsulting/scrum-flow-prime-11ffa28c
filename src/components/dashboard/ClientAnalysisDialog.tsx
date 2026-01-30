@@ -5,6 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, FileText, Copy, Check, FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ClientStatus {
   id: string;
@@ -36,16 +37,88 @@ export const ClientAnalysisDialog = ({
   const [isLoading, setIsLoading] = useState(false);
   const [analysis, setAnalysis] = useState('');
   const [copied, setCopied] = useState(false);
+  const [isFromCache, setIsFromCache] = useState(false);
   const analysisRef = useRef<HTMLDivElement>(null);
+
+  // Get today's date in YYYY-MM-DD format (Brazil timezone)
+  const getTodayDate = () => {
+    const now = new Date();
+    // Adjust for Brazil timezone (GMT-3)
+    const brazilOffset = -3 * 60;
+    const localOffset = now.getTimezoneOffset();
+    const brazilTime = new Date(now.getTime() + (localOffset + brazilOffset) * 60000);
+    return brazilTime.toISOString().split('T')[0];
+  };
+
+  // Check for existing daily summary
+  const checkExistingSummary = async (): Promise<string | null> => {
+    const today = getTodayDate();
+    
+    const { data, error } = await supabase
+      .from('resumo_executivo_diario')
+      .select('conteudo')
+      .eq('data_geracao', today)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Error checking existing summary:', error);
+      return null;
+    }
+    
+    return data?.conteudo || null;
+  };
+
+  // Save new summary to database
+  const saveSummary = async (content: string) => {
+    const today = getTodayDate();
+    
+    const { error } = await supabase
+      .from('resumo_executivo_diario')
+      .upsert({
+        data_geracao: today,
+        conteudo: content,
+        periodo_inicio: periodo?.inicio || '',
+        periodo_fim: periodo?.fim || '',
+      }, {
+        onConflict: 'data_geracao'
+      });
+    
+    if (error) {
+      console.error('Error saving summary:', error);
+    }
+  };
 
   // Reset state when dialog opens
   useEffect(() => {
     if (open) {
       setAnalysis('');
       setIsLoading(true);
-      generateAnalysis();
+      setIsFromCache(false);
+      loadOrGenerateAnalysis();
     }
   }, [open]);
+
+  const loadOrGenerateAnalysis = async () => {
+    try {
+      // First, check if we have a summary for today
+      const existingSummary = await checkExistingSummary();
+      
+      if (existingSummary) {
+        // Use cached summary
+        setAnalysis(existingSummary);
+        setIsFromCache(true);
+        setIsLoading(false);
+        return;
+      }
+      
+      // No cached summary, generate new one
+      await generateAnalysis();
+    } catch (error) {
+      console.error('Error loading analysis:', error);
+      setIsLoading(false);
+      toast.error('Erro ao carregar análise');
+    }
+  };
 
   const generateAnalysis = async () => {
     try {
@@ -137,6 +210,11 @@ export const ClientAnalysisDialog = ({
             }
           } catch { /* ignore */ }
         }
+      }
+
+      // Save the generated analysis to the database
+      if (fullAnalysis) {
+        await saveSummary(fullAnalysis);
       }
 
       setIsLoading(false);
@@ -371,6 +449,11 @@ export const ClientAnalysisDialog = ({
             <DialogTitle className="flex items-center gap-2 text-xl">
               <FileText className="h-5 w-5" />
               Resumo Executivo - Análise de Clientes
+              {isFromCache && !isLoading && (
+                <span className="text-xs font-normal text-muted-foreground ml-2">
+                  (gerado hoje)
+                </span>
+              )}
             </DialogTitle>
             {analysis && !isLoading && (
               <div className="flex gap-2 mr-8">
