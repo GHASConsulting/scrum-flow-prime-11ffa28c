@@ -582,50 +582,52 @@ const DashboardClientes = () => {
               </div>
             </div>
             {/* Cabeçalho da tabela - fixo */}
-            <Table className="table-fixed">
-              <colgroup>
-                <col className="w-[80px]" />
-                <col className="w-[200px]" />
-                <col className="w-[150px]" />
-                <col className="w-[100px]" />
-                <col className="w-[100px]" />
-                <col className="w-[100px]" />
-                <col className="w-[100px]" />
-                <col className="w-[100px]" />
-              </colgroup>
-              <TableHeader className="text-base">
-                <TableRow className="bg-muted/30">
-                  <TableHead></TableHead>
-                  <TableHead></TableHead>
-                  <TableHead></TableHead>
-                  <TableHead>
-                    <ClickableStatusIndicator status={summaryStatuses.geral} onClick={() => handleSummaryClick('geral')} />
-                  </TableHead>
-                  <TableHead>
-                    <ClickableStatusIndicator status={summaryStatuses.metodologia} onClick={() => handleSummaryClick('metodologia')} />
-                  </TableHead>
-                  <TableHead>
-                    <ClickableStatusIndicator status={summaryStatuses.prioridades} onClick={() => handleSummaryClick('prioridades')} />
-                  </TableHead>
-                  <TableHead>
-                    <ClickableStatusIndicator status={summaryStatuses.produtividade} onClick={() => handleSummaryClick('produtividade')} />
-                  </TableHead>
-                  <TableHead>
-                    <ClickableStatusIndicator status={summaryStatuses.riscos} onClick={() => handleSummaryClick('riscos')} />
-                  </TableHead>
-                </TableRow>
-                <TableRow className="bg-muted/30 border-b">
-                  <SortableHeader field="codigo">Código</SortableHeader>
-                  <SortableHeader field="nome" className="text-left">Cliente</SortableHeader>
-                  <SortableHeader field="responsavel" className="text-left">Responsável</SortableHeader>
-                  <SortableHeader field="geral">Geral</SortableHeader>
-                  <SortableHeader field="metodologia">Metodologia</SortableHeader>
-                  <SortableHeader field="prioridades">Prioridades</SortableHeader>
-                  <SortableHeader field="produtividade">Produtividade</SortableHeader>
-                  <SortableHeader field="riscos">Riscos e BO's</SortableHeader>
-                </TableRow>
-              </TableHeader>
-            </Table>
+            <div className="overflow-x-auto overflow-y-hidden">
+              <Table className="table-fixed w-full min-w-[930px]">
+                <colgroup>
+                  <col style={{ width: '80px' }} />
+                  <col style={{ width: '200px' }} />
+                  <col style={{ width: '150px' }} />
+                  <col style={{ width: '100px' }} />
+                  <col style={{ width: '100px' }} />
+                  <col style={{ width: '100px' }} />
+                  <col style={{ width: '100px' }} />
+                  <col style={{ width: '100px' }} />
+                </colgroup>
+                <TableHeader className="text-base">
+                  <TableRow className="bg-muted/30">
+                    <TableHead></TableHead>
+                    <TableHead></TableHead>
+                    <TableHead></TableHead>
+                    <TableHead className="text-center">
+                      <ClickableStatusIndicator status={summaryStatuses.geral} onClick={() => handleSummaryClick('geral')} />
+                    </TableHead>
+                    <TableHead className="text-center">
+                      <ClickableStatusIndicator status={summaryStatuses.metodologia} onClick={() => handleSummaryClick('metodologia')} />
+                    </TableHead>
+                    <TableHead className="text-center">
+                      <ClickableStatusIndicator status={summaryStatuses.prioridades} onClick={() => handleSummaryClick('prioridades')} />
+                    </TableHead>
+                    <TableHead className="text-center">
+                      <ClickableStatusIndicator status={summaryStatuses.produtividade} onClick={() => handleSummaryClick('produtividade')} />
+                    </TableHead>
+                    <TableHead className="text-center">
+                      <ClickableStatusIndicator status={summaryStatuses.riscos} onClick={() => handleSummaryClick('riscos')} />
+                    </TableHead>
+                  </TableRow>
+                  <TableRow className="bg-muted/30 border-b">
+                    <SortableHeader field="codigo">Código</SortableHeader>
+                    <SortableHeader field="nome" className="text-left">Cliente</SortableHeader>
+                    <SortableHeader field="responsavel" className="text-left">Responsável</SortableHeader>
+                    <SortableHeader field="geral">Geral</SortableHeader>
+                    <SortableHeader field="metodologia">Metodologia</SortableHeader>
+                    <SortableHeader field="prioridades">Prioridades</SortableHeader>
+                    <SortableHeader field="produtividade">Produtividade</SortableHeader>
+                    <SortableHeader field="riscos">Riscos e BO's</SortableHeader>
+                  </TableRow>
+                </TableHeader>
+              </Table>
+            </div>
           </div>
           {/* Corpo da tabela - scrollável */}
           <div className="flex-1 overflow-auto">
@@ -634,16 +636,16 @@ const DashboardClientes = () => {
             ) : filteredAndSortedClientes.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</div>
             ) : (
-              <Table className="table-fixed">
+              <Table className="table-fixed w-full min-w-[930px]">
                 <colgroup>
-                  <col className="w-[80px]" />
-                  <col className="w-[200px]" />
-                  <col className="w-[150px]" />
-                  <col className="w-[100px]" />
-                  <col className="w-[100px]" />
-                  <col className="w-[100px]" />
-                  <col className="w-[100px]" />
-                  <col className="w-[100px]" />
+                  <col style={{ width: '80px' }} />
+                  <col style={{ width: '200px' }} />
+                  <col style={{ width: '150px' }} />
+                  <col style={{ width: '100px' }} />
+                  <col style={{ width: '100px' }} />
+                  <col style={{ width: '100px' }} />
+                  <col style={{ width: '100px' }} />
+                  <col style={{ width: '100px' }} />
                 </colgroup>
                 <TableBody>
                   {filteredAndSortedClientes.map(cliente => (
