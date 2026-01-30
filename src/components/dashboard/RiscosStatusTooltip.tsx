@@ -40,19 +40,19 @@ export const RiscosStatusTooltip = ({ status, riscosData }: RiscosStatusTooltipP
           <p className="font-medium">Riscos e BO's</p>
           <p className="text-sm text-muted-foreground">{riscosData.message}</p>
           
-          <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="space-y-1 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Total de riscos:</span>
               <span className="font-medium">{riscosData.totalCount}</span>
             </div>
             {riscosData.abertosCount > 0 && (
-              <div className="flex justify-between col-span-2">
+              <div className="flex justify-between">
                 <span className="text-red-600">Abertos:</span>
                 <span className="font-medium text-red-600">{riscosData.abertosCount}</span>
               </div>
             )}
             {riscosData.emMitigacaoCount > 0 && (
-              <div className="flex justify-between col-span-2">
+              <div className="flex justify-between">
                 <span className="text-yellow-600">Em mitigação:</span>
                 <span className="font-medium text-yellow-600">{riscosData.emMitigacaoCount}</span>
               </div>
