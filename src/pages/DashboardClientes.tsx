@@ -582,37 +582,47 @@ const DashboardClientes = () => {
               </div>
             </div>
             {/* Cabeçalho da tabela - fixo */}
-            <Table>
+            <Table className="table-fixed">
+              <colgroup>
+                <col className="w-[80px]" />
+                <col className="w-[200px]" />
+                <col className="w-[150px]" />
+                <col className="w-[100px]" />
+                <col className="w-[100px]" />
+                <col className="w-[100px]" />
+                <col className="w-[100px]" />
+                <col className="w-[100px]" />
+              </colgroup>
               <TableHeader>
                 <TableRow className="bg-muted/30">
-                  <TableHead className="w-16"></TableHead>
-                  <TableHead className="text-left min-w-[200px]"></TableHead>
-                  <TableHead className="text-left min-w-[150px]"></TableHead>
-                  <TableHead className="w-24">
+                  <TableHead></TableHead>
+                  <TableHead></TableHead>
+                  <TableHead></TableHead>
+                  <TableHead>
                     <ClickableStatusIndicator status={summaryStatuses.geral} onClick={() => handleSummaryClick('geral')} />
                   </TableHead>
-                  <TableHead className="w-24">
+                  <TableHead>
                     <ClickableStatusIndicator status={summaryStatuses.metodologia} onClick={() => handleSummaryClick('metodologia')} />
                   </TableHead>
-                  <TableHead className="w-24">
+                  <TableHead>
                     <ClickableStatusIndicator status={summaryStatuses.prioridades} onClick={() => handleSummaryClick('prioridades')} />
                   </TableHead>
-                  <TableHead className="w-24">
+                  <TableHead>
                     <ClickableStatusIndicator status={summaryStatuses.produtividade} onClick={() => handleSummaryClick('produtividade')} />
                   </TableHead>
-                  <TableHead className="w-24">
+                  <TableHead>
                     <ClickableStatusIndicator status={summaryStatuses.riscos} onClick={() => handleSummaryClick('riscos')} />
                   </TableHead>
                 </TableRow>
                 <TableRow className="bg-muted/30 border-b">
-                  <SortableHeader field="codigo" className="w-16">Código</SortableHeader>
-                  <SortableHeader field="nome" className="text-left min-w-[200px]">Cliente</SortableHeader>
-                  <SortableHeader field="responsavel" className="text-left min-w-[150px]">Responsável</SortableHeader>
-                  <SortableHeader field="geral" className="w-24">Geral</SortableHeader>
-                  <SortableHeader field="metodologia" className="w-24">Metodologia</SortableHeader>
-                  <SortableHeader field="prioridades" className="w-24">Prioridades</SortableHeader>
-                  <SortableHeader field="produtividade" className="w-24">Produtividade</SortableHeader>
-                  <SortableHeader field="riscos" className="w-24">Riscos e BO's</SortableHeader>
+                  <SortableHeader field="codigo">Código</SortableHeader>
+                  <SortableHeader field="nome" className="text-left">Cliente</SortableHeader>
+                  <SortableHeader field="responsavel" className="text-left">Responsável</SortableHeader>
+                  <SortableHeader field="geral">Geral</SortableHeader>
+                  <SortableHeader field="metodologia">Metodologia</SortableHeader>
+                  <SortableHeader field="prioridades">Prioridades</SortableHeader>
+                  <SortableHeader field="produtividade">Produtividade</SortableHeader>
+                  <SortableHeader field="riscos">Riscos e BO's</SortableHeader>
                 </TableRow>
               </TableHeader>
             </Table>
@@ -624,33 +634,43 @@ const DashboardClientes = () => {
             ) : filteredAndSortedClientes.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">Nenhum cliente encontrado</div>
             ) : (
-              <Table>
+              <Table className="table-fixed">
+                <colgroup>
+                  <col className="w-[80px]" />
+                  <col className="w-[200px]" />
+                  <col className="w-[150px]" />
+                  <col className="w-[100px]" />
+                  <col className="w-[100px]" />
+                  <col className="w-[100px]" />
+                  <col className="w-[100px]" />
+                  <col className="w-[100px]" />
+                </colgroup>
                 <TableBody>
                   {filteredAndSortedClientes.map(cliente => (
                     <TableRow key={cliente.id}>
-                      <TableCell className="w-16 font-medium text-center">{cliente.codigo}</TableCell>
-                      <TableCell className="min-w-[200px] font-semibold">{cliente.nome}</TableCell>
-                      <TableCell className="min-w-[150px] font-semibold">{cliente.responsavel}</TableCell>
-                      <TableCell className="w-24"><StatusIndicator status={cliente.geral} /></TableCell>
-                      <TableCell className="w-24">
+                      <TableCell className="font-medium text-center">{cliente.codigo}</TableCell>
+                      <TableCell className="font-semibold">{cliente.nome}</TableCell>
+                      <TableCell className="font-semibold">{cliente.responsavel}</TableCell>
+                      <TableCell><StatusIndicator status={cliente.geral} /></TableCell>
+                      <TableCell>
                         <MetodologiaStatusTooltip 
                           status={cliente.metodologia} 
                           metodologiaData={metodologiaStatusMap?.[cliente.id]}
                         />
                       </TableCell>
-                      <TableCell className="w-24">
+                      <TableCell>
                         <PrioridadesStatusTooltip 
                           status={cliente.prioridades} 
                           prioridadesData={prioridadesStatusMap?.[cliente.id]}
                         />
                       </TableCell>
-                      <TableCell className="w-24">
+                      <TableCell>
                         <ProdutividadeStatusTooltip 
                           status={cliente.produtividade} 
                           produtividadeData={produtividadeStatusMap?.[cliente.id]}
                         />
                       </TableCell>
-                      <TableCell className="w-24"><StatusIndicator status={cliente.riscos} /></TableCell>
+                      <TableCell><StatusIndicator status={cliente.riscos} /></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
