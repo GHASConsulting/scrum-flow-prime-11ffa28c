@@ -173,6 +173,7 @@ export default function Riscos() {
   const [filterAnoFim, setFilterAnoFim] = useState<string>(currentYear);
   
   const [formData, setFormData] = useState<RiscoInsert>({
+    cliente_id: null,
     projeto: '',
     area_impactada: '',
     tipo_risco_ghas: '',
@@ -192,6 +193,15 @@ export default function Riscos() {
     impacto_real_ocorrido: null,
     licao_aprendida: null,
   });
+
+  // Helper function to get client name from cliente_id
+  const getClienteName = (risco: Risco) => {
+    if (risco.cliente_id) {
+      const cliente = clientes.find(c => c.id === risco.cliente_id);
+      if (cliente) return cliente.cliente;
+    }
+    return risco.projeto || '-';
+  };
 
   // Generate available months/years based on riscos
   const availableMonthYears = useMemo(() => {
@@ -342,6 +352,7 @@ export default function Riscos() {
 
   const resetForm = () => {
     setFormData({
+      cliente_id: null,
       projeto: '',
       area_impactada: '',
       tipo_risco_ghas: '',
@@ -369,6 +380,7 @@ export default function Riscos() {
     if (risco) {
       setEditingRisco(risco);
       setFormData({
+        cliente_id: risco.cliente_id,
         projeto: risco.projeto,
         area_impactada: risco.area_impactada,
         tipo_risco_ghas: risco.tipo_risco_ghas,
@@ -458,10 +470,17 @@ export default function Riscos() {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="projeto">Projeto *</Label>
+                        <Label htmlFor="cliente_id">Cliente *</Label>
                         <Select
-                          value={formData.projeto}
-                          onValueChange={(value) => setFormData({ ...formData, projeto: value })}
+                          value={formData.cliente_id || ''}
+                          onValueChange={(value) => {
+                            const cliente = clientes.find(c => c.id === value);
+                            setFormData({ 
+                              ...formData, 
+                              cliente_id: value,
+                              projeto: cliente?.cliente || '' 
+                            });
+                          }}
                           required
                         >
                           <SelectTrigger>
@@ -469,7 +488,7 @@ export default function Riscos() {
                           </SelectTrigger>
                           <SelectContent>
                             {clientes.map((cliente) => (
-                              <SelectItem key={cliente.id} value={cliente.cliente}>
+                              <SelectItem key={cliente.id} value={cliente.id}>
                                 {cliente.cliente}
                               </SelectItem>
                             ))}
@@ -965,14 +984,15 @@ export default function Riscos() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Projeto</TableHead>
+                      <TableHead className="w-[60px]">ID</TableHead>
+                      <TableHead className="w-[100px]">Ações</TableHead>
+                      <TableHead>Cliente</TableHead>
                       <TableHead>Área</TableHead>
                       <TableHead>Descrição</TableHead>
                       <TableHead>Nível</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Responsável</TableHead>
                       <TableHead>Data Identificação</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -980,23 +1000,9 @@ export default function Riscos() {
                       const { emoji, color } = getNivelRiscoDisplay(risco.nivel_risco);
                       return (
                         <TableRow key={risco.id}>
-                          <TableCell className="font-medium">{risco.projeto}</TableCell>
-                          <TableCell>{risco.area_impactada}</TableCell>
-                          <TableCell className="max-w-xs truncate">{risco.descricao}</TableCell>
+                          <TableCell className="font-medium">{risco.codigo}</TableCell>
                           <TableCell>
-                            <span className={color}>{emoji} {risco.nivel_risco}</span>
-                          </TableCell>
-                          <TableCell>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(risco.status_risco)}`}>
-                              {risco.status_risco}
-                            </span>
-                          </TableCell>
-                          <TableCell>{risco.responsavel || '-'}</TableCell>
-                          <TableCell>
-                            {format(new Date(risco.data_identificacao + 'T00:00:00'), "dd/MM/yyyy", { locale: ptBR })}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
+                            <div className="flex gap-2">
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -1027,6 +1033,21 @@ export default function Riscos() {
                                 </AlertDialogContent>
                               </AlertDialog>
                             </div>
+                          </TableCell>
+                          <TableCell className="font-medium">{getClienteName(risco)}</TableCell>
+                          <TableCell>{risco.area_impactada}</TableCell>
+                          <TableCell className="max-w-xs truncate">{risco.descricao}</TableCell>
+                          <TableCell>
+                            <span className={color}>{emoji} {risco.nivel_risco}</span>
+                          </TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(risco.status_risco)}`}>
+                              {risco.status_risco}
+                            </span>
+                          </TableCell>
+                          <TableCell>{risco.responsavel || '-'}</TableCell>
+                          <TableCell>
+                            {format(new Date(risco.data_identificacao + 'T00:00:00'), "dd/MM/yyyy", { locale: ptBR })}
                           </TableCell>
                         </TableRow>
                       );
@@ -1109,7 +1130,8 @@ export default function Riscos() {
                     <CardTitle className="text-base">Identificação</CardTitle>
                   </CardHeader>
                   <CardContent className="grid grid-cols-2 gap-4 text-sm">
-                    <div><strong>Projeto:</strong> {viewingRisco.projeto}</div>
+                    <div><strong>ID:</strong> {viewingRisco.codigo}</div>
+                    <div><strong>Cliente:</strong> {getClienteName(viewingRisco)}</div>
                     <div><strong>Área Impactada:</strong> {viewingRisco.area_impactada}</div>
                     <div><strong>Tipo Risco GHAS:</strong> {viewingRisco.tipo_risco_ghas}</div>
                     <div><strong>Tipo Risco Cliente:</strong> {viewingRisco.tipo_risco_cliente}</div>
