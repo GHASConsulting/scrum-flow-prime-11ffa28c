@@ -21,30 +21,29 @@ export function useClientMetodologiaStatus(
   const data = useMemo(() => {
     const statusMap: Record<string, MetodologiaStatusData> = {};
 
-    // Se não houver filtro de período, retornar vazio (todos cinza)
-    if (!filterDataInicio || !filterDataFim) {
-      return statusMap;
-    }
-
-    const periodoInicio = new Date(filterDataInicio + 'T00:00:00');
-    const periodoFim = new Date(filterDataFim + 'T23:59:59');
     const hoje = new Date();
+    let percentualTempoTranscorrido = 100; // Default: considera 100% do tempo quando sem filtro
 
-    // Calcular % de tempo transcorrido no período filtrado
-    const duracaoTotalPeriodo = periodoFim.getTime() - periodoInicio.getTime();
-    let tempoTranscorrido: number;
-    
-    if (hoje >= periodoFim) {
-      tempoTranscorrido = duracaoTotalPeriodo;
-    } else if (hoje <= periodoInicio) {
-      tempoTranscorrido = 0;
-    } else {
-      tempoTranscorrido = hoje.getTime() - periodoInicio.getTime();
+    // Se houver filtro de período, calcular % de tempo transcorrido
+    if (filterDataInicio && filterDataFim) {
+      const periodoInicio = new Date(filterDataInicio + 'T00:00:00');
+      const periodoFim = new Date(filterDataFim + 'T23:59:59');
+
+      const duracaoTotalPeriodo = periodoFim.getTime() - periodoInicio.getTime();
+      let tempoTranscorrido: number;
+      
+      if (hoje >= periodoFim) {
+        tempoTranscorrido = duracaoTotalPeriodo;
+      } else if (hoje <= periodoInicio) {
+        tempoTranscorrido = 0;
+      } else {
+        tempoTranscorrido = hoje.getTime() - periodoInicio.getTime();
+      }
+      
+      percentualTempoTranscorrido = duracaoTotalPeriodo > 0 
+        ? (tempoTranscorrido / duracaoTotalPeriodo) * 100 
+        : 0;
     }
-    
-    const percentualTempoTranscorrido = duracaoTotalPeriodo > 0 
-      ? (tempoTranscorrido / duracaoTotalPeriodo) * 100 
-      : 0;
 
     // Filtrar apenas tarefas do backlog com tipo_tarefa = "Cliente" e cliente_id preenchido
     const tarefasCliente = backlog.filter(
