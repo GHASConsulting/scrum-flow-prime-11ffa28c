@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -154,7 +155,7 @@ interface RiscoEditableFieldsProps {
 }
 
 const RiscoEditableFields = ({ risco, onUpdate, userName }: RiscoEditableFieldsProps) => {
-  const { addHistoryEntry } = useRiscoHistory(risco.id);
+  const { history, addHistoryEntry } = useRiscoHistory(risco.id);
   const [localStatus, setLocalStatus] = useState(risco.status_risco);
   const [localProbabilidade, setLocalProbabilidade] = useState(risco.probabilidade);
   const [localImpacto, setLocalImpacto] = useState(risco.impacto);
@@ -174,6 +175,13 @@ const RiscoEditableFields = ({ risco, onUpdate, userName }: RiscoEditableFieldsP
     fieldLabel: string
   ) => {
     if (newValue === oldValue) return;
+    
+    // Regra: só pode mudar para "Em mitigação" se houver histórico
+    if (field === 'status_risco' && newValue === 'Em mitigação' && history.length === 0) {
+      toast.error('É necessário adicionar um histórico de acompanhamento antes de alterar para "Em mitigação"');
+      setLocalStatus(oldValue);
+      return;
+    }
     
     setIsUpdating(true);
     try {
