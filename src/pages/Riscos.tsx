@@ -51,7 +51,7 @@ const getNivelRiscoDisplay = (nivel: string) => {
 const getStatusStyle = (status: string) => {
   switch (status) {
     case 'Aberto':
-      return 'font-bold';
+      return 'text-red-600 font-bold';
     case 'Em mitigação':
       return 'text-yellow-600 font-medium';
     case 'Mitigado':
