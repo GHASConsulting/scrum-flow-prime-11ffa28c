@@ -134,6 +134,7 @@ export type Database = {
           codigo: number
           created_at: string
           id: string
+          responsavel_id: string | null
           updated_at: string
         }
         Insert: {
@@ -142,6 +143,7 @@ export type Database = {
           codigo?: number
           created_at?: string
           id?: string
+          responsavel_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -150,9 +152,18 @@ export type Database = {
           codigo?: number
           created_at?: string
           id?: string
+          responsavel_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "client_access_records_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       client_app_access: {
         Row: {
