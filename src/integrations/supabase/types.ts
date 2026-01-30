@@ -1183,6 +1183,44 @@ export type Database = {
           },
         ]
       }
+      schedule_task_history: {
+        Row: {
+          alterado_por: string | null
+          campo_alterado: string
+          created_at: string
+          id: string
+          task_id: string
+          valor_anterior: string | null
+          valor_novo: string | null
+        }
+        Insert: {
+          alterado_por?: string | null
+          campo_alterado: string
+          created_at?: string
+          id?: string
+          task_id: string
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Update: {
+          alterado_por?: string | null
+          campo_alterado?: string
+          created_at?: string
+          id?: string
+          task_id?: string
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_task_history_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_task"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sprint: {
         Row: {
           created_at: string

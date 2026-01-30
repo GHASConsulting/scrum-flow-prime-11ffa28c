@@ -3,8 +3,9 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, FileDown, ChevronDown, ChevronRight, Circle, Eye, Upload, Download } from 'lucide-react';
+import { Plus, Trash2, FileDown, ChevronDown, ChevronRight, Circle, Eye, Upload, Download, History } from 'lucide-react';
 import { useScheduleTasks } from '@/hooks/useScheduleTasks';
+import { useScheduleTaskHistory } from '@/hooks/useScheduleTaskHistory';
 import type { Tables } from '@/integrations/supabase/types';
 import { calculateWorkingDays } from '@/lib/workingDays';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -16,6 +17,7 @@ import { format, differenceInDays } from 'date-fns';
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { TaskHistoryDialog } from './TaskHistoryDialog';
+import { TaskChangeHistoryPanel } from './TaskChangeHistoryPanel';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import * as XLSX from 'xlsx';
 
@@ -72,6 +74,7 @@ const createDefaultEndTime = (): Date => {
 
 export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) {
   const { tasks, loading, addTask, updateTask, deleteTask, loadTasks } = useScheduleTasks(priorityListId);
+  const { history: changeHistory, loading: historyLoading, loadHistory } = useScheduleTaskHistory(priorityListId);
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
   const [selectedTaskForHistory, setSelectedTaskForHistory] = useState<Tables<'schedule_task'> | null>(null);
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
@@ -753,6 +756,17 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
             </HoverCard>
           </h3>
           <div className="flex gap-2">
+            <HoverCard openDelay={200}>
+              <HoverCardTrigger asChild>
+                <Button variant="outline" onMouseEnter={() => loadHistory()}>
+                  <History className="h-4 w-4 mr-2" />
+                  Histórico
+                </Button>
+              </HoverCardTrigger>
+              <HoverCardContent side="bottom" align="start" className="w-auto p-0">
+                <TaskChangeHistoryPanel history={changeHistory} loading={historyLoading} />
+              </HoverCardContent>
+            </HoverCard>
             <Button onClick={handleAddTask}>
               <Plus className="h-4 w-4 mr-2" />
               Adicionar Tarefa
