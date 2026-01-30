@@ -571,20 +571,11 @@ const DashboardClientes = () => {
         {/* Grid de Clientes - Scrollable */}
         <Card className="flex-1 mt-6 min-h-0 flex flex-col">
           <CardHeader className="flex-shrink-0 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <CardTitle className="text-base">Indicadores por Cliente</CardTitle>
-                <span className="text-sm text-muted-foreground">
-                  ({filteredAndSortedClientes.length} {filteredAndSortedClientes.length === 1 ? 'cliente' : 'clientes'})
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                <ClickableStatusIndicator status={summaryStatuses.geral} onClick={() => handleSummaryClick('geral')} />
-                <ClickableStatusIndicator status={summaryStatuses.metodologia} onClick={() => handleSummaryClick('metodologia')} />
-                <ClickableStatusIndicator status={summaryStatuses.prioridades} onClick={() => handleSummaryClick('prioridades')} />
-                <ClickableStatusIndicator status={summaryStatuses.produtividade} onClick={() => handleSummaryClick('produtividade')} />
-                <ClickableStatusIndicator status={summaryStatuses.riscos} onClick={() => handleSummaryClick('riscos')} />
-              </div>
+            <div className="flex items-center gap-3">
+              <CardTitle className="text-base">Indicadores por Cliente</CardTitle>
+              <span className="text-sm text-muted-foreground">
+                ({filteredAndSortedClientes.length} {filteredAndSortedClientes.length === 1 ? 'cliente' : 'clientes'})
+              </span>
             </div>
           </CardHeader>
           <CardContent className="flex-1 min-h-0 p-0">
@@ -596,6 +587,26 @@ const DashboardClientes = () => {
               <div className="overflow-auto h-full">
                 <Table>
                   <TableHeader className="sticky top-0 z-20 bg-background">
+                    <TableRow className="bg-background">
+                      <TableHead className="w-16 sticky left-0 bg-background z-30"></TableHead>
+                      <TableHead className="text-left sticky left-16 bg-background z-30 min-w-[200px]"></TableHead>
+                      <TableHead className="text-left min-w-[150px]"></TableHead>
+                      <TableHead className="w-24">
+                        <ClickableStatusIndicator status={summaryStatuses.geral} onClick={() => handleSummaryClick('geral')} />
+                      </TableHead>
+                      <TableHead className="w-24">
+                        <ClickableStatusIndicator status={summaryStatuses.metodologia} onClick={() => handleSummaryClick('metodologia')} />
+                      </TableHead>
+                      <TableHead className="w-24">
+                        <ClickableStatusIndicator status={summaryStatuses.prioridades} onClick={() => handleSummaryClick('prioridades')} />
+                      </TableHead>
+                      <TableHead className="w-24">
+                        <ClickableStatusIndicator status={summaryStatuses.produtividade} onClick={() => handleSummaryClick('produtividade')} />
+                      </TableHead>
+                      <TableHead className="w-24">
+                        <ClickableStatusIndicator status={summaryStatuses.riscos} onClick={() => handleSummaryClick('riscos')} />
+                      </TableHead>
+                    </TableRow>
                     <TableRow className="bg-background border-b">
                       <SortableHeader field="codigo" className="w-16 sticky left-0 bg-background z-30">Código</SortableHeader>
                       <SortableHeader field="nome" className="text-left sticky left-16 bg-background z-30 min-w-[200px]">Cliente</SortableHeader>
