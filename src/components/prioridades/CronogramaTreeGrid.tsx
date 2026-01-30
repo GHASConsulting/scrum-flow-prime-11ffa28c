@@ -506,18 +506,14 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
     return counts;
   }, [changeHistory]);
 
-  // Check if task has 2+ end_at changes (considered as overdue even if on time)
+  // Check if task has 2+ end_at changes (for yellow warning styling only)
   const hasMultipleEndAtChanges = (taskId: string): boolean => {
     return (endAtChangesCount.get(taskId) || 0) >= 2;
   };
 
-  // Check if a task is overdue (for status styling)
-  const isTaskOverdue = (task: ScheduleTask): boolean => {
+  // Check if a task is overdue based on date only (for traffic light calculation)
+  const isTaskOverdueByDate = (task: ScheduleTask): boolean => {
     if (task.status === 'concluida' || task.status === 'cancelada') return false;
-    
-    // Check if task has 2+ end_at changes - considered overdue regardless of date
-    if (hasMultipleEndAtChanges(task.id)) return true;
-    
     if (!task.end_at) return false;
     const now = new Date();
     const brazilNow = toZonedTime(now, BRAZIL_TIMEZONE);
@@ -534,15 +530,20 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
       return 'font-bold text-green-700';
     }
     
+    // Check for 2+ end_at changes (yellow warning - does not affect traffic light)
+    if (status !== 'cancelada' && hasMultipleEndAtChanges(task.id)) {
+      return 'font-bold text-yellow-600';
+    }
+    
     if (status === 'em_andamento') {
-      if (isTaskOverdue(task)) {
+      if (isTaskOverdueByDate(task)) {
         return 'font-bold text-red-600';
       }
       return 'font-bold text-foreground';
     }
     
     if (status === 'pendente') {
-      if (isTaskOverdue(task)) {
+      if (isTaskOverdueByDate(task)) {
         return 'font-bold text-red-600';
       }
     }
@@ -670,11 +671,8 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
       t.status !== 'cancelada'
     );
 
-    // Find overdue tasks (including those with 2+ end_at changes)
+    // Find overdue tasks based on date only (2+ end_at changes do NOT affect traffic light)
     const overdueTasks = nonCompletedTasks.filter(task => {
-      // Check if task has 2+ end_at changes - considered overdue
-      if (hasMultipleEndAtChanges(task.id)) return true;
-      
       if (!task.end_at) return false;
       const taskEndDate = toZonedTime(new Date(task.end_at), BRAZIL_TIMEZONE);
       return taskEndDate < brazilNow;
