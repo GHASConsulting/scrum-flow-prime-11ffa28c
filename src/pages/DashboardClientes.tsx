@@ -8,7 +8,7 @@ import { useClientAccessRecords } from '@/hooks/useClientAccessRecords';
 import { useClientPrioridadesStatus } from '@/hooks/useClientPrioridadesStatus';
 import { PrioridadesStatusTooltip } from '@/components/dashboard/PrioridadesStatusTooltip';
 
-type StatusColor = 'verde' | 'amarelo' | 'vermelho';
+type StatusColor = 'verde' | 'amarelo' | 'vermelho' | 'cinza';
 
 type SortField = 'codigo' | 'nome' | 'geral' | 'metodologia' | 'prioridades' | 'produtividade' | 'riscos';
 type SortDirection = 'asc' | 'desc' | null;
@@ -32,6 +32,8 @@ const getStatusColor = (status: StatusColor): string => {
       return 'text-yellow-500';
     case 'vermelho':
       return 'text-red-500';
+    case 'cinza':
+      return 'text-gray-400';
     default:
       return 'text-muted-foreground';
   }
@@ -45,14 +47,17 @@ const getStatusBgColor = (status: StatusColor): string => {
       return 'bg-yellow-500';
     case 'vermelho':
       return 'bg-red-500';
+    case 'cinza':
+      return 'bg-gray-400';
     default:
       return 'bg-muted';
   }
 };
 
-// Status priority for sorting (verde=1, amarelo=2, vermelho=3)
+// Status priority for sorting (cinza=0, verde=1, amarelo=2, vermelho=3)
 const getStatusPriority = (status: StatusColor): number => {
   switch (status) {
+    case 'cinza': return 0;
     case 'verde': return 1;
     case 'amarelo': return 2;
     case 'vermelho': return 3;

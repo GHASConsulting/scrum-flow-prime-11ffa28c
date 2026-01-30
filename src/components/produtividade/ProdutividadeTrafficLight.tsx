@@ -5,7 +5,7 @@ import {
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
 
-type StatusColor = 'verde' | 'amarelo' | 'vermelho';
+type StatusColor = 'verde' | 'amarelo' | 'vermelho' | 'cinza';
 
 interface ProdutividadeTrafficLightProps {
   abertos15Dias: number;
@@ -21,6 +21,8 @@ const getStatusColor = (color: StatusColor): string => {
       return 'text-yellow-500';
     case 'vermelho':
       return 'text-red-500';
+    case 'cinza':
+      return 'text-gray-400';
     default:
       return 'text-muted-foreground';
   }
@@ -44,7 +46,7 @@ const getStatusFromBacklog = (backlog: number, abertos: number): StatusColor => 
 };
 
 const getWorstStatus = (status1: StatusColor, status2: StatusColor): StatusColor => {
-  const priority: Record<StatusColor, number> = { verde: 0, amarelo: 1, vermelho: 2 };
+  const priority: Record<StatusColor, number> = { cinza: -1, verde: 0, amarelo: 1, vermelho: 2 };
   return priority[status1] >= priority[status2] ? status1 : status2;
 };
 
@@ -91,10 +93,39 @@ Chamados abertos há 15 dias:
 Backlog (% sobre total de abertos):
 • Verde: Menos de 12%
 • Amarelo: 12% a 17,99%
-• Vermelho: 18% ou mais`;
+• Vermelho: 18% ou mais
+
+Cinza: Sem dados para análise`;
 };
 
 export function ProdutividadeTrafficLight({ abertos15Dias, backlog, abertos }: ProdutividadeTrafficLightProps) {
+  // Se não há dados para calcular, retorna cinza
+  const hasNoData = abertos15Dias === 0 && backlog === 0 && abertos === 0;
+  
+  if (hasNoData) {
+    return (
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          <button className="cursor-pointer ml-2">
+            <Circle className={`h-4 w-4 fill-current ${getStatusColor('cinza')}`} />
+          </button>
+        </HoverCardTrigger>
+        <HoverCardContent className="w-80">
+          <div className="space-y-3">
+            <div>
+              <p className="text-sm font-medium">Sem dados disponíveis para análise.</p>
+            </div>
+            <div className="border-t pt-2">
+              <p className="text-xs text-muted-foreground whitespace-pre-line">
+                {getRuleExplanation()}
+              </p>
+            </div>
+          </div>
+        </HoverCardContent>
+      </HoverCard>
+    );
+  }
+
   const statusAbertos = getStatusFromAbertos15Dias(abertos15Dias);
   const statusBacklog = getStatusFromBacklog(backlog, abertos);
   const finalStatus = getWorstStatus(statusAbertos, statusBacklog);

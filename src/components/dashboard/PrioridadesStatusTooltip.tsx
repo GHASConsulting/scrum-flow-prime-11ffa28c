@@ -5,7 +5,7 @@ import {
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
 
-type StatusColor = 'verde' | 'amarelo' | 'vermelho';
+type StatusColor = 'verde' | 'amarelo' | 'vermelho' | 'cinza';
 
 interface PriorityListStatus {
   listId: string;
@@ -32,13 +32,15 @@ const getStatusColor = (status: StatusColor): string => {
       return 'text-yellow-500';
     case 'vermelho':
       return 'text-red-500';
+    case 'cinza':
+      return 'text-gray-400';
     default:
       return 'text-muted-foreground';
   }
 };
 
 const getStatusMessage = (status: StatusColor, listsStatuses?: PriorityListStatus[]): string => {
-  if (!listsStatuses || listsStatuses.length === 0) {
+  if (status === 'cinza' || !listsStatuses || listsStatuses.length === 0) {
     return 'Nenhuma lista de prioridades cadastrada.';
   }
 

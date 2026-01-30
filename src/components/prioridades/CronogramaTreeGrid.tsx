@@ -632,7 +632,7 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
   // Calculate traffic light status
   const trafficLightData = useMemo(() => {
     if (tasks.length === 0) {
-      return { color: 'verde' as const, reason: 'Nenhuma tarefa cadastrada.', overdueTasks: [] as ScheduleTask[] };
+      return { color: 'cinza' as const, reason: 'Nenhuma tarefa cadastrada.', overdueTasks: [] as ScheduleTask[] };
     }
 
     // Get current date in Brazil timezone at 23:59
@@ -695,7 +695,7 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
     };
   }, [tasks, totalTasks]);
 
-  const getTrafficLightColor = (color: 'verde' | 'amarelo' | 'vermelho'): string => {
+  const getTrafficLightColor = (color: 'verde' | 'amarelo' | 'vermelho' | 'cinza'): string => {
     switch (color) {
       case 'verde':
         return 'text-green-500';
@@ -703,6 +703,8 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
         return 'text-yellow-500';
       case 'vermelho':
         return 'text-red-500';
+      case 'cinza':
+        return 'text-gray-400';
       default:
         return 'text-muted-foreground';
     }
