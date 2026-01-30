@@ -582,7 +582,7 @@ const DashboardClientes = () => {
               </div>
             </div>
             {/* Cabeçalho da tabela - fixo */}
-            <div className="overflow-x-auto overflow-y-hidden">
+            <div className="overflow-x-auto overflow-y-hidden pr-[17px]">
               <Table className="table-fixed w-full min-w-[930px]">
                 <colgroup>
                   <col style={{ width: '80px' }} />
