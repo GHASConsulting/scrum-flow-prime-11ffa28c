@@ -578,27 +578,12 @@ const DashboardClientes = () => {
                   ({filteredAndSortedClientes.length} {filteredAndSortedClientes.length === 1 ? 'cliente' : 'clientes'})
                 </span>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Geral</span>
-                  <ClickableStatusIndicator status={summaryStatuses.geral} onClick={() => handleSummaryClick('geral')} />
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Metodologia</span>
-                  <ClickableStatusIndicator status={summaryStatuses.metodologia} onClick={() => handleSummaryClick('metodologia')} />
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Prioridades</span>
-                  <ClickableStatusIndicator status={summaryStatuses.prioridades} onClick={() => handleSummaryClick('prioridades')} />
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Produtividade</span>
-                  <ClickableStatusIndicator status={summaryStatuses.produtividade} onClick={() => handleSummaryClick('produtividade')} />
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Riscos e BO's</span>
-                  <ClickableStatusIndicator status={summaryStatuses.riscos} onClick={() => handleSummaryClick('riscos')} />
-                </div>
+              <div className="flex items-center gap-3">
+                <ClickableStatusIndicator status={summaryStatuses.geral} onClick={() => handleSummaryClick('geral')} />
+                <ClickableStatusIndicator status={summaryStatuses.metodologia} onClick={() => handleSummaryClick('metodologia')} />
+                <ClickableStatusIndicator status={summaryStatuses.prioridades} onClick={() => handleSummaryClick('prioridades')} />
+                <ClickableStatusIndicator status={summaryStatuses.produtividade} onClick={() => handleSummaryClick('produtividade')} />
+                <ClickableStatusIndicator status={summaryStatuses.riscos} onClick={() => handleSummaryClick('riscos')} />
               </div>
             </div>
           </CardHeader>
