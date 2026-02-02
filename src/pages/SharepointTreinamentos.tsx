@@ -15,6 +15,7 @@ import { Plus, Edit, Trash2, Eye, GraduationCap, Search, ArrowUpDown, ArrowUp, A
 import { useTreinamentos, Treinamento, TreinamentoInsert, TreinamentoUpdate, ParticipanteInput, TreinamentoParticipante } from '@/hooks/useTreinamentos';
 import { useDocumentos } from '@/hooks/useDocumentos';
 import { usePrestadorServico } from '@/hooks/usePrestadorServico';
+import { usePessoa } from '@/hooks/usePessoa';
 import { useAuth } from '@/hooks/useAuth';
 import { formatDate } from '@/lib/formatters';
 import { toast } from 'sonner';
