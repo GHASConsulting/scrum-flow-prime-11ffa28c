@@ -71,7 +71,7 @@ export const useTreinamentos = () => {
         .from('treinamento')
         .select(`
           *,
-          ministrado_por:ministrado_por_id(id, nome),
+          ministrado_por:pessoa!treinamento_ministrado_por_id_fkey(id, nome),
           documento:documento_id(id, nome, codigo)
         `)
         .order('data_treinamento', { ascending: false });
