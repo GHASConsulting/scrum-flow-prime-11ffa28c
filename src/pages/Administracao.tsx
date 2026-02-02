@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { usePessoa } from "@/hooks/usePessoa";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,8 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIntegracaoConfig } from "@/hooks/useIntegracaoConfig";
 
 const userSchema = z.object({
-  nome: z.string().min(3, { message: "Nome deve ter no mínimo 3 caracteres" }),
-  email: z.string().email({ message: "Email inválido" }),
+  pessoa_id: z.string().min(1, { message: "Selecione uma pessoa" }),
   password: z.string().min(6, { message: "Senha deve ter no mínimo 6 caracteres" }),
   role: z.enum(["administrador", "operador"]),
 });
@@ -37,6 +37,7 @@ interface UserProfile {
 export default function Administracao() {
   const navigate = useNavigate();
   const { user, userRole, loading } = useAuth();
+  const { pessoasAtivas } = usePessoa();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
@@ -46,14 +47,16 @@ export default function Administracao() {
   const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [formData, setFormData] = useState({
-    nome: "",
-    email: "",
+    pessoa_id: "",
     password: "",
     role: "operador" as "administrador" | "operador",
   });
   const [submitting, setSubmitting] = useState(false);
   const [webhookToken, setWebhookToken] = useState("");
   const { config, isLoading: configLoading, saveConfig } = useIntegracaoConfig();
+
+  // Filter pessoas that don't have a user_id yet (not linked to system users)
+  const pessoasSemUsuario = pessoasAtivas.filter(p => !p.user_id);
 
   useEffect(() => {
     if (!loading && (!user || userRole !== "administrador")) {
@@ -106,14 +109,29 @@ export default function Administracao() {
 
     try {
       const validatedData = userSchema.parse(formData);
+      
+      // Get the selected pessoa
+      const selectedPessoa = pessoasAtivas.find(p => p.id === validatedData.pessoa_id);
+      if (!selectedPessoa) {
+        toast.error("Pessoa não encontrada");
+        setSubmitting(false);
+        return;
+      }
+
+      if (!selectedPessoa.email) {
+        toast.error("A pessoa selecionada não possui e-mail cadastrado");
+        setSubmitting(false);
+        return;
+      }
 
       // Usar edge function para criar usuário (bypass RLS com service role)
       const { data, error } = await supabase.functions.invoke('create-admin-user', {
         body: {
-          email: validatedData.email,
+          email: selectedPessoa.email,
           password: validatedData.password,
-          nome: validatedData.nome,
+          nome: selectedPessoa.nome,
           role: validatedData.role,
+          pessoa_id: selectedPessoa.id,
         },
       });
 
@@ -121,7 +139,7 @@ export default function Administracao() {
       if (data?.error) throw new Error(data.error);
 
       toast.success("Usuário cadastrado com sucesso!");
-      setFormData({ nome: "", email: "", password: "", role: "operador" });
+      setFormData({ pessoa_id: "", password: "", role: "operador" });
       fetchUsers();
     } catch (error: any) {
       if (error instanceof z.ZodError) {
@@ -342,29 +360,34 @@ export default function Administracao() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="nome">Nome da Pessoa</Label>
-                  <Input
-                    id="nome"
-                    value={formData.nome}
-                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                    required
-                  />
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="pessoa">Pessoa *</Label>
+                  <Select
+                    value={formData.pessoa_id}
+                    onValueChange={(value) => setFormData({ ...formData, pessoa_id: value })}
+                  >
+                    <SelectTrigger id="pessoa">
+                      <SelectValue placeholder="Selecione uma pessoa" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {pessoasSemUsuario.length === 0 ? (
+                        <SelectItem value="_none" disabled>Nenhuma pessoa disponível</SelectItem>
+                      ) : (
+                        pessoasSemUsuario.map((pessoa) => (
+                          <SelectItem key={pessoa.id} value={pessoa.id}>
+                            {pessoa.nome} {pessoa.email ? `(${pessoa.email})` : '(sem e-mail)'}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Selecione uma pessoa cadastrada que ainda não possui acesso ao sistema
+                  </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">E-mail</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
+                  <Label htmlFor="password">Senha *</Label>
                   <Input
                     id="password"
                     type="password"
@@ -375,7 +398,7 @@ export default function Administracao() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="role">Tipo de Usuário</Label>
+                  <Label htmlFor="role">Tipo de Usuário *</Label>
                   <Select
                     value={formData.role}
                     onValueChange={(value: "administrador" | "operador") =>

@@ -71,13 +71,13 @@ export const useTreinamentos = () => {
         .from('treinamento')
         .select(`
           *,
-          ministrado_por:pessoa!ministrado_por_id(id, nome),
+          ministrado_por:ministrado_por_id(id, nome),
           documento:documento_id(id, nome, codigo)
         `)
         .order('data_treinamento', { ascending: false });
       
       if (error) throw error;
-      return data as Treinamento[];
+      return (data || []) as unknown as Treinamento[];
     },
   });
 

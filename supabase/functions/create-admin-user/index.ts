@@ -25,8 +25,8 @@ serve(async (req) => {
       }
     );
 
-    const { email, password, nome, role } = await req.json();
-    console.log('Creating user with email:', email, 'role:', role);
+    const { email, password, nome, role, pessoa_id } = await req.json();
+    console.log('Creating user with email:', email, 'role:', role, 'pessoa_id:', pessoa_id);
 
     let userId: string;
 
@@ -125,13 +125,28 @@ serve(async (req) => {
       console.log('Role already exists for user:', userId);
     }
 
-    console.log('User role added successfully:', userRole);
+    // Vincular pessoa ao usuário (atualizar user_id na tabela pessoa)
+    if (pessoa_id) {
+      console.log('Linking pessoa to user:', pessoa_id, '->', userId);
+      const { error: pessoaError } = await supabaseAdmin
+        .from('pessoa')
+        .update({ user_id: userId, deve_alterar_senha: true })
+        .eq('id', pessoa_id);
+
+      if (pessoaError) {
+        console.error('Error linking pessoa to user:', pessoaError);
+        throw pessoaError;
+      }
+      console.log('Pessoa linked successfully');
+    }
+
+    console.log('User created successfully:', userId);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        userId: authData.user?.id,
-        email: authData.user?.email 
+        userId,
+        email 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
