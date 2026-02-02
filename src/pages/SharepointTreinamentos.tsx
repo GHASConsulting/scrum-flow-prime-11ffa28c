@@ -27,6 +27,7 @@ const SharepointTreinamentos = () => {
   const { treinamentos, isLoading, fetchParticipantes, addTreinamento, updateTreinamento, deleteTreinamento, isAdding, isUpdating } = useTreinamentos();
   const { documentos } = useDocumentos();
   const { prestadoresServico } = usePrestadorServico();
+  const { pessoasAtivas } = usePessoa();
 
   // Dialogs state
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -591,8 +592,8 @@ const SharepointTreinamentos = () => {
                     <SelectValue placeholder="Selecione o responsável" />
                   </SelectTrigger>
                   <SelectContent>
-                    {prestadoresServico.map(prestador => (
-                      <SelectItem key={prestador.id} value={prestador.id}>{prestador.nome}</SelectItem>
+                    {pessoasAtivas.map(pessoa => (
+                      <SelectItem key={pessoa.id} value={pessoa.id}>{pessoa.nome}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -690,8 +691,8 @@ const SharepointTreinamentos = () => {
                     <SelectValue placeholder="Selecione o responsável" />
                   </SelectTrigger>
                   <SelectContent>
-                    {prestadoresServico.map(prestador => (
-                      <SelectItem key={prestador.id} value={prestador.id}>{prestador.nome}</SelectItem>
+                    {pessoasAtivas.map(pessoa => (
+                      <SelectItem key={pessoa.id} value={pessoa.id}>{pessoa.nome}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
