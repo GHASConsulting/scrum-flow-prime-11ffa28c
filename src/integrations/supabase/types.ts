@@ -568,6 +568,56 @@ export type Database = {
         }
         Relationships: []
       }
+      pessoa: {
+        Row: {
+          ativo: boolean
+          codigo: number
+          created_at: string
+          deve_alterar_senha: boolean | null
+          email: string | null
+          id: string
+          nivel: string | null
+          nome: string
+          setor_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          codigo?: number
+          created_at?: string
+          deve_alterar_senha?: boolean | null
+          email?: string | null
+          id?: string
+          nivel?: string | null
+          nome: string
+          setor_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          codigo?: number
+          created_at?: string
+          deve_alterar_senha?: boolean | null
+          email?: string | null
+          id?: string
+          nivel?: string | null
+          nome?: string
+          setor_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pessoa_setor_id_fkey"
+            columns: ["setor_id"]
+            isOneToOne: false
+            referencedRelation: "area_documento"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prestador_servico: {
         Row: {
           codigo: number
