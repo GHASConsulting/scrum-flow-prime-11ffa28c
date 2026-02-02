@@ -95,6 +95,23 @@ interface CadastrosDialogsProps {
   setEditingTipoDoc: (tipo: any) => void;
   handleAddTipoDoc: () => void;
   handleUpdateTipoDoc: () => void;
+  // Pessoas
+  isAddPessoaDialogOpen: boolean;
+  setIsAddPessoaDialogOpen: (open: boolean) => void;
+  isEditPessoaDialogOpen: boolean;
+  setIsEditPessoaDialogOpen: (open: boolean) => void;
+  newPessoaNome: string;
+  setNewPessoaNome: (nome: string) => void;
+  newPessoaEmail: string;
+  setNewPessoaEmail: (email: string) => void;
+  newPessoaNivel: string;
+  setNewPessoaNivel: (nivel: string) => void;
+  newPessoaSetor: string;
+  setNewPessoaSetor: (setor: string) => void;
+  editingPessoa: any;
+  setEditingPessoa: (pessoa: any) => void;
+  handleAddPessoa: () => void;
+  handleUpdatePessoa: () => void;
 }
 
 export const CadastrosDialogs = (props: CadastrosDialogsProps) => {
@@ -670,6 +687,174 @@ export const CadastrosDialogs = (props: CadastrosDialogsProps) => {
               Cancelar
             </Button>
             <Button onClick={props.handleUpdateTipoDoc}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Adicionar Pessoa */}
+      <Dialog open={props.isAddPessoaDialogOpen} onOpenChange={props.setIsAddPessoaDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Adicionar Pessoa</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Nome</label>
+              <Input
+                value={props.newPessoaNome}
+                onChange={(e) => props.setNewPessoaNome(e.target.value)}
+                placeholder="Digite o nome"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Email</label>
+              <Input
+                type="email"
+                value={props.newPessoaEmail}
+                onChange={(e) => props.setNewPessoaEmail(e.target.value)}
+                placeholder="Digite o email"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Nível</label>
+              <Select value={props.newPessoaNivel} onValueChange={props.setNewPessoaNivel}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o nível" />
+                </SelectTrigger>
+                <SelectContent>
+                  {props.nivelOptions.map((nivel) => (
+                    <SelectItem key={nivel} value={nivel}>
+                      {nivel}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Setor</label>
+              <Select value={props.newPessoaSetor} onValueChange={props.setNewPessoaSetor}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o setor" />
+                </SelectTrigger>
+                <SelectContent>
+                  {props.areasDocumento
+                    .filter((a) => a.ativo)
+                    .map((area) => (
+                      <SelectItem key={area.id} value={area.id}>
+                        {area.nome}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => props.setIsAddPessoaDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={props.handleAddPessoa}>Adicionar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Editar Pessoa */}
+      <Dialog open={props.isEditPessoaDialogOpen} onOpenChange={props.setIsEditPessoaDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Pessoa</DialogTitle>
+          </DialogHeader>
+          {props.editingPessoa && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Código</label>
+                <Input value={props.editingPessoa.codigo} disabled className="bg-muted" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nome</label>
+                <Input
+                  value={props.editingPessoa.nome}
+                  onChange={(e) =>
+                    props.setEditingPessoa({ ...props.editingPessoa, nome: e.target.value })
+                  }
+                  placeholder="Digite o nome"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Email</label>
+                <Input
+                  type="email"
+                  value={props.editingPessoa.email || ''}
+                  onChange={(e) =>
+                    props.setEditingPessoa({ ...props.editingPessoa, email: e.target.value })
+                  }
+                  placeholder="Digite o email"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nível</label>
+                <Select
+                  value={props.editingPessoa.nivel || 'N1'}
+                  onValueChange={(nivel) =>
+                    props.setEditingPessoa({ ...props.editingPessoa, nivel })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o nível" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {props.nivelOptions.map((nivel) => (
+                      <SelectItem key={nivel} value={nivel}>
+                        {nivel}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Setor</label>
+                <Select
+                  value={props.editingPessoa.setor_id || ''}
+                  onValueChange={(setor_id) =>
+                    props.setEditingPessoa({ ...props.editingPessoa, setor_id: setor_id || null })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o setor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {props.areasDocumento
+                      .filter((a) => a.ativo)
+                      .map((area) => (
+                        <SelectItem key={area.id} value={area.id}>
+                          {area.nome}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {props.editingPessoa.user_id && (
+                <div className="p-3 bg-muted rounded-md">
+                  <p className="text-sm text-muted-foreground">
+                    Esta pessoa está vinculada a um usuário do sistema e não pode ser excluída.
+                  </p>
+                </div>
+              )}
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Ativo</label>
+                <Switch
+                  checked={props.editingPessoa.ativo}
+                  onCheckedChange={(checked) =>
+                    props.setEditingPessoa({ ...props.editingPessoa, ativo: checked })
+                  }
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => props.setIsEditPessoaDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={props.handleUpdatePessoa}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

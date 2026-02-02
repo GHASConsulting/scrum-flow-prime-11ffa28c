@@ -8,6 +8,7 @@ import { useTipoDocumento } from '@/hooks/useTipoDocumento';
 import { useAreaDocumento } from '@/hooks/useAreaDocumento';
 import { useTipoDocumentoCliente } from '@/hooks/useTipoDocumentoCliente';
 import { useProfiles } from '@/hooks/useProfiles';
+import { usePessoa } from '@/hooks/usePessoa';
 import { toast } from 'sonner';
 import { CadastrosSidebar, type CadastroType } from '@/components/cadastros/CadastrosSidebar';
 import { CadastrosContent } from '@/components/cadastros/CadastrosContent';
@@ -67,6 +68,15 @@ const CadastrosSistema = () => {
     deleteTipoDocumentoCliente
   } = useTipoDocumentoCliente();
   const { profiles } = useProfiles();
+  const {
+    pessoas,
+    isLoading: isLoadingPessoas,
+    addPessoa,
+    updatePessoa,
+    deletePessoa,
+    toggleAtivo: togglePessoaAtivo
+  } = usePessoa();
+
   // Estado para Área Sprint
   const [isAddAreaDialogOpen, setIsAddAreaDialogOpen] = useState(false);
   const [isEditAreaDialogOpen, setIsEditAreaDialogOpen] = useState(false);
@@ -145,6 +155,24 @@ const CadastrosSistema = () => {
   const [editingTipoDocCliente, setEditingTipoDocCliente] = useState<{
     id: string;
     nome: string;
+    ativo: boolean;
+  } | null>(null);
+
+  // Estado para Pessoas
+  const [isAddPessoaDialogOpen, setIsAddPessoaDialogOpen] = useState(false);
+  const [isEditPessoaDialogOpen, setIsEditPessoaDialogOpen] = useState(false);
+  const [newPessoaNome, setNewPessoaNome] = useState('');
+  const [newPessoaEmail, setNewPessoaEmail] = useState('');
+  const [newPessoaNivel, setNewPessoaNivel] = useState('N1');
+  const [newPessoaSetor, setNewPessoaSetor] = useState('');
+  const [editingPessoa, setEditingPessoa] = useState<{
+    id: string;
+    codigo: number;
+    nome: string;
+    email: string | null;
+    nivel: string | null;
+    setor_id: string | null;
+    user_id: string | null;
     ativo: boolean;
   } | null>(null);
 
@@ -562,6 +590,102 @@ const CadastrosSistema = () => {
     }
   };
 
+  // Handlers para Pessoas
+  const handleAddPessoa = async () => {
+    if (!newPessoaNome.trim()) {
+      toast.error('Nome é obrigatório');
+      return;
+    }
+    if (!newPessoaEmail.trim()) {
+      toast.error('Email é obrigatório');
+      return;
+    }
+    if (!newPessoaNivel) {
+      toast.error('Nível é obrigatório');
+      return;
+    }
+    if (!newPessoaSetor) {
+      toast.error('Setor é obrigatório');
+      return;
+    }
+    try {
+      await addPessoa({
+        nome: newPessoaNome.trim(),
+        email: newPessoaEmail.trim(),
+        nivel: newPessoaNivel,
+        setor_id: newPessoaSetor
+      });
+      setNewPessoaNome('');
+      setNewPessoaEmail('');
+      setNewPessoaNivel('N1');
+      setNewPessoaSetor('');
+      setIsAddPessoaDialogOpen(false);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+  const handleEditPessoa = (item: {
+    id: string;
+    codigo: number;
+    nome: string;
+    email: string | null;
+    nivel: string | null;
+    setor_id: string | null;
+    user_id: string | null;
+    ativo: boolean;
+  }) => {
+    setEditingPessoa({ ...item });
+    setIsEditPessoaDialogOpen(true);
+  };
+  const handleUpdatePessoa = async () => {
+    if (!editingPessoa) return;
+    if (!editingPessoa.nome.trim()) {
+      toast.error('Nome é obrigatório');
+      return;
+    }
+    if (!editingPessoa.email?.trim()) {
+      toast.error('Email é obrigatório');
+      return;
+    }
+    if (!editingPessoa.nivel) {
+      toast.error('Nível é obrigatório');
+      return;
+    }
+    if (!editingPessoa.setor_id) {
+      toast.error('Setor é obrigatório');
+      return;
+    }
+    try {
+      await updatePessoa({
+        id: editingPessoa.id,
+        nome: editingPessoa.nome.trim(),
+        email: editingPessoa.email.trim(),
+        nivel: editingPessoa.nivel,
+        setor_id: editingPessoa.setor_id,
+        ativo: editingPessoa.ativo
+      });
+      setIsEditPessoaDialogOpen(false);
+      setEditingPessoa(null);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+  const handleDeletePessoa = async (id: string) => {
+    if (!confirm('Tem certeza que deseja remover esta pessoa?')) return;
+    try {
+      await deletePessoa(id);
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+  const handleTogglePessoaAtivo = async (id: string, ativo: boolean) => {
+    try {
+      await togglePessoaAtivo({ id, ativo: !ativo });
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -698,6 +822,28 @@ const CadastrosSistema = () => {
             handleUpdateTipoDoc={handleUpdateTipoDoc}
             handleDeleteTipoDoc={handleDeleteTipoDoc}
             handleToggleTipoDocAtivo={handleToggleTipoDocAtivo}
+            // Pessoas
+            pessoas={pessoas}
+            isLoadingPessoas={isLoadingPessoas}
+            isAddPessoaDialogOpen={isAddPessoaDialogOpen}
+            setIsAddPessoaDialogOpen={setIsAddPessoaDialogOpen}
+            isEditPessoaDialogOpen={isEditPessoaDialogOpen}
+            setIsEditPessoaDialogOpen={setIsEditPessoaDialogOpen}
+            newPessoaNome={newPessoaNome}
+            setNewPessoaNome={setNewPessoaNome}
+            newPessoaEmail={newPessoaEmail}
+            setNewPessoaEmail={setNewPessoaEmail}
+            newPessoaNivel={newPessoaNivel}
+            setNewPessoaNivel={setNewPessoaNivel}
+            newPessoaSetor={newPessoaSetor}
+            setNewPessoaSetor={setNewPessoaSetor}
+            editingPessoa={editingPessoa}
+            setEditingPessoa={setEditingPessoa}
+            handleAddPessoa={handleAddPessoa}
+            handleEditPessoa={handleEditPessoa}
+            handleUpdatePessoa={handleUpdatePessoa}
+            handleDeletePessoa={handleDeletePessoa}
+            handleTogglePessoaAtivo={handleTogglePessoaAtivo}
           />
         </div>
 
@@ -792,6 +938,23 @@ const CadastrosSistema = () => {
           setEditingTipoDoc={setEditingTipoDoc}
           handleAddTipoDoc={handleAddTipoDoc}
           handleUpdateTipoDoc={handleUpdateTipoDoc}
+          // Pessoas
+          isAddPessoaDialogOpen={isAddPessoaDialogOpen}
+          setIsAddPessoaDialogOpen={setIsAddPessoaDialogOpen}
+          isEditPessoaDialogOpen={isEditPessoaDialogOpen}
+          setIsEditPessoaDialogOpen={setIsEditPessoaDialogOpen}
+          newPessoaNome={newPessoaNome}
+          setNewPessoaNome={setNewPessoaNome}
+          newPessoaEmail={newPessoaEmail}
+          setNewPessoaEmail={setNewPessoaEmail}
+          newPessoaNivel={newPessoaNivel}
+          setNewPessoaNivel={setNewPessoaNivel}
+          newPessoaSetor={newPessoaSetor}
+          setNewPessoaSetor={setNewPessoaSetor}
+          editingPessoa={editingPessoa}
+          setEditingPessoa={setEditingPessoa}
+          handleAddPessoa={handleAddPessoa}
+          handleUpdatePessoa={handleUpdatePessoa}
         />
       </div>
     </Layout>
