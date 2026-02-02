@@ -1650,7 +1650,7 @@ export type Database = {
             foreignKeyName: "treinamento_ministrado_por_id_fkey"
             columns: ["ministrado_por_id"]
             isOneToOne: false
-            referencedRelation: "prestador_servico"
+            referencedRelation: "pessoa"
             referencedColumns: ["id"]
           },
         ]
