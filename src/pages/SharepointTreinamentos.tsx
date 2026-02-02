@@ -155,6 +155,26 @@ const SharepointTreinamentos = () => {
       toast.error('Nome do Treinamento é obrigatório');
       return;
     }
+    if (!formData.data_treinamento) {
+      toast.error('Data do Treinamento é obrigatória');
+      return;
+    }
+    if (!formData.ministrado_por_id) {
+      toast.error('Ministrado Por é obrigatório');
+      return;
+    }
+    if (!formData.descricao.trim()) {
+      toast.error('Descrição do Treinamento é obrigatória');
+      return;
+    }
+    if (!formData.documento_id) {
+      toast.error('Documento Vinculado é obrigatório');
+      return;
+    }
+    if (formData.participantes.length === 0) {
+      toast.error('Selecione pelo menos um participante');
+      return;
+    }
 
     try {
       const treinamento: TreinamentoInsert = {
@@ -178,6 +198,26 @@ const SharepointTreinamentos = () => {
     if (!selectedTreinamento) return;
     if (!formData.nome.trim()) {
       toast.error('Nome do Treinamento é obrigatório');
+      return;
+    }
+    if (!formData.data_treinamento) {
+      toast.error('Data do Treinamento é obrigatória');
+      return;
+    }
+    if (!formData.ministrado_por_id) {
+      toast.error('Ministrado Por é obrigatório');
+      return;
+    }
+    if (!formData.descricao.trim()) {
+      toast.error('Descrição do Treinamento é obrigatória');
+      return;
+    }
+    if (!formData.documento_id) {
+      toast.error('Documento Vinculado é obrigatório');
+      return;
+    }
+    if (formData.participantes.length === 0) {
+      toast.error('Selecione pelo menos um participante');
       return;
     }
 
@@ -298,7 +338,7 @@ const SharepointTreinamentos = () => {
 
   const renderParticipantesForm = () => (
     <div className="grid gap-2">
-      <Label>Lista de Prestadores</Label>
+      <Label>Lista de Prestadores *</Label>
       <div className="border rounded-md p-3 max-h-48 overflow-y-auto">
         {prestadoresServico.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhum prestador cadastrado</p>
@@ -532,7 +572,7 @@ const SharepointTreinamentos = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="data">Data do Treinamento</Label>
+                <Label htmlFor="data">Data do Treinamento *</Label>
                 <Input
                   id="data"
                   type="date"
@@ -541,7 +581,7 @@ const SharepointTreinamentos = () => {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="ministrado_por">Ministrado Por</Label>
+                <Label htmlFor="ministrado_por">Ministrado Por *</Label>
                 <Select 
                   value={formData.ministrado_por_id} 
                   onValueChange={(v) => setFormData(prev => ({ ...prev, ministrado_por_id: v }))}
@@ -558,7 +598,7 @@ const SharepointTreinamentos = () => {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="descricao">Descrição do Treinamento</Label>
+              <Label htmlFor="descricao">Descrição do Treinamento *</Label>
               <Textarea
                 id="descricao"
                 value={formData.descricao}
@@ -570,7 +610,7 @@ const SharepointTreinamentos = () => {
             {renderParticipantesForm()}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="status">Status *</Label>
                 <Select 
                   value={formData.status} 
                   onValueChange={(v) => setFormData(prev => ({ ...prev, status: v }))}
@@ -585,13 +625,13 @@ const SharepointTreinamentos = () => {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="documento">Documento Vinculado</Label>
+                <Label htmlFor="documento">Documento Vinculado *</Label>
                 <Select 
                   value={formData.documento_id} 
                   onValueChange={(v) => setFormData(prev => ({ ...prev, documento_id: v }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione um documento (opcional)" />
+                    <SelectValue placeholder="Selecione um documento" />
                   </SelectTrigger>
                   <SelectContent>
                     {documentos.filter(d => d.status === 'ativo').map(doc => (
@@ -631,7 +671,7 @@ const SharepointTreinamentos = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="edit-data">Data do Treinamento</Label>
+                <Label htmlFor="edit-data">Data do Treinamento *</Label>
                 <Input
                   id="edit-data"
                   type="date"
@@ -640,7 +680,7 @@ const SharepointTreinamentos = () => {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-ministrado_por">Ministrado Por</Label>
+                <Label htmlFor="edit-ministrado_por">Ministrado Por *</Label>
                 <Select 
                   value={formData.ministrado_por_id} 
                   onValueChange={(v) => setFormData(prev => ({ ...prev, ministrado_por_id: v }))}
@@ -657,7 +697,7 @@ const SharepointTreinamentos = () => {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-descricao">Descrição do Treinamento</Label>
+              <Label htmlFor="edit-descricao">Descrição do Treinamento *</Label>
               <Textarea
                 id="edit-descricao"
                 value={formData.descricao}
@@ -669,7 +709,7 @@ const SharepointTreinamentos = () => {
             {renderParticipantesForm()}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="edit-status">Status</Label>
+                <Label htmlFor="edit-status">Status *</Label>
                 <Select 
                   value={formData.status} 
                   onValueChange={(v) => setFormData(prev => ({ ...prev, status: v }))}
@@ -684,13 +724,13 @@ const SharepointTreinamentos = () => {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-documento">Documento Vinculado</Label>
+                <Label htmlFor="edit-documento">Documento Vinculado *</Label>
                 <Select 
                   value={formData.documento_id} 
                   onValueChange={(v) => setFormData(prev => ({ ...prev, documento_id: v }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione um documento (opcional)" />
+                    <SelectValue placeholder="Selecione um documento" />
                   </SelectTrigger>
                   <SelectContent>
                     {documentos.filter(d => d.status === 'ativo').map(doc => (
