@@ -10,7 +10,8 @@ export type CadastroType =
   | 'prestador-servico' 
   | 'clientes' 
   | 'setor' 
-  | 'tipo-documento';
+  | 'tipo-documento'
+  | 'pessoas';
 
 interface CadastrosSidebarProps {
   selectedCadastro: CadastroType | null;
@@ -50,6 +51,7 @@ const menuGroups: MenuGroup[] = [
     name: 'GHAS',
     icon: FolderOpen,
     items: [
+      { id: 'pessoas', name: 'Pessoas' },
       { id: 'prestador-servico', name: 'Prestador de Serviço' },
       { id: 'clientes', name: 'Clientes' },
       { id: 'setor', name: 'Setor' },

@@ -132,6 +132,28 @@ interface CadastrosContentProps {
   handleUpdateTipoDoc: () => void;
   handleDeleteTipoDoc: (id: string) => void;
   handleToggleTipoDocAtivo: (id: string, ativo: boolean) => void;
+  // Pessoas
+  pessoas: any[];
+  isLoadingPessoas: boolean;
+  isAddPessoaDialogOpen: boolean;
+  setIsAddPessoaDialogOpen: (open: boolean) => void;
+  isEditPessoaDialogOpen: boolean;
+  setIsEditPessoaDialogOpen: (open: boolean) => void;
+  newPessoaNome: string;
+  setNewPessoaNome: (nome: string) => void;
+  newPessoaEmail: string;
+  setNewPessoaEmail: (email: string) => void;
+  newPessoaNivel: string;
+  setNewPessoaNivel: (nivel: string) => void;
+  newPessoaSetor: string;
+  setNewPessoaSetor: (setor: string) => void;
+  editingPessoa: any;
+  setEditingPessoa: (pessoa: any) => void;
+  handleAddPessoa: () => void;
+  handleEditPessoa: (item: any) => void;
+  handleUpdatePessoa: () => void;
+  handleDeletePessoa: (id: string) => void;
+  handleTogglePessoaAtivo: (id: string, ativo: boolean) => void;
 }
 
 export const CadastrosContent = (props: CadastrosContentProps) => {
@@ -164,6 +186,8 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
         return renderSetor();
       case 'tipo-documento':
         return renderTipoDocumento();
+      case 'pessoas':
+        return renderPessoas();
       default:
         return null;
     }
@@ -602,6 +626,84 @@ export const CadastrosContent = (props: CadastrosContentProps) => {
                   </TableCell>
                 </TableRow>
               ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  // Render Pessoas
+  const renderPessoas = () => (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Users className="h-5 w-5 text-primary" />
+            <CardTitle>Pessoas</CardTitle>
+            <Badge variant="secondary">{props.pessoas.length} itens</Badge>
+          </div>
+          <Button onClick={() => props.setIsAddPessoaDialogOpen(true)} size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {props.isLoadingPessoas ? (
+          <p className="text-muted-foreground">Carregando...</p>
+        ) : props.pessoas.length === 0 ? (
+          <p className="text-muted-foreground">Nenhuma pessoa cadastrada</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[80px]">Código</TableHead>
+                <TableHead className="w-[100px] text-center">Ações</TableHead>
+                <TableHead>Nome</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead className="w-[100px]">Nível</TableHead>
+                <TableHead>Setor</TableHead>
+                <TableHead className="w-[100px] text-center">Usuário</TableHead>
+                <TableHead className="w-[100px] text-center">Ativo</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {props.pessoas.map((item) => {
+                const setor = props.areasDocumento.find((a) => a.id === item.setor_id);
+                return (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium">{item.codigo}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-center gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => props.handleEditPessoa(item)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        {!item.user_id && (
+                          <Button variant="ghost" size="icon" onClick={() => props.handleDeletePessoa(item.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">{item.nome}</TableCell>
+                    <TableCell className="text-muted-foreground">{item.email || '-'}</TableCell>
+                    <TableCell className="font-medium">{item.nivel || '-'}</TableCell>
+                    <TableCell className="text-muted-foreground">{setor?.nome || '-'}</TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant={item.user_id ? 'default' : 'secondary'}>
+                        {item.user_id ? 'Sim' : 'Não'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Switch
+                        checked={item.ativo}
+                        onCheckedChange={() => props.handleTogglePessoaAtivo(item.id, item.ativo)}
+                      />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         )}
