@@ -220,11 +220,43 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
     }
     
     if (typeof value === 'string') {
-      // Try to parse date string
-      const parsed = new Date(value);
-      if (!isNaN(parsed.getTime())) {
-        return fromZonedTime(parsed, BRAZIL_TIMEZONE);
+      const trimmed = value.trim();
+      
+      // Try DD/MM/YYYY or DD/MM/YYYY HH:mm format (Brazilian format)
+      const brMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?$/);
+      if (brMatch) {
+        const [, day, month, year, hours, minutes] = brMatch;
+        const date = new Date(
+          Number(year),
+          Number(month) - 1,
+          Number(day),
+          hours ? Number(hours) : 8,
+          minutes ? Number(minutes) : 0,
+          0,
+          0
+        );
+        return fromZonedTime(date, BRAZIL_TIMEZONE);
       }
+      
+      // Try YYYY-MM-DD or YYYY-MM-DDTHH:mm format (ISO format)
+      const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/);
+      if (isoMatch) {
+        const [, year, month, day, hours, minutes] = isoMatch;
+        const date = new Date(
+          Number(year),
+          Number(month) - 1,
+          Number(day),
+          hours ? Number(hours) : 8,
+          minutes ? Number(minutes) : 0,
+          0,
+          0
+        );
+        return fromZonedTime(date, BRAZIL_TIMEZONE);
+      }
+    }
+    
+    if (value instanceof Date) {
+      return fromZonedTime(value, BRAZIL_TIMEZONE);
     }
     
     return null;
