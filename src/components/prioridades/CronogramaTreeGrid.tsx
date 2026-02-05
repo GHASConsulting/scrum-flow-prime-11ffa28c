@@ -205,18 +205,32 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
     
     if (typeof value === 'number') {
       // Excel serial date
-      const excelEpoch = new Date(1899, 11, 30);
+      // Excel uses 1900-01-01 as day 1 (but has a leap year bug treating 1900 as leap year)
+      // So we use 1899-12-30 as the base date
+      const excelEpoch = new Date(Date.UTC(1899, 11, 30));
       const days = Math.floor(value);
       const fractionalDay = value - days;
-      const date = new Date(excelEpoch.getTime() + days * 24 * 60 * 60 * 1000);
+      
+      // Calculate the date
+      const utcDate = new Date(excelEpoch.getTime() + days * 24 * 60 * 60 * 1000);
       
       // Add time from fractional part
       const totalSeconds = Math.round(fractionalDay * 24 * 60 * 60);
       const hours = Math.floor(totalSeconds / 3600);
       const minutes = Math.floor((totalSeconds % 3600) / 60);
-      date.setHours(hours, minutes, 0, 0);
       
-      return fromZonedTime(date, BRAZIL_TIMEZONE);
+      // Create local date with the correct year, month, day
+      const localDate = new Date(
+        utcDate.getUTCFullYear(),
+        utcDate.getUTCMonth(),
+        utcDate.getUTCDate(),
+        hours || 8,
+        minutes || 0,
+        0,
+        0
+      );
+      
+      return fromZonedTime(localDate, BRAZIL_TIMEZONE);
     }
     
     if (typeof value === 'string') {
@@ -282,7 +296,8 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
       reader.onload = async (event) => {
         try {
           const data = new Uint8Array(event.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array' });
+          // Use cellDates: false to get raw values and parse manually to avoid Excel's date interpretation issues
+          const workbook = XLSX.read(data, { type: 'array', cellDates: false, raw: true });
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
           const jsonData: any[][] = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
           
