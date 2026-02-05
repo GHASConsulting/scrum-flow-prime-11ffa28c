@@ -112,31 +112,17 @@ const DashboardClientes = () => {
     riscos: 'Riscos e BO\'s',
   };
 
-  // Generate available months/years based on produtividade records
-  const availableMonthYears = useMemo(() => {
-    const monthYearSet = new Set<string>();
-    
-    produtividades.forEach((p) => {
-      const startDate = new Date(p.data_inicio + 'T12:00:00');
-      const startKey = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}`;
-      monthYearSet.add(startKey);
-      
-      const endDate = new Date(p.data_fim + 'T12:00:00');
-      const endKey = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}`;
-      monthYearSet.add(endKey);
-    });
-    
-    return Array.from(monthYearSet).sort();
-  }, [produtividades]);
-
+  // Generate available years - from 2024 to current year + 1
   const availableYears = useMemo(() => {
-    const years = new Set<string>();
-    availableMonthYears.forEach((my) => {
-      years.add(my.split('-')[0]);
-    });
-    return Array.from(years).sort();
-  }, [availableMonthYears]);
+    const currentYear = new Date().getFullYear();
+    const years: string[] = [];
+    for (let year = 2024; year <= currentYear + 1; year++) {
+      years.push(String(year));
+    }
+    return years;
+  }, []);
 
+  // All months are always available
   const getAvailableMonths = (selectedYear: string) => {
     if (!selectedYear) return [];
     
@@ -146,13 +132,7 @@ const DashboardClientes = () => {
       '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro',
     };
     
-    return availableMonthYears
-      .filter((my) => my.startsWith(selectedYear))
-      .map((my) => {
-        const month = my.split('-')[1];
-        return { value: month, label: monthLabels[month] };
-      })
-      .sort((a, b) => a.value.localeCompare(b.value));
+    return Object.entries(monthLabels).map(([value, label]) => ({ value, label }));
   };
 
   // Sync initial values to final when initial changes
