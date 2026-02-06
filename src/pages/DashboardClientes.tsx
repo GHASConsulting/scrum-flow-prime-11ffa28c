@@ -132,7 +132,9 @@ const DashboardClientes = () => {
       '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro',
     };
     
-    return Object.entries(monthLabels).map(([value, label]) => ({ value, label }));
+    return Object.entries(monthLabels)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([value, label]) => ({ value, label }));
   };
 
   // Sync initial values to final when initial changes
