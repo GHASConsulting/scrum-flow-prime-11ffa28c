@@ -112,17 +112,18 @@ const DashboardClientes = () => {
     riscos: 'Riscos e BO\'s',
   };
 
-  // Generate available years - from 2024 to current year + 1
+  // Generate available years - from 2024 to current year (Brazil timezone)
   const availableYears = useMemo(() => {
-    const currentYear = new Date().getFullYear();
+    const nowBrazil = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    const currentYear = nowBrazil.getFullYear();
     const years: string[] = [];
-    for (let year = 2024; year <= currentYear + 1; year++) {
+    for (let year = 2024; year <= currentYear; year++) {
       years.push(String(year));
     }
     return years;
   }, []);
 
-  // All months are always available
+  // Only show months up to the current month (Brazil timezone)
   const getAvailableMonths = (selectedYear: string) => {
     if (!selectedYear) return [];
     
@@ -131,9 +132,24 @@ const DashboardClientes = () => {
       '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto',
       '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro',
     };
-    
+
+    // Current date in Brazil timezone (GMT-3)
+    const nowBrazil = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    const currentYear = nowBrazil.getFullYear();
+    const currentMonth = nowBrazil.getMonth() + 1; // 1-12
+    const selectedYearNum = parseInt(selectedYear, 10);
+
     return Object.entries(monthLabels)
       .sort(([a], [b]) => a.localeCompare(b))
+      .filter(([value]) => {
+        const monthNum = parseInt(value, 10);
+        // Past years: all months available
+        if (selectedYearNum < currentYear) return true;
+        // Current year: only up to current month
+        if (selectedYearNum === currentYear) return monthNum <= currentMonth;
+        // Future years: no months available
+        return false;
+      })
       .map(([value, label]) => ({ value, label }));
   };
 
