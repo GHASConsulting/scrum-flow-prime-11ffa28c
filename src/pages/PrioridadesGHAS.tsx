@@ -7,49 +7,36 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CronogramaTreeGrid } from '@/components/prioridades/CronogramaTreeGrid';
-import { GanttChart } from '@/components/prioridades/GanttChart';
 import { Plus, Trash2 } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-// Busca todas as listas de prioridades sem filtro de cliente
-function useAllPriorityLists() {
-  const queryClient = useQueryClient();
-
-  const { data: priorityLists = [], isLoading } = useQuery({
-    queryKey: ['ghas-priority-lists'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('priority_list')
-        .select('*')
-        .order('codigo', { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const deletePriorityList = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('priority_list').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ghas-priority-lists'] });
-      toast.success('Lista excluída com sucesso');
-    },
-    onError: (error: Error) => {
-      toast.error('Erro ao excluir lista: ' + error.message);
-    },
-  });
-
-  return { priorityLists, isLoading, deletePriorityList };
-}
+import { useGhasPriorityLists } from '@/hooks/useGhasPriorityLists';
 
 export default function PrioridadesGHAS() {
-  const { priorityLists, deletePriorityList } = useAllPriorityLists();
+  const { priorityLists, createPriorityList, deletePriorityList } = useGhasPriorityLists();
   const [selectedPriorityListId, setSelectedPriorityListId] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newListName, setNewListName] = useState('');
+  const [newListDesc, setNewListDesc] = useState('');
+
+  const handleCreateList = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newListName.trim()) {
+      toast.error('Nome da lista é obrigatório');
+      return;
+    }
+    try {
+      const newList = await createPriorityList.mutateAsync({
+        nome: newListName.trim(),
+        descricao: newListDesc.trim() || undefined,
+      });
+      setSelectedPriorityListId(newList.id);
+      setIsDialogOpen(false);
+      setNewListName('');
+      setNewListDesc('');
+    } catch (error) {
+      console.error('Erro ao criar lista:', error);
+    }
+  };
 
   const handleDeleteList = async (listId: string) => {
     if (confirm('Tem certeza que deseja excluir esta lista de prioridades? Todas as tarefas serão excluídas.')) {
@@ -84,6 +71,43 @@ export default function PrioridadesGHAS() {
                   </SelectContent>
                 </Select>
 
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Nova Lista de Prioridades</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleCreateList} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="listName">Nome da Lista *</Label>
+                        <Input
+                          id="listName"
+                          value={newListName}
+                          onChange={(e) => setNewListName(e.target.value)}
+                          placeholder="Ex: Implantação Laboratório"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="listDesc">Descrição</Label>
+                        <Input
+                          id="listDesc"
+                          value={newListDesc}
+                          onChange={(e) => setNewListDesc(e.target.value)}
+                          placeholder="Descrição opcional"
+                        />
+                      </div>
+                      <Button type="submit" className="w-full" disabled={createPriorityList.isPending}>
+                        Criar Lista
+                      </Button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+
                 {selectedPriorityListId && (
                   <Button
                     variant="outline"
@@ -108,18 +132,11 @@ export default function PrioridadesGHAS() {
             </p>
           </Card>
         ) : (
-          <Tabs defaultValue="tabela" className="w-full">
-            <TabsList>
-              <TabsTrigger value="tabela">Tabela</TabsTrigger>
-              <TabsTrigger value="gantt">Gantt</TabsTrigger>
-            </TabsList>
-            <TabsContent value="tabela">
-              <CronogramaTreeGrid priorityListId={selectedPriorityListId} />
-            </TabsContent>
-            <TabsContent value="gantt">
-              <GanttChart priorityListId={selectedPriorityListId} />
-            </TabsContent>
-          </Tabs>
+          <Card className="p-8 text-center">
+            <p className="text-muted-foreground">
+              Lista selecionada. Em breve, o cronograma de tarefas estará disponível aqui.
+            </p>
+          </Card>
         )}
       </div>
     </Layout>
