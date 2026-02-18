@@ -61,6 +61,7 @@ const menuStructure: MenuGroup[] = [
     items: [
       { name: 'Documentos', href: '/sharepoint/documentos', icon: FolderOpen },
       { name: 'Treinamentos', href: '/sharepoint/treinamentos', icon: GraduationCap },
+      { name: 'Prioridades', href: '/sharepoint/prioridades', icon: Target },
     ],
   },
   {
@@ -78,7 +79,7 @@ const menuStructure: MenuGroup[] = [
 const getActiveGroup = (pathname: string): string => {
   if (pathname === '/' || pathname.startsWith('/sprint-planning') || pathname.startsWith('/backlog') || pathname.startsWith('/daily') || pathname.startsWith('/retrospectiva') || pathname.startsWith('/roadmap')) return 'PMO/CET';
   if (pathname.startsWith('/prioridades') || pathname.startsWith('/dashboard-clientes') || pathname.startsWith('/produtividade') || pathname.startsWith('/riscos') || pathname.startsWith('/documentos-cliente')) return 'CLIENTE';
-  if (pathname.startsWith('/sharepoint')) return 'GHAS';
+  if (pathname.startsWith('/sharepoint') || pathname.startsWith('/sharepoint/prioridades')) return 'GHAS';
   if (pathname.startsWith('/cadastros') || pathname.startsWith('/administracao')) return 'Administração';
   return '';
 };

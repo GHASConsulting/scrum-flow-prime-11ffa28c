@@ -22,6 +22,7 @@ import ProdutividadeGlobal from "./pages/ProdutividadeGlobal";
 import Prioridades from "./pages/Prioridades";
 import SharepointDocumentos from "./pages/SharepointDocumentos";
 import SharepointTreinamentos from "./pages/SharepointTreinamentos";
+import PrioridadesGHAS from "./pages/PrioridadesGHAS";
 import DocumentosCliente from "./pages/DocumentosCliente";
 import NotFound from "./pages/NotFound";
 
@@ -49,6 +50,7 @@ function App() {
           <Route path="/prioridades" element={<ProtectedRoute><Prioridades /></ProtectedRoute>} />
           <Route path="/sharepoint/documentos" element={<ProtectedRoute><SharepointDocumentos /></ProtectedRoute>} />
           <Route path="/sharepoint/treinamentos" element={<ProtectedRoute><SharepointTreinamentos /></ProtectedRoute>} />
+          <Route path="/sharepoint/prioridades" element={<ProtectedRoute><PrioridadesGHAS /></ProtectedRoute>} />
           <Route path="/administracao" element={<ProtectedRoute><Administracao /></ProtectedRoute>} />
           <Route path="/cadastros" element={<ProtectedRoute><CadastrosSistema /></ProtectedRoute>} />
           <Route path="/produtividade" element={<ProtectedRoute><Produtividade /></ProtectedRoute>} />
