@@ -154,25 +154,27 @@ export function GhasCronogramaTreeGrid({ priorityListId }: GhasCronogramaTreeGri
   const handleDownloadTemplate = () => {
     const wb = XLSX.utils.book_new();
 
+    // Nova estrutura: sem colunas em branco
+    // Col A: Código da Lista | B: ID | C: Nome da Tarefa | D: Pai | E: Status | F: Dias | G: Duração | H: Data Início | I: Data Fim | J: Responsável
     const headers = [
-      '', '', 'ID', 'Nome da Tarefa', 'ID Pai', 'Status', 'Duração (dias)', 'Data Início', 'Data Fim', 'Responsável'
+      'Cód. Lista', 'ID', 'Nome da Tarefa', 'Pai', 'Status', 'Dias', 'Duração (dias)', 'Data Início', 'Data Fim', 'Responsável'
     ];
 
     const exampleRows = [
-      ['', '', 1, 'Fase de Planejamento', '', 'Pendente', 5, '01/03/2025', '07/03/2025', 'João Silva'],
-      ['', '', 2, 'Levantamento de Requisitos', 1, 'Pendente', 3, '01/03/2025', '05/03/2025', 'Maria Santos'],
-      ['', '', 3, 'Documentação', 1, 'Pendente', 2, '05/03/2025', '07/03/2025', 'João Silva'],
-      ['', '', 4, 'Fase de Execução', '', 'Pendente', 10, '10/03/2025', '21/03/2025', ''],
-      ['', '', 5, 'Desenvolvimento', 4, 'Fazendo', 8, '10/03/2025', '19/03/2025', 'Carlos Lima'],
-      ['', '', 6, 'Testes', 4, 'Pendente', 2, '19/03/2025', '21/03/2025', 'Ana Costa'],
+      [1, 1, 'Fase de Planejamento', '', 'Pendente', 5, 5, '01/03/2025', '07/03/2025', 'João Silva'],
+      [1, 2, 'Levantamento de Requisitos', 1, 'Pendente', 3, 3, '01/03/2025', '05/03/2025', 'Maria Santos'],
+      [1, 3, 'Documentação', 1, 'Pendente', 2, 2, '05/03/2025', '07/03/2025', 'João Silva'],
+      [1, 4, 'Fase de Execução', '', 'Pendente', 10, 10, '10/03/2025', '21/03/2025', ''],
+      [1, 5, 'Desenvolvimento', 4, 'Fazendo', 8, 8, '10/03/2025', '19/03/2025', 'Carlos Lima'],
+      [1, 6, 'Testes', 4, 'Pendente', 2, 2, '19/03/2025', '21/03/2025', 'Ana Costa'],
     ];
 
     const wsData = [headers, ...exampleRows];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
 
     ws['!cols'] = [
-      { wch: 5 }, { wch: 5 }, { wch: 8 }, { wch: 40 }, { wch: 10 },
-      { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 25 },
+      { wch: 12 }, { wch: 8 }, { wch: 40 }, { wch: 8 }, { wch: 15 },
+      { wch: 8 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 25 },
     ];
 
     XLSX.utils.book_append_sheet(wb, ws, 'Prioridades GHAS');
@@ -231,7 +233,9 @@ export function GhasCronogramaTreeGrid({ priorityListId }: GhasCronogramaTreeGri
           const workbook = XLSX.read(data, { type: 'array', cellDates: false, raw: true });
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
           const jsonData: any[][] = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-          const rows = jsonData.slice(1).filter(row => row.length > 0 && row[0]);
+          // Nova estrutura das colunas (índice 0-based):
+          // [0] Cód. Lista | [1] ID | [2] Nome da Tarefa | [3] Pai | [4] Status | [5] Dias | [6] Duração (dias) | [7] Data Início | [8] Data Fim | [9] Responsável
+          const rows = jsonData.slice(1).filter(row => row.length > 0 && row[2]);
 
           if (rows.length === 0) {
             toast.error('Nenhum registro encontrado no arquivo');
@@ -245,13 +249,13 @@ export function GhasCronogramaTreeGrid({ priorityListId }: GhasCronogramaTreeGri
           const importedTasksMap = new Map<number, string>();
 
           for (const row of rows) {
-            const excelId = Number(row[2]) || 0;
-            const nome = String(row[3] || '').trim();
-            const status = mapStatusFromExcel(String(row[5] || ''));
-            const diasDuracao = row[6] ? Number(row[6]) : 1;
-            const dataInicio = parseExcelDate(row[7]);
-            const dataFim = parseExcelDate(row[8]);
-            const responsavel = String(row[9] || '').trim() || null;
+            const excelId = Number(row[1]) || 0;   // col B: ID
+            const nome = String(row[2] || '').trim(); // col C: Nome da Tarefa
+            const status = mapStatusFromExcel(String(row[4] || '')); // col E: Status
+            const diasDuracao = row[6] ? Number(row[6]) : (row[5] ? Number(row[5]) : 1); // col G ou F
+            const dataInicio = parseExcelDate(row[7]); // col H: Data Início
+            const dataFim = parseExcelDate(row[8]);   // col I: Data Fim
+            const responsavel = String(row[9] || '').trim() || null; // col J: Responsável
 
             if (!nome) continue;
 
@@ -277,8 +281,8 @@ export function GhasCronogramaTreeGrid({ priorityListId }: GhasCronogramaTreeGri
           }
 
           for (const row of rows) {
-            const excelId = Number(row[2]) || 0;
-            const paiId = row[4] ? Number(row[4]) : null;
+            const excelId = Number(row[1]) || 0;    // col B: ID
+            const paiId = row[3] ? Number(row[3]) : null; // col D: Pai
             if (paiId && excelId > 0) {
               const taskId = importedTasksMap.get(excelId);
               const parentTaskId = importedTasksMap.get(paiId);
