@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useGhasPriorityLists } from '@/hooks/useGhasPriorityLists';
+import { GhasCronogramaTreeGrid } from '@/components/prioridades/GhasCronogramaTreeGrid';
+import { GhasGanttChart } from '@/components/prioridades/GhasGanttChart';
 
 export default function PrioridadesGHAS() {
   const { priorityLists, createPriorityList, deletePriorityList } = useGhasPriorityLists();
@@ -132,11 +134,18 @@ export default function PrioridadesGHAS() {
             </p>
           </Card>
         ) : (
-          <Card className="p-8 text-center">
-            <p className="text-muted-foreground">
-              Lista selecionada. Em breve, o cronograma de tarefas estará disponível aqui.
-            </p>
-          </Card>
+          <Tabs defaultValue="tabela" className="w-full">
+            <TabsList>
+              <TabsTrigger value="tabela">Tabela</TabsTrigger>
+              <TabsTrigger value="gantt">Gantt</TabsTrigger>
+            </TabsList>
+            <TabsContent value="tabela">
+              <GhasCronogramaTreeGrid priorityListId={selectedPriorityListId} />
+            </TabsContent>
+            <TabsContent value="gantt">
+              <GhasGanttChart priorityListId={selectedPriorityListId} />
+            </TabsContent>
+          </Tabs>
         )}
       </div>
     </Layout>
