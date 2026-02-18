@@ -547,6 +547,146 @@ export type Database = {
           },
         ]
       }
+      ghas_priority_list: {
+        Row: {
+          codigo: number
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          codigo: number
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          codigo?: number
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ghas_schedule_task: {
+        Row: {
+          created_at: string
+          duration_days: number | null
+          duration_is_estimate: boolean
+          end_at: string | null
+          ghas_priority_list_id: string
+          id: string
+          is_summary: boolean
+          name: string
+          notes: string | null
+          order_index: number
+          parent_id: string | null
+          percent_complete: number | null
+          predecessors: string | null
+          responsavel: string | null
+          start_at: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration_days?: number | null
+          duration_is_estimate?: boolean
+          end_at?: string | null
+          ghas_priority_list_id: string
+          id?: string
+          is_summary?: boolean
+          name: string
+          notes?: string | null
+          order_index?: number
+          parent_id?: string | null
+          percent_complete?: number | null
+          predecessors?: string | null
+          responsavel?: string | null
+          start_at?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration_days?: number | null
+          duration_is_estimate?: boolean
+          end_at?: string | null
+          ghas_priority_list_id?: string
+          id?: string
+          is_summary?: boolean
+          name?: string
+          notes?: string | null
+          order_index?: number
+          parent_id?: string | null
+          percent_complete?: number | null
+          predecessors?: string | null
+          responsavel?: string | null
+          start_at?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ghas_schedule_task_ghas_priority_list_id_fkey"
+            columns: ["ghas_priority_list_id"]
+            isOneToOne: false
+            referencedRelation: "ghas_priority_list"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ghas_schedule_task_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "ghas_schedule_task"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ghas_schedule_task_history: {
+        Row: {
+          alterado_por: string | null
+          campo_alterado: string
+          created_at: string
+          id: string
+          task_id: string
+          valor_anterior: string | null
+          valor_novo: string | null
+        }
+        Insert: {
+          alterado_por?: string | null
+          campo_alterado: string
+          created_at?: string
+          id?: string
+          task_id: string
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Update: {
+          alterado_por?: string | null
+          campo_alterado?: string
+          created_at?: string
+          id?: string
+          task_id?: string
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ghas_schedule_task_history_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "ghas_schedule_task"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       integracao_config: {
         Row: {
           created_at: string
