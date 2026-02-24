@@ -53,7 +53,10 @@ export function useDocumentoCliente(clienteId?: string) {
 
   const uploadFile = async (file: File, clienteId: string): Promise<{ path: string; nome: string; tipo: string }> => {
     const fileExt = file.name.split('.').pop();
-    const fileName = `${clienteId}/${Date.now()}_${file.name}`;
+    const sanitizedName = file.name
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9._-]/g, '_');
+    const fileName = `${clienteId}/${Date.now()}_${sanitizedName}`;
     
     const { error: uploadError } = await supabase.storage
       .from('documentos-cliente')
