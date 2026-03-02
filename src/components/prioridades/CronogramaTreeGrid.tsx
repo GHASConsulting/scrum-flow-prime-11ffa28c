@@ -128,6 +128,41 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
     }
   };
 
+  const handleExportExcel = () => {
+    try {
+      const headers = ['Código Cliente', 'Código Lista', 'ID', 'Nome da Tarefa', 'Pai', 'Status', 'Dias Duração', 'Data Início', 'Data Fim', 'Responsável'];
+      const rows = tasks.map(task => {
+        const parentTask = task.parent_id ? tasks.find(t => t.id === task.parent_id) : null;
+        const statusLabel = STATUS_OPTIONS.find(s => s.value === task.status)?.label || 'Pendente';
+        return [
+          '', // Código Cliente
+          '', // Código Lista
+          task.order_index + 1,
+          task.name,
+          parentTask ? parentTask.order_index + 1 : '',
+          statusLabel,
+          task.duration_days ?? '',
+          task.start_at ? format(toZonedTime(new Date(task.start_at), BRAZIL_TIMEZONE), 'dd/MM/yyyy') : '',
+          task.end_at ? format(toZonedTime(new Date(task.end_at), BRAZIL_TIMEZONE), 'dd/MM/yyyy') : '',
+          task.responsavel || '',
+        ];
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      ws['!cols'] = [
+        { wch: 18 }, { wch: 18 }, { wch: 8 }, { wch: 40 }, { wch: 8 },
+        { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 25 },
+      ];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Cronograma');
+      XLSX.writeFile(wb, `cronograma-${new Date().toLocaleDateString('pt-BR')}.xlsx`);
+      toast.success('Excel exportado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao exportar Excel:', error);
+      toast.error('Erro ao exportar Excel');
+    }
+  };
+
   const handleExportPDF = () => {
     try {
       const doc = new jsPDF('landscape', 'mm', 'a4');
@@ -854,10 +889,24 @@ export function CronogramaTreeGrid({ priorityListId }: CronogramaTreeGridProps) 
               onChange={handleImportFile}
               className="hidden"
             />
-            <Button variant="outline" onClick={handleExportPDF}>
-              <FileDown className="h-4 w-4 mr-2" />
-              Exportar PDF
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <FileDown className="h-4 w-4 mr-2" />
+                  Exportar
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={handleExportPDF}>
+                  <FileDown className="h-4 w-4 mr-2" />
+                  Exportar PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportExcel}>
+                  <FileDown className="h-4 w-4 mr-2" />
+                  Exportar Excel
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
